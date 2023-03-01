@@ -35,6 +35,8 @@ Collections:
     template: ExtData/CMIP6/L72/SAD/sad_wt_CMIP6_288x181x72_%y4.nc
   GMI_veg_fraction_x720_y360_t12_2008.nc:
     template: ExtData/g5chem/sfc/LAI/veg_fraction_x720_y360_t12_2008.nc
+  GMI_aerodust_file:
+    template: /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
 
 Samplings:
   GMI_sample_0:
@@ -54,6 +56,68 @@ Samplings:
     extrapolation: clim
 
 Exports:
+  BCphobic:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: BCPHOBIC
+  BCphilic:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: BCPHILIC
+  OCphobic:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: OCPHOBIC
+  OCphilic:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: OCPHILIC
+  SO4:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: SO4
+  SO4v:
+    collection: /dev/null
+  ss001:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: SS001
+  ss002:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: SS002
+  ss003:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: SS003
+  ss004:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: SS004
+  ss005:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: SS005
+  du001:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: DU001
+  du002:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: DU002
+  du003:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: DU003
+  du004:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: DU004
+  du005:
+    collection: GMI_aerodust_file
+    sample: GMI_sample_2
+    variable: DU005
   ACET_FIXED:
     collection: GMI_acetone_fixed_GMI.x288_y181_z72_t12.2001.nc
     sample: GMI_sample_0
@@ -77,10 +141,6 @@ Exports:
     regrid: CONSERVE
     sample: GMI_sample_1
     variable: ALK4_ff
-  BC1:
-    collection: /dev/null
-  BC2:
-    collection: /dev/null
   C2H6_biof:
     collection: /dev/null
   C2H6_biom:
@@ -177,20 +237,6 @@ Exports:
     collection: GMI_lai_x720_y360_v72_t12_2008.nc
     sample: GMI_sample_0
     variable: LAI_FRAC
-  MDUST1:
-    collection: /dev/null
-  MDUST2:
-    collection: /dev/null
-  MDUST3:
-    collection: /dev/null
-  MDUST4:
-    collection: /dev/null
-  MDUST5:
-    collection: /dev/null
-  MDUST6:
-    collection: /dev/null
-  MDUST7:
-    collection: /dev/null
   MEGAN_ISOP:
     collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
     regrid: CONSERVE
@@ -309,10 +355,6 @@ Exports:
     collection: /dev/null
   NO_ship:
     collection: /dev/null
-  OC1:
-    collection: /dev/null
-  OC2:
-    collection: /dev/null
   OCS_CLIMO:
     collection: GMI_OCS_vmr.x360_y181_z72.t12.2016.nc4
     sample: GMI_sample_0
@@ -363,10 +405,6 @@ Exports:
     regrid: CONSERVE
     sample: GMI_sample_1
     variable: SO2_shipping
-  SO4:
-    collection: /dev/null
-  SO4v:
-    collection: /dev/null
   SOILFERT:
     collection: GMI_fertilizer_GMI.x288_y181_t12.2006.nc
     regrid: CONSERVE
@@ -376,17 +414,7 @@ Exports:
     collection: GMI_precipitation_GMI.x288_y181_t12.2006.nc
     sample: GMI_sample_0
     variable: soilPrecip
-  SS1:
-    collection: /dev/null
-  SS2:
-    collection: /dev/null
-  SS3:
-    collection: /dev/null
-  SS4:
-    collection: /dev/null
   VEG_FRAC:
     collection: GMI_veg_fraction_x720_y360_t12_2008.nc
     sample: GMI_sample_0
     variable: VEG_FRAC
-
-
