@@ -1497,7 +1497,7 @@ CONTAINS
     CALL ESMF_AttributeSet(aero, NAME='cloud_area_fraction_for_aerosol_optics', VALUE='', __RC__)
     CALL ESMF_AttributeSet(aero, NAME='band_for_aerosol_optics', VALUE=0, __RC__)
 
-   DO n = 1,numAttributes
+    DO n = 1,numAttributes
      CALL ESMF_AttributeSet(aero, NAME=TRIM(attName(n)), VALUE=TRIM(attValu(n)), __RC__)
     END DO
 

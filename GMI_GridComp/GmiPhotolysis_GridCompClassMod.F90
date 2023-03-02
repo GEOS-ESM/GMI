@@ -96,7 +96,7 @@
 
 ! Perhaps GMICHEM is the AERO_PROVIDER
 ! ------------------------------------
-   LOGICAL :: AM_I_AERO_PROVIDER
+   LOGICAL :: AM_I_AERO_PROVIDER    ! Even if another GC is the real AERO_PROVIDER, set this TRUE to have GMI export the AERO state, etc.
    CHARACTER(LEN=255) :: aeroProviderName
 
 ! Various switches
