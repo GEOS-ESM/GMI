@@ -305,6 +305,11 @@ CONTAINS
       STATUS = 0
 
 
+     CASE("CARMA")
+
+      STATUS = 0
+
+
      CASE("none")
 
       STATUS = 0
@@ -502,7 +507,7 @@ CONTAINS
 
 ! ========================== EXPORT STATE =========================
 
-    IF(TRIM(aeroProviderName) == "GMICHEM") THEN
+    IF(TRIM(aeroProviderName) == "GMICHEM" .or. TRIM(aeroProviderName) == "CARMA") THEN
 
 !   This state is needed by radiation, and contains aerosols and aerosol optics
 !   ---------------------------------------------------------------------------
@@ -1167,7 +1172,7 @@ CONTAINS
    If (ESMF_UtilStringLowerCase(trim(ProviderName)).eq.'none') ProviderName = 'none'
 
    gcGMI%gcPhot%aeroProviderName = TRIM(ProviderName)
-   IF(TRIM(providerName) == "GMICHEM") THEN
+   IF(TRIM(providerName) == "GMICHEM" .or. TRIM(providerName) == "CARMA") THEN
     gcGMI%gcPhot%AM_I_AERO_PROVIDER = .TRUE.
    ELSE
     gcGMI%gcPhot%AM_I_AERO_PROVIDER = .FALSE.

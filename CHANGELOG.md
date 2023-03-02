@@ -21,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Capability for AERO_PROVIDER=GMIDATA
+- Capability for AERO_PROVIDER=GMICHEM
+- Capability for AERO_PROVIDER=CARMA (uses GMICHEM right now)
 
 ### Removed
 

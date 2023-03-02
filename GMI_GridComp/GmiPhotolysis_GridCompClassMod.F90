@@ -1664,6 +1664,7 @@ CONTAINS
     IF(self%verbose) CALL pmaxmin('BCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
     NULLIFY(PTR3D)
 
+
    CASE("GOCART")
 
     IF(self%usingGOCART_BC) THEN
@@ -1683,6 +1684,7 @@ CONTAINS
 
     END IF
 
+
    CASE("GMICHEM")
 
      CALL MAPL_GetPointer(impChem, PTR3D, 'BCphobic', RC=STATUS)
@@ -1698,6 +1700,24 @@ CONTAINS
      IF(self%verbose) CALL pmaxmin('BCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
      IF(ASSOCIATED(BCphilic) .AND. self%AM_I_AERO_PROVIDER) BCphilic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
      NULLIFY(PTR3D)
+
+
+   CASE("CARMA")
+
+     CALL MAPL_GetPointer(impChem, PTR3D, 'BCphobic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%dAersl(:,:,1:km,1) = PTR3D(:,:,km:1:-1)
+     IF(self%verbose) CALL pmaxmin('BCphobic:', PTR3D, qmin, qmax, iXj, km, 1. )
+     IF(ASSOCIATED(BCphobic) .AND. self%AM_I_AERO_PROVIDER) BCphobic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
+     NULLIFY(PTR3D)
+
+     CALL MAPL_GetPointer(impChem, PTR3D, 'BCphilic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%wAersl(:,:,1:km,2) = PTR3D(:,:,km:1:-1)
+     IF(self%verbose) CALL pmaxmin('BCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
+     IF(ASSOCIATED(BCphilic) .AND. self%AM_I_AERO_PROVIDER) BCphilic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
+     NULLIFY(PTR3D)
+
 
    CASE("none")
 
@@ -1872,6 +1892,7 @@ CONTAINS
 
     END IF
 
+
    CASE("GMICHEM")
 
      CALL MAPL_GetPointer(impChem, DU001, 'du001', RC=STATUS)
@@ -1901,7 +1922,36 @@ CONTAINS
      self%dust(:,:,km:1:-1,6) = DU003(:,:,1:km)*airdens(:,:,1:km)
      self%dust(:,:,km:1:-1,7) = DU004(:,:,1:km)*airdens(:,:,1:km)
 
-     NULLIFY(PTR3D)
+
+   CASE("CARMA")
+
+     CALL MAPL_GetPointer(impChem, DU001, 'du001', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU002, 'du002', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU003, 'du003', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU004, 'du004', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU005, 'du005', RC=STATUS)
+     VERIFY_(STATUS)
+
+     IF(self%verbose) THEN
+      CALL pmaxmin('du001:', DU001, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du002:', DU002, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du003:', DU003, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du004:', DU004, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du005:', DU005, qmin, qmax, iXj, km, 1. )
+     END IF
+
+     self%dust(:,:,km:1:-1,1) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.009
+     self%dust(:,:,km:1:-1,2) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.081
+     self%dust(:,:,km:1:-1,3) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.234
+     self%dust(:,:,km:1:-1,4) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.676
+     self%dust(:,:,km:1:-1,5) = DU002(:,:,1:km)*airdens(:,:,1:km)
+     self%dust(:,:,km:1:-1,6) = DU003(:,:,1:km)*airdens(:,:,1:km)
+     self%dust(:,:,km:1:-1,7) = DU004(:,:,1:km)*airdens(:,:,1:km)
+
 
    CASE("none")
 
@@ -2020,6 +2070,20 @@ CONTAINS
      self%wAersl(:,:,km:1:-1,3) = OCphilic(:,:,1:km)*airdens(:,:,1:km)
      IF(self%verbose) CALL pmaxmin('OCphilic:', OCphilic, qmin, qmax, iXj, km, 1. )
 
+
+   CASE("CARMA")
+!... Organic Carbon hydrophobic
+     CALL MAPL_GetPointer(impChem, OCphobic, 'OCphobic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%dAersl(:,:,km:1:-1,2) = OCphobic(:,:,1:km)*airdens(:,:,1:km)
+     IF(self%verbose) CALL pmaxmin('OCphobic:', OCphobic, qmin, qmax, iXj, km, 1. )
+!... Organic Carbon hydrophilic
+     CALL MAPL_GetPointer(impChem, OCphilic, 'OCphilic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%wAersl(:,:,km:1:-1,3) = OCphilic(:,:,1:km)*airdens(:,:,1:km)
+     IF(self%verbose) CALL pmaxmin('OCphilic:', OCphilic, qmin, qmax, iXj, km, 1. )
+
+
    CASE("none")
 
      self%dAersl(:,:,1:km,2) = 0.0
@@ -2126,6 +2190,7 @@ CONTAINS
     IF(self%verbose) CALL pmaxmin('ss005:', PTR3D, qmin, qmax, iXj, km, 1. )
     NULLIFY(PTR3D)
 
+
    CASE("GOCART")
 
     IF(self%usingGOCART_SS) THEN
@@ -2159,6 +2224,7 @@ CONTAINS
 
     END IF
 
+
    CASE("GMICHEM")
 
      CALL MAPL_GetPointer(impChem, SS001, 'ss001', RC=STATUS)
@@ -2188,7 +2254,36 @@ CONTAINS
 ! ------
      self%wAersl(:,:,km:1:-1,5) = (SS003(:,:,1:km)+SS004(:,:,1:km)+SS005(:,:,1:km))*airdens(:,:,1:km)
 
-!     NULLIFY(PTR3D)
+
+   CASE("CARMA")
+
+     CALL MAPL_GetPointer(impChem, SS001, 'ss001', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS002, 'ss002', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS003, 'ss003', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS004, 'ss004', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS005, 'ss005', RC=STATUS)
+     VERIFY_(STATUS)
+
+     IF(self%verbose) THEN
+      CALL pmaxmin('ss001:', SS001, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss002:', SS002, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss003:', SS003, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss004:', SS004, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss005:', SS005, qmin, qmax, iXj, km, 1. )
+     END IF
+
+! Accumulated
+! -----------
+     self%wAersl(:,:,km:1:-1,4) = (SS001(:,:,1:km)+SS002(:,:,1:km))*airdens(:,:,1:km)
+
+! Coarse
+! ------
+     self%wAersl(:,:,km:1:-1,5) = (SS003(:,:,1:km)+SS004(:,:,1:km)+SS005(:,:,1:km))*airdens(:,:,1:km)
+
 
    CASE("none")
 
@@ -2294,8 +2389,8 @@ CONTAINS
 
     END IF
 
-   CASE("GMICHEM")
 
+   CASE("GMICHEM")
 
      CALL MAPL_GetPointer(impChem, SO4, 'SO4', RC=STATUS)
      VERIFY_(STATUS)
@@ -2320,6 +2415,34 @@ CONTAINS
          CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
        END IF
      END IF
+
+
+   CASE("CARMA")
+
+     CALL MAPL_GetPointer(impChem, SO4, 'SO4', RC=STATUS)
+     VERIFY_(STATUS)
+     self%wAersl(:,:,km:1:-1,1) = SO4(:,:,1:km)*airdens(:,:,1:km)
+
+     IF(self%verbose) THEN
+      CALL pmaxmin('SO4:', SO4, qmin, qmax, iXj, km, 1. )
+     END IF
+
+     ! If volcanic SU exists, use it too:
+     CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
+     VERIFY_(STATUS)
+
+     IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
+       CALL MAPL_GetPointer(impChem, SO4, 'SO4v', RC=STATUS)
+       VERIFY_(STATUS)
+
+       self%wAersl(:,:,km:1:-1,1) = &
+       self%wAersl(:,:,km:1:-1,1) + SO4(:,:,1:km)*airdens(:,:,1:km)
+
+       IF(self%verbose) THEN
+         CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
+       END IF
+     END IF
+
 
    CASE("none")
 
