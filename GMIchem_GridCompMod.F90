@@ -305,6 +305,11 @@ CONTAINS
       STATUS = 0
 
 
+     CASE("CARMA")
+
+      STATUS = 0
+
+
      CASE("none")
 
       STATUS = 0
@@ -502,7 +507,7 @@ CONTAINS
 
 ! ========================== EXPORT STATE =========================
 
-    IF(TRIM(aeroProviderName) == "GMICHEM") THEN
+    IF(TRIM(aeroProviderName) == "GMICHEM" .or. TRIM(aeroProviderName) == "CARMA") THEN
 
 !   This state is needed by radiation, and contains aerosols and aerosol optics
 !   ---------------------------------------------------------------------------
@@ -1122,10 +1127,10 @@ CONTAINS
    CHARACTER(LEN=ESMF_MAXSTR)      :: providerName
    CHARACTER(LEN=ESMF_MAXSTR), POINTER, DIMENSION(:) :: fieldNames
 
-   INTEGER, PARAMETER :: numAeroes = 13
+   INTEGER, PARAMETER :: numAeroes = 15
    CHARACTER(LEN=ESMF_MAXSTR) :: aeroName(numAeroes) = (/"BCphobic","BCphilic", &
-             "du001   ","du002   ","du003   ","du004   ","OCphobic","OCphilic", &
-             "ss001   ","ss003   ","ss004   ","ss005   ","SO4     "/)
+             "du001   ","du002   ","du003   ","du004   ","du005   ","OCphobic","OCphilic", &
+             "ss001   ","ss002   ","ss003   ","ss004   ","ss005   ","SO4     "/)
 
    rc = 0
 
@@ -1167,7 +1172,7 @@ CONTAINS
    If (ESMF_UtilStringLowerCase(trim(ProviderName)).eq.'none') ProviderName = 'none'
 
    gcGMI%gcPhot%aeroProviderName = TRIM(ProviderName)
-   IF(TRIM(providerName) == "GMICHEM") THEN
+   IF(TRIM(providerName) == "GMICHEM" .or. TRIM(providerName) == "CARMA") THEN
     gcGMI%gcPhot%AM_I_AERO_PROVIDER = .TRUE.
    ELSE
     gcGMI%gcPhot%AM_I_AERO_PROVIDER = .FALSE.
@@ -1479,8 +1484,8 @@ CONTAINS
     CALL MAPL_StateAdd(aero, aeroBundle, __RC__)
 
     DO n = 1,numAeroes
-     CALL MAPL_GetPointer(expChem, PTR3D, "GMICHEM::"//TRIM(aeroName(n)), ALLOC=.TRUE., RC=STATUS)
-     CALL ESMF_StateGet(expChem, "GMICHEM::"//TRIM(aeroName(n)), field, __RC__)
+     CALL MAPL_GetPointer(expChem, PTR3D, TRIM(aeroName(n)), ALLOC=.TRUE., RC=STATUS)
+     CALL ESMF_StateGet(expChem, TRIM(aeroName(n)), field, __RC__)
      renamedField = MAPL_FieldCreate(field, NAME=TRIM(aeroName(n)), __RC__)
      CALL MAPL_FieldBundleAdd(aeroBundle, renamedField, __RC__)
      NULLIFY(PTR3D)
@@ -1505,7 +1510,7 @@ CONTAINS
      END IF
     END DO
 
-    CALL ESMF_MethodAdd(aero, LABEL='aerosol_optics', USERROUTINE=aerosol_optics, __RC__)
+    CALL ESMF_MethodAdd(aero, LABEL='run_aerosol_optics', USERROUTINE=aerosol_optics, __RC__)
 
     IF(MAPL_AM_I_ROOT()) THEN
      PRINT *," "
@@ -1789,7 +1794,7 @@ CONTAINS
 
 ! Replay mode detection
 ! ---------------------
-   CHARACTER(LEN=ESMF_MAXSTR)        :: ReplayMode
+   CHARACTER(LEN=ESMF_MAXSTR)        :: ReplayMode, H2SO4_Source
    TYPE(ESMF_Alarm)                  :: PredictorIsActive
    LOGICAL                           :: doingPredictorNow
 
@@ -2105,21 +2110,23 @@ CONTAINS
 
    END IF Phase99
 
-!.TEMP.. if H2SO4 exists in GMI then ZERO OUT H2SO4 until coupled into GOCART2G
-   SDSTEMP: IF ( phase == 2 .OR. phase == 99 ) THEN
+!... if H2SO4 exists in GMI then ZERO OUT H2SO4 unless coupled into SO4 altering aerosol component
+   H2SO4LOSS: IF ( phase == 2 .OR. phase == 99 ) THEN
      m = 1
      n = ggReg%nq
      iH2SO4 = -1
      DO i = m,n
-       IF(TRIM(ggReg%vname(i)) == "H2SO4") THEN
+       IF (TRIM(ggReg%vname(i)) == "H2SO4") THEN
          iH2SO4 = i
          EXIT
        ENDIF
      ENDDO
+!... 
      IF(iH2SO4 >= 1) THEN
-       bgg%qa(iH2SO4)%data3d(:,:,:) = 1e-30
+       call ESMF_ConfigGetAttribute(CF, H2SO4_Source, LABEL="SULFURIC_ACID_SOURCE:", DEFAULT='tendency', __RC__)
+       if (trim(H2SO4_Source).ne."full_field") bgg%qa(iH2SO4)%data3d(:,:,:) = 1e-30
      ENDIF
-   ENDIF SDSTEMP
+   ENDIF H2SO4LOSS
 
 
 !  Update age-of-air.
@@ -2872,7 +2879,7 @@ subroutine aerosol_optics(state, rc)
   end do
 
   call ESMF_AttributeGet(state, name='mie_table_instance', value=instance, __RC__)
-  call mie_(gocartMieTable(instance, aerosol_names, n_bands, offset, q_4d, rh, ext, ssa, asy, __RC__)
+  call mie_(gocartMieTable(instance), aerosol_names, n_bands, offset, q_4d, rh, ext, ssa, asy, __RC__)
 
   deallocate(dp, f_p, __STAT__)
 #else
@@ -2891,6 +2898,7 @@ subroutine aerosol_optics(state, rc)
   end do
 
   call mie_(gocartMieTable(instance), aerosol_names, n_bands, offset, q_4d, rh, ext, ssa, asy, __RC__)
+
 #endif
   
   call ESMF_AttributeGet(state, name='extinction_in_air_due_to_ambient_aerosol', value=fld_name, __RC__)

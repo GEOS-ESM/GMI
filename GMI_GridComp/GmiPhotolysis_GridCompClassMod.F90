@@ -96,7 +96,7 @@
 
 ! Perhaps GMICHEM is the AERO_PROVIDER
 ! ------------------------------------
-   LOGICAL :: AM_I_AERO_PROVIDER
+   LOGICAL :: AM_I_AERO_PROVIDER    ! Even if another GC is the real AERO_PROVIDER, set this TRUE to have GMI export the AERO state, etc.
    CHARACTER(LEN=255) :: aeroProviderName
 
 ! Various switches
@@ -1205,11 +1205,11 @@ CONTAINS
 !  Dust and aerosols.  May serve as imports from GOCART
 !  or as exports to fill the AERO_BUNDLE, but not both.
 !  ----------------------------------------------------
-   REAL, POINTER, DIMENSION(:,:,:) :: BCphobic,BCphilic
-   REAL, POINTER, DIMENSION(:,:,:) :: DU001,DU002,DU003,DU004,DU005
-   REAL, POINTER, DIMENSION(:,:,:) :: OCphobic,OCphilic
-   REAL, POINTER, DIMENSION(:,:,:) :: SS001,SS002,SS003,SS004,SS005
-   REAL, POINTER, DIMENSION(:,:,:) :: DMS,SO2,SO4,MSA
+   REAL, POINTER, DIMENSION(:,:,:) :: BCphobic, BCphilic
+   REAL, POINTER, DIMENSION(:,:,:) :: DU001, DU002, DU003, DU004, DU005
+   REAL, POINTER, DIMENSION(:,:,:) :: OCphobic, OCphilic
+   REAL, POINTER, DIMENSION(:,:,:) :: SS001, SS002, SS003, SS004, SS005
+   REAL, POINTER, DIMENSION(:,:,:) :: DMS, SO2, SO4, SO4v, MSA
 
 !  Exports not part of internal state
 !  ----------------------------------
@@ -1664,6 +1664,7 @@ CONTAINS
     IF(self%verbose) CALL pmaxmin('BCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
     NULLIFY(PTR3D)
 
+
    CASE("GOCART")
 
     IF(self%usingGOCART_BC) THEN
@@ -1683,21 +1684,40 @@ CONTAINS
 
     END IF
 
+
    CASE("GMICHEM")
 
-    CALL MAPL_GetPointer(impChem, PTR3D, 'BC1', RC=STATUS)
-    VERIFY_(STATUS)
-    self%dAersl(:,:,1:km,1) = PTR3D(:,:,km:1:-1)
-    IF(self%verbose) CALL pmaxmin('BCphobic:', PTR3D, qmin, qmax, iXj, km, 1. )
-    IF(ASSOCIATED(BCphobic) .AND. self%AM_I_AERO_PROVIDER) BCphobic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-    NULLIFY(PTR3D)
+     CALL MAPL_GetPointer(impChem, PTR3D, 'BCphobic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%dAersl(:,:,1:km,1) = PTR3D(:,:,km:1:-1)
+     IF(self%verbose) CALL pmaxmin('BCphobic:', PTR3D, qmin, qmax, iXj, km, 1. )
+     IF(ASSOCIATED(BCphobic) .AND. self%AM_I_AERO_PROVIDER) BCphobic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
+     NULLIFY(PTR3D)
 
-    CALL MAPL_GetPointer(impChem, PTR3D, 'BC2', RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,1:km,2) = PTR3D(:,:,km:1:-1)
-    IF(self%verbose) CALL pmaxmin('BCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
-    IF(ASSOCIATED(BCphilic) .AND. self%AM_I_AERO_PROVIDER) BCphilic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-    NULLIFY(PTR3D)
+     CALL MAPL_GetPointer(impChem, PTR3D, 'BCphilic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%wAersl(:,:,1:km,2) = PTR3D(:,:,km:1:-1)
+     IF(self%verbose) CALL pmaxmin('BCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
+     IF(ASSOCIATED(BCphilic) .AND. self%AM_I_AERO_PROVIDER) BCphilic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
+     NULLIFY(PTR3D)
+
+
+   CASE("CARMA")
+
+     CALL MAPL_GetPointer(impChem, PTR3D, 'BCphobic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%dAersl(:,:,1:km,1) = PTR3D(:,:,km:1:-1)
+     IF(self%verbose) CALL pmaxmin('BCphobic:', PTR3D, qmin, qmax, iXj, km, 1. )
+     IF(ASSOCIATED(BCphobic) .AND. self%AM_I_AERO_PROVIDER) BCphobic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
+     NULLIFY(PTR3D)
+
+     CALL MAPL_GetPointer(impChem, PTR3D, 'BCphilic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%wAersl(:,:,1:km,2) = PTR3D(:,:,km:1:-1)
+     IF(self%verbose) CALL pmaxmin('BCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
+     IF(ASSOCIATED(BCphilic) .AND. self%AM_I_AERO_PROVIDER) BCphilic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
+     NULLIFY(PTR3D)
+
 
    CASE("none")
 
@@ -1872,33 +1892,66 @@ CONTAINS
 
     END IF
 
+
    CASE("GMICHEM")
 
-    DO i = 1,nSADdust
-
-     WRITE(importName, FMT="('MDUST',I1)") i
-     CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
+     CALL MAPL_GetPointer(impChem, DU001, 'du001', RC=STATUS)
      VERIFY_(STATUS)
-     self%dust(:,:,1:km,i) = PTR3D(:,:,km:1:-1)
-     IF(self%verbose) CALL pmaxmin(TRIM(importName)//":", PTR3D, qmin, qmax, iXj, km, 1. )
+     CALL MAPL_GetPointer(impChem, DU002, 'du002', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU003, 'du003', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU004, 'du004', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU005, 'du005', RC=STATUS)
+     VERIFY_(STATUS)
 
-     SELECT CASE (i)
-      CASE(5)
-       IF(ASSOCIATED(DU002) .AND. self%AM_I_AERO_PROVIDER) DU002(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-      CASE(6)
-       IF(ASSOCIATED(DU003) .AND. self%AM_I_AERO_PROVIDER) DU003(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-      CASE(7)
-       IF(ASSOCIATED(DU004) .AND. self%AM_I_AERO_PROVIDER) DU004(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-      CASE DEFAULT
-       IF(ASSOCIATED(DU001) .AND. self%AM_I_AERO_PROVIDER) THEN
-        IF(i == 1) DU001(:,:,:) = 0.00
-        DU001(:,:,:) = DU001(:,:,:) + PTR3D(:,:,:)/airdens(:,:,:)
-       END IF
-     END SELECT
+     IF(self%verbose) THEN
+      CALL pmaxmin('du001:', DU001, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du002:', DU002, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du003:', DU003, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du004:', DU004, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du005:', DU005, qmin, qmax, iXj, km, 1. )
+     END IF
 
-     NULLIFY(PTR3D)
+     self%dust(:,:,km:1:-1,1) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.009
+     self%dust(:,:,km:1:-1,2) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.081
+     self%dust(:,:,km:1:-1,3) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.234
+     self%dust(:,:,km:1:-1,4) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.676
+     self%dust(:,:,km:1:-1,5) = DU002(:,:,1:km)*airdens(:,:,1:km)
+     self%dust(:,:,km:1:-1,6) = DU003(:,:,1:km)*airdens(:,:,1:km)
+     self%dust(:,:,km:1:-1,7) = DU004(:,:,1:km)*airdens(:,:,1:km)
 
-    END DO
+
+   CASE("CARMA")
+
+     CALL MAPL_GetPointer(impChem, DU001, 'du001', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU002, 'du002', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU003, 'du003', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU004, 'du004', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, DU005, 'du005', RC=STATUS)
+     VERIFY_(STATUS)
+
+     IF(self%verbose) THEN
+      CALL pmaxmin('du001:', DU001, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du002:', DU002, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du003:', DU003, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du004:', DU004, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('du005:', DU005, qmin, qmax, iXj, km, 1. )
+     END IF
+
+     self%dust(:,:,km:1:-1,1) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.009
+     self%dust(:,:,km:1:-1,2) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.081
+     self%dust(:,:,km:1:-1,3) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.234
+     self%dust(:,:,km:1:-1,4) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.676
+     self%dust(:,:,km:1:-1,5) = DU002(:,:,1:km)*airdens(:,:,1:km)
+     self%dust(:,:,km:1:-1,6) = DU003(:,:,1:km)*airdens(:,:,1:km)
+     self%dust(:,:,km:1:-1,7) = DU004(:,:,1:km)*airdens(:,:,1:km)
+
 
    CASE("none")
 
@@ -1958,6 +2011,7 @@ CONTAINS
   
   TYPE(ESMF_State)           :: aero
   TYPE(ESMF_FieldBundle)     :: aerosols
+  TYPE(ESMF_StateItem_Flag)  :: itemtype
 
   rc = 0
   IAm = "Acquire_OC"
@@ -2005,20 +2059,29 @@ CONTAINS
 
 
    CASE("GMICHEM")
+!... Organic Carbon hydrophobic
+     CALL MAPL_GetPointer(impChem, OCphobic, 'OCphobic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%dAersl(:,:,km:1:-1,2) = OCphobic(:,:,1:km)*airdens(:,:,1:km)
+     IF(self%verbose) CALL pmaxmin('OCphobic:', OCphobic, qmin, qmax, iXj, km, 1. )
+!... Organic Carbon hydrophilic
+     CALL MAPL_GetPointer(impChem, OCphilic, 'OCphilic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%wAersl(:,:,km:1:-1,3) = OCphilic(:,:,1:km)*airdens(:,:,1:km)
+     IF(self%verbose) CALL pmaxmin('OCphilic:', OCphilic, qmin, qmax, iXj, km, 1. )
 
-    CALL MAPL_GetPointer(impChem, PTR3D, 'OC1', RC=STATUS)
-    VERIFY_(STATUS)
-    self%dAersl(:,:,1:km,2) = PTR3D(:,:,km:1:-1)
-    IF(self%verbose) CALL pmaxmin('OCphobic:', PTR3D, qmin, qmax, iXj, km, 1. )
-    IF(ASSOCIATED(OCphobic) .AND. self%AM_I_AERO_PROVIDER) OCphobic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-    NULLIFY(PTR3D)
 
-    CALL MAPL_GetPointer(impChem, PTR3D, 'OC2', RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,1:km,3) = PTR3D(:,:,km:1:-1)
-    IF(self%verbose) CALL pmaxmin('OCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
-    IF(ASSOCIATED(OCphilic) .AND. self%AM_I_AERO_PROVIDER) OCphilic(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-    NULLIFY(PTR3D)
+   CASE("CARMA")
+!... Organic Carbon hydrophobic
+     CALL MAPL_GetPointer(impChem, OCphobic, 'OCphobic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%dAersl(:,:,km:1:-1,2) = OCphobic(:,:,1:km)*airdens(:,:,1:km)
+     IF(self%verbose) CALL pmaxmin('OCphobic:', OCphobic, qmin, qmax, iXj, km, 1. )
+!... Organic Carbon hydrophilic
+     CALL MAPL_GetPointer(impChem, OCphilic, 'OCphilic', RC=STATUS)
+     VERIFY_(STATUS)
+     self%wAersl(:,:,km:1:-1,3) = OCphilic(:,:,1:km)*airdens(:,:,1:km)
+     IF(self%verbose) CALL pmaxmin('OCphilic:', OCphilic, qmin, qmax, iXj, km, 1. )
 
 
    CASE("none")
@@ -2127,6 +2190,7 @@ CONTAINS
     IF(self%verbose) CALL pmaxmin('ss005:', PTR3D, qmin, qmax, iXj, km, 1. )
     NULLIFY(PTR3D)
 
+
    CASE("GOCART")
 
     IF(self%usingGOCART_SS) THEN
@@ -2160,40 +2224,66 @@ CONTAINS
 
     END IF
 
+
    CASE("GMICHEM")
+
+     CALL MAPL_GetPointer(impChem, SS001, 'ss001', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS002, 'ss002', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS003, 'ss003', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS004, 'ss004', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS005, 'ss005', RC=STATUS)
+     VERIFY_(STATUS)
+
+     IF(self%verbose) THEN
+      CALL pmaxmin('ss001:', SS001, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss002:', SS002, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss003:', SS003, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss004:', SS004, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss005:', SS005, qmin, qmax, iXj, km, 1. )
+     END IF
 
 ! Accumulated
 ! -----------
-    CALL MAPL_GetPointer(impChem, PTR3D, 'SS1', RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,1:km,4) = PTR3D(:,:,km:1:-1)
-    IF(self%verbose) CALL pmaxmin('SS1:', PTR3D, qmin, qmax, iXj, km, 1. )
-    IF(ASSOCIATED(SS001) .AND. self%AM_I_AERO_PROVIDER) SS001(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-    NULLIFY(PTR3D)
+     self%wAersl(:,:,km:1:-1,4) = (SS001(:,:,1:km)+SS002(:,:,1:km))*airdens(:,:,1:km)
 
 ! Coarse
 ! ------
-    self%wAersl(:,:,:,5) = 0.00
-    DO i = 2,4
+     self%wAersl(:,:,km:1:-1,5) = (SS003(:,:,1:km)+SS004(:,:,1:km)+SS005(:,:,1:km))*airdens(:,:,1:km)
 
-     WRITE(importName,FMT="('SS',I1)") i
-     CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
+
+   CASE("CARMA")
+
+     CALL MAPL_GetPointer(impChem, SS001, 'ss001', RC=STATUS)
      VERIFY_(STATUS)
-     self%wAersl(:,:,1:km,5) = self%wAersl(:,:,1:km,5)+PTR3D(:,:,km:1:-1)
-     IF(self%verbose) CALL pmaxmin(TRIM(importName)//':', PTR3D, qmin, qmax, iXj, km, 1. )
+     CALL MAPL_GetPointer(impChem, SS002, 'ss002', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS003, 'ss003', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS004, 'ss004', RC=STATUS)
+     VERIFY_(STATUS)
+     CALL MAPL_GetPointer(impChem, SS005, 'ss005', RC=STATUS)
+     VERIFY_(STATUS)
 
-     SELECT CASE (i)
-      CASE(2)
-       IF(ASSOCIATED(SS003) .AND. self%AM_I_AERO_PROVIDER) SS003(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-      CASE(3)
-       IF(ASSOCIATED(SS004) .AND. self%AM_I_AERO_PROVIDER) SS004(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-      CASE(4)
-       IF(ASSOCIATED(SS005) .AND. self%AM_I_AERO_PROVIDER) SS005(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-     END SELECT
+     IF(self%verbose) THEN
+      CALL pmaxmin('ss001:', SS001, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss002:', SS002, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss003:', SS003, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss004:', SS004, qmin, qmax, iXj, km, 1. )
+      CALL pmaxmin('ss005:', SS005, qmin, qmax, iXj, km, 1. )
+     END IF
 
-     NULLIFY(PTR3D)
+! Accumulated
+! -----------
+     self%wAersl(:,:,km:1:-1,4) = (SS001(:,:,1:km)+SS002(:,:,1:km))*airdens(:,:,1:km)
 
-    END DO
+! Coarse
+! ------
+     self%wAersl(:,:,km:1:-1,5) = (SS003(:,:,1:km)+SS004(:,:,1:km)+SS005(:,:,1:km))*airdens(:,:,1:km)
+
 
    CASE("none")
 
@@ -2299,14 +2389,60 @@ CONTAINS
 
     END IF
 
+
    CASE("GMICHEM")
 
-    CALL MAPL_GetPointer(impChem, PTR3D, 'SO4', RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,1) = PTR3D(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('SO4:', PTR3D, qmin, qmax, iXj, km, 1. )
-    IF(ASSOCIATED(SO4) .AND. self%AM_I_AERO_PROVIDER) SO4(:,:,:) = PTR3D(:,:,:)/airdens(:,:,:)
-    NULLIFY(PTR3D)
+     CALL MAPL_GetPointer(impChem, SO4, 'SO4', RC=STATUS)
+     VERIFY_(STATUS)
+     self%wAersl(:,:,km:1:-1,1) = SO4(:,:,1:km)*airdens(:,:,1:km)
+
+     IF(self%verbose) THEN
+      CALL pmaxmin('SO4:', SO4, qmin, qmax, iXj, km, 1. )
+     END IF
+
+     ! If volcanic SU exists, use it too:
+     CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
+     VERIFY_(STATUS)
+
+     IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
+       CALL MAPL_GetPointer(impChem, SO4, 'SO4v', RC=STATUS)
+       VERIFY_(STATUS)
+
+       self%wAersl(:,:,km:1:-1,1) = &
+       self%wAersl(:,:,km:1:-1,1) + SO4(:,:,1:km)*airdens(:,:,1:km)
+
+       IF(self%verbose) THEN
+         CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
+       END IF
+     END IF
+
+
+   CASE("CARMA")
+
+     CALL MAPL_GetPointer(impChem, SO4, 'SO4', RC=STATUS)
+     VERIFY_(STATUS)
+     self%wAersl(:,:,km:1:-1,1) = SO4(:,:,1:km)*airdens(:,:,1:km)
+
+     IF(self%verbose) THEN
+      CALL pmaxmin('SO4:', SO4, qmin, qmax, iXj, km, 1. )
+     END IF
+
+     ! If volcanic SU exists, use it too:
+     CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
+     VERIFY_(STATUS)
+
+     IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
+       CALL MAPL_GetPointer(impChem, SO4, 'SO4v', RC=STATUS)
+       VERIFY_(STATUS)
+
+       self%wAersl(:,:,km:1:-1,1) = &
+       self%wAersl(:,:,km:1:-1,1) + SO4(:,:,1:km)*airdens(:,:,1:km)
+
+       IF(self%verbose) THEN
+         CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
+       END IF
+     END IF
+
 
    CASE("none")
 
@@ -2516,6 +2652,7 @@ CONTAINS
 !EOP
 !---------------------------------------------------------------------------
 
+  TYPE(ESMF_StateItem_Flag)  :: itemtype
   CHARACTER(LEN=255) :: IAm
   REAL :: qmin,qmax
   INTEGER :: STATUS
@@ -2634,32 +2771,43 @@ CONTAINS
 !  Dust and aerosols are (instead!) part of the export state when GMICHEM is the AERO provider.
 !  --------------------------------------------------------------------------------------------
    IF(self%AM_I_AERO_PROVIDER) THEN
-    CALL MAPL_GetPointer(expChem, BCphobic, 'GMICHEM::BCphobic', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem, BCphobic, 'BCphobic', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem, BCphilic, 'GMICHEM::BCphilic', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem, BCphilic, 'BCphilic', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem,    DU001,    'GMICHEM::du001', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem,    DU001,    'du001', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem,    DU002,    'GMICHEM::du002', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem,    DU002,    'du002', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem,    DU003,    'GMICHEM::du003', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem,    DU003,    'du003', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem,    DU004,    'GMICHEM::du004', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem,    DU004,    'du004', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem, OCphobic, 'GMICHEM::OCphobic', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem,    DU005,    'du005', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem, OCphilic, 'GMICHEM::OCphilic', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem, OCphobic, 'OCphobic', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem,    SS001,    'GMICHEM::ss001', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem, OCphilic, 'OCphilic', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem,    SS003,    'GMICHEM::ss003', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem,    SS001,    'ss001', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem,    SS004,    'GMICHEM::ss004', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem,    SS002,    'ss002', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem,    SS005,    'GMICHEM::ss005', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem,    SS003,    'ss003', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(expChem,      SO4,      'GMICHEM::SO4', ALLOC=.TRUE., RC=STATUS)
+    CALL MAPL_GetPointer(expChem,    SS004,    'ss004', ALLOC=.TRUE., RC=STATUS)
     VERIFY_(STATUS)
+    CALL MAPL_GetPointer(expChem,    SS005,    'ss005', ALLOC=.TRUE., RC=STATUS)
+    VERIFY_(STATUS)
+    CALL MAPL_GetPointer(expChem,      SO4,      'SO4', ALLOC=.TRUE., RC=STATUS)
+    VERIFY_(STATUS)
+!... check for SO4v
+    CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
+    VERIFY_(STATUS)
+!    IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
+!      CALL MAPL_GetPointer(expChem,    SO4v,    'SO4v', ALLOC=.TRUE., RC=STATUS)
+!      VERIFY_(STATUS)
+!    END IF
    END IF
 
   RETURN
