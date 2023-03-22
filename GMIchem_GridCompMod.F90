@@ -1358,6 +1358,8 @@ CONTAINS
    gcGMI%gcDepos%j2 = j2
    gcGMI%gcDepos%jm = jm
    gcGMI%gcDepos%km = km
+   gcGMI%gcDepos%orbit = ORBIT
+   gcGMI%gcDepos%clock = CLOCK
    
    gcGMI%gcEmiss%i1 = i1
    gcGMI%gcEmiss%i2 = i2
@@ -1383,7 +1385,7 @@ CONTAINS
    gcGMI%gcPhot%j2 = j2
    gcGMI%gcPhot%jm = jm
    gcGMI%gcPhot%km = km
-   gcGMI%gcPhot%orbit = ORBIT ! VV adding Mike's SZA edits
+   gcGMI%gcPhot%orbit = ORBIT
    gcGMI%gcPhot%clock = CLOCK
    
    gcGMI%gcSAD%i1 = i1

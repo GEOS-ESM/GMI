@@ -778,9 +778,10 @@
    USE GmiTimeControl_mod,            ONLY : Set_numTimeSteps, Get_numTimeSteps
    USE GmiTimeControl_mod,            ONLY : Set_gmiSeconds, GetSecondsFromJanuary1
    USE GmiSpcConcentrationMethod_mod, ONLY : resetFixedConcentration
-   USE GmiSolar_mod,                  ONLY : CalcCosSolarZenithAngle
    USE GmiEmissionMethod_mod,         ONLY : RunEmission
    USE GmiEmissionMethod_mod,         ONLY : Get_lightning_opt
+   USE SZA_from_MAPL_mod,             ONLY : compute_SZA
+
 !.sds
    USE Gmi_SEmissMethod_Mod
    use GmiSpeciesRegistry_mod, only : getSpeciesIndex
@@ -789,6 +790,7 @@
    use GOCART2G_Process,              only : ReadPointEmissions
    use MAPL_BaseMod,                  only : MAPL_GetHorzIJIndex
 !.sds.end
+
    IMPLICIT none
 
 ! !INPUT/OUTPUT PARAMETERS:
@@ -885,7 +887,7 @@
    REAL, PARAMETER :: secPerDay = 86400.00
    REAL, PARAMETER :: err = 1.00E-04
 
-   REAL(KIND=DBL) :: chemDt, dayOfYear
+   REAL(KIND=DBL) :: chemDt
 
    CHARACTER(LEN=ESMF_MAXSTR) :: speciesName
    CHARACTER(LEN=ESMF_MAXSTR) :: importName
@@ -1089,6 +1091,11 @@
 ! -------------------------------------
    CALL SatisfyImports(STATUS)
    VERIFY_(STATUS)
+
+! SZA
+! ---                           
+   call compute_SZA ( GC=gc, CLOCK=clock, tdt=tdt, label='GMI-EMISS', &
+                      SZA=cosSolarZenithAngle, __RC__ )
 
 ! Daily or monthly emissions inventories
 ! -----------------------------------------
@@ -2436,13 +2443,6 @@ CONTAINS
                        (zle(:,:,k-1)-zle(:,:,k))
     gridBoxThickness(:,:,kReverse) = zle(:,:,k-1)-zle(:,:,k)                ! m
   END DO
-
-! Obtain instantaneous apparent sun
-! ---------------------------------
-  CALL GetSecondsFromJanuary1(ic, nymd, nhms)
-  dayOfYear = (1.00*ic)/secPerDay
-  CALL CalcCosSolarZenithAngle(dayOfYear, latDeg, lonDeg, cosSolarZenithAngle, &
-                                i1, i2, j1, j2)
 
   RETURN
  END SUBROUTINE SatisfyImports
