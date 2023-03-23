@@ -1210,9 +1210,10 @@ CONTAINS
    REAL, POINTER, DIMENSION(:,:,:) :: OCphobic, OCphilic
    REAL, POINTER, DIMENSION(:,:,:) :: SS001, SS002, SS003, SS004, SS005
    REAL, POINTER, DIMENSION(:,:,:) :: DMS, SO2, SO4, SO4v, MSA
-   REAL, POINTER, DIMENSION(:,:,:) :: BRphobic,BRphilic ! Needed by GOCART2G
-   REAL, POINTER, DIMENSION(:,:,:,:) :: SS ! Needed by GOCART2G
-   REAL, POINTER, DIMENSION(:,:,:,:) :: DU ! Needed by GOCART2G
+   REAL, POINTER, DIMENSION(:,:,:) :: BRphobic,BRphilic
+
+   REAL, POINTER, DIMENSION(:,:,:,:) :: SS ! 4d ! Imported from GOCART2G
+   REAL, POINTER, DIMENSION(:,:,:,:) :: DU ! 4d ! Imported from GOCART2G
 
 !  Exports not part of internal state
 !  ----------------------------------
@@ -2107,18 +2108,18 @@ CONTAINS
     VERIFY_(STATUS)
     CALL MAPL_GetPointer(impChem, OCphilic, 'CA.ocphilic', RC=STATUS)
     VERIFY_(STATUS)
-    
+   
+    self%dAersl(:,:,km:1:-1,2) = OCphobic(:,:,1:km)*airdens(:,:,1:km)
+    self%wAersl(:,:,km:1:-1,3) = OCphilic(:,:,1:km)*airdens(:,:,1:km)
+
     !GOCART2G has brown carbon broken out 
     CALL MAPL_GetPointer(impChem, BRphobic, 'CA.brphobic', RC=STATUS)
     VERIFY_(STATUS)
-    CALL MAPL_GetPointer(impChem, BRphilic, 'CA.brphobic', RC=STATUS)
+    CALL MAPL_GetPointer(impChem, BRphilic, 'CA.brphilic', RC=STATUS)
     VERIFY_(STATUS)
 
-    OCphobic(:,:,1:km) = OCphobic(:,:,1:km)+BRphobic(:,:,1:km)
-    OCphilic(:,:,1:km) = OCphobic(:,:,1:km)+BRphobic(:,:,1:km)
-
-    self%dAersl(:,:,km:1:-1,2) = OCphobic(:,:,1:km)*airdens(:,:,1:km)
-    self%wAersl(:,:,km:1:-1,3) = OCphilic(:,:,1:km)*airdens(:,:,1:km)
+    self%dAersl(:,:,km:1:-1,2) = self%dAersl(:,:,km:1:-1,2)+BRphobic(:,:,1:km)*airdens(:,:,1:km)
+    self%wAersl(:,:,km:1:-1,3) = self%wAersl(:,:,km:1:-1,3)+BRphilic(:,:,1:km)*airdens(:,:,1:km)
 
     IF(self%verbose) THEN
      CALL pmaxmin('OCphobic:', OCphobic, qmin, qmax, iXj, km, 1. )
