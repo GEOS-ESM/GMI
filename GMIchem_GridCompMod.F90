@@ -299,6 +299,104 @@ CONTAINS
 							RC=STATUS  )
       VERIFY_(STATUS)
 
+     CASE("GOCART2G")
+!   GOCART2G aerosols and dust
+!   --------------------------
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'CA.bcphobic',                              &
+            LONG_NAME   = 'CA.bcphobic',                              &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+   
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'CA.bcphilic',                              &
+            LONG_NAME   = 'CA.bcphilic',                              &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'CA.ocphobic',                              &
+            LONG_NAME   = 'CA.ocphobic',                              &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'CA.ocphilic',                              &
+            LONG_NAME   = 'CA.ocphilic',                              &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'CA.brphobic',                              &
+            LONG_NAME   = 'CA.brphobic',                              &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'CA.brphilic',                              &
+            LONG_NAME   = 'CA.brphilic',                              &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'SS',                                       &
+            LONG_NAME   = 'SS',                                       &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'DU',                                       &
+            LONG_NAME   = 'DU',                                       &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'DMS',                                      &
+            LONG_NAME   = 'DMS',                                      &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'SO2',                                      &
+            LONG_NAME   = 'SO2',                                      &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'SO4',                                      &
+            LONG_NAME   = 'SO4',                                      &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
+
+      CALL MAPL_AddImportSpec(GC,                                    &
+            SHORT_NAME  = 'MSA',                                      &
+            LONG_NAME   = 'MSA',                                      &
+            UNITS       = 'n/a',                                      &
+            DIMS        = MAPL_DimsHorzVert,                          &
+            VLOCATION   = MAPL_VLocationCenter,        RC=STATUS  )
+      VERIFY_(STATUS)
 
      CASE("GMICHEM")
 

@@ -1210,6 +1210,9 @@ CONTAINS
    REAL, POINTER, DIMENSION(:,:,:) :: OCphobic, OCphilic
    REAL, POINTER, DIMENSION(:,:,:) :: SS001, SS002, SS003, SS004, SS005
    REAL, POINTER, DIMENSION(:,:,:) :: DMS, SO2, SO4, SO4v, MSA
+   REAL, POINTER, DIMENSION(:,:,:) :: BRphobic,BRphilic ! Needed by GOCART2G
+   REAL, POINTER, DIMENSION(:,:,:,:) :: SS ! Needed by GOCART2G
+   REAL, POINTER, DIMENSION(:,:,:,:) :: DU ! Needed by GOCART2G
 
 !  Exports not part of internal state
 !  ----------------------------------
@@ -1684,6 +1687,20 @@ CONTAINS
 
     END IF
 
+   CASE("GOCART2G")
+   
+    CALL MAPL_GetPointer(impChem, BCphilic, 'CA.bcphilic', RC=STATUS)
+    VERIFY_(STATUS)
+    CALL MAPL_GetPointer(impChem, BCphobic, 'CA.bcphobic', RC=STATUS)
+    VERIFY_(STATUS)
+   
+    self%dAersl(:,:,km:1:-1,1) = BCphobic(:,:,1:km)*airdens(:,:,1:km)
+    self%wAersl(:,:,km:1:-1,2) = BCphilic(:,:,1:km)*airdens(:,:,1:km)
+   
+    IF(self%verbose) THEN
+     CALL pmaxmin('BCphobic:', BCphobic, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('BCphilic:', BCphilic, qmin, qmax, iXj, km, 1. )
+    END IF
 
    CASE("GMICHEM")
 
@@ -1892,6 +1909,33 @@ CONTAINS
 
     END IF
 
+   CASE("GOCART2G")
+
+    ! 'DU' 5 'bin' dimensions, kg kg-1 mass mixing ratio     
+    CALL MAPL_GetPointer(impChem, DU, 'DU', RC=STATUS)
+    VERIFY_(STATUS)
+    
+    ! Create DU001-4 from DU bin dimension
+    DU001 => DU(:,:,1:km,1)
+    DU002 => DU(:,:,1:km,2)
+    DU003 => DU(:,:,1:km,3)
+    DU004 => DU(:,:,1:km,4)
+     
+    IF(self%verbose) THEN
+     CALL pmaxmin('DU001:', DU001, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('DU002:', DU002, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('DU003:', DU003, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('DU004:', DU004, qmin, qmax, iXj, km, 1. )
+    END IF
+
+    ! then create dust with the 7 bins created from the 4 dust bins
+    self%dust(:,:,km:1:-1,1) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.009
+    self%dust(:,:,km:1:-1,2) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.081
+    self%dust(:,:,km:1:-1,3) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.234
+    self%dust(:,:,km:1:-1,4) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.676
+    self%dust(:,:,km:1:-1,5) = DU002(:,:,1:km)*airdens(:,:,1:km)
+    self%dust(:,:,km:1:-1,6) = DU003(:,:,1:km)*airdens(:,:,1:km)
+    self%dust(:,:,km:1:-1,7) = DU004(:,:,1:km)*airdens(:,:,1:km)
 
    CASE("GMICHEM")
 
@@ -2057,6 +2101,31 @@ CONTAINS
 
     END IF
 
+   CASE("GOCART2G")
+    
+    CALL MAPL_GetPointer(impChem, OCphobic, 'CA.ocphobic', RC=STATUS)
+    VERIFY_(STATUS)
+    CALL MAPL_GetPointer(impChem, OCphilic, 'CA.ocphilic', RC=STATUS)
+    VERIFY_(STATUS)
+    
+    !GOCART2G has brown carbon broken out 
+    CALL MAPL_GetPointer(impChem, BRphobic, 'CA.brphobic', RC=STATUS)
+    VERIFY_(STATUS)
+    CALL MAPL_GetPointer(impChem, BRphilic, 'CA.brphobic', RC=STATUS)
+    VERIFY_(STATUS)
+
+    OCphobic(:,:,1:km) = OCphobic(:,:,1:km)+BRphobic(:,:,1:km)
+    OCphilic(:,:,1:km) = OCphobic(:,:,1:km)+BRphobic(:,:,1:km)
+
+    self%dAersl(:,:,km:1:-1,2) = OCphobic(:,:,1:km)*airdens(:,:,1:km)
+    self%wAersl(:,:,km:1:-1,3) = OCphilic(:,:,1:km)*airdens(:,:,1:km)
+
+    IF(self%verbose) THEN
+     CALL pmaxmin('OCphobic:', OCphobic, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('OCphilic:', OCphilic, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('BRphobic:', BRphobic, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('BRphilic:', BRphilic, qmin, qmax, iXj, km, 1. )
+    END IF
 
    CASE("GMICHEM")
 !... Organic Carbon hydrophobic
@@ -2224,6 +2293,34 @@ CONTAINS
 
     END IF
 
+   CASE("GOCART2G")
+    
+    CALL MAPL_GetPointer(impChem, SS, 'SS', RC=STATUS)
+    VERIFY_(STATUS)
+    
+! Create SS001-5 from SS bin dimension 
+! ------------------------------------
+    SS001 => SS(:,:,:,1)
+    SS002 => SS(:,:,:,2)
+    SS003 => SS(:,:,:,3)
+    SS004 => SS(:,:,:,4)
+    SS005 => SS(:,:,:,5)
+     
+    IF(self%verbose) THEN
+     CALL pmaxmin('SS001:', SS001, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('SS002:', SS002, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('SS003:', SS003, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('SS004:', SS004, qmin, qmax, iXj, km, 1. )
+     CALL pmaxmin('SS005:', SS005, qmin, qmax, iXj, km, 1. )
+    END IF
+
+! Accumulated
+! -----------
+    self%wAersl(:,:,km:1:-1,4) = (SS001(:,:,1:km)+SS002(:,:,1:km))*airdens(:,:,1:km)
+
+! Coarse
+! ------
+    self%wAersl(:,:,km:1:-1,5) = (SS003(:,:,1:km)+SS004(:,:,1:km)+SS005(:,:,1:km))*airdens(:,:,1:km)
 
    CASE("GMICHEM")
 
@@ -2389,6 +2486,32 @@ CONTAINS
 
     END IF
 
+   CASE("GOCART2G")
+
+    CALL MAPL_GetPointer(impChem, SO4, 'SO4', RC=STATUS)
+    VERIFY_(STATUS)
+    self%wAersl(:,:,km:1:-1,1) = SO4(:,:,1:km)*airdens(:,:,1:km)
+
+    IF(self%verbose) THEN
+     CALL pmaxmin('SO4:', SO4, qmin, qmax, iXj, km, 1. )
+    END IF
+
+ ! Currently, no volcanic SU exists, suggest ignoring by Pete 
+ ! ----------------------------------------------------------
+!     CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
+!     VERIFY_(STATUS)
+  
+!     IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
+!       CALL MAPL_GetPointer(impChem, SO4, 'SO4v', RC=STATUS)
+!       VERIFY_(STATUS)
+
+!       self%wAersl(:,:,km:1:-1,1) = &
+!       self%wAersl(:,:,km:1:-1,1) + SO4(:,:,1:km)*airdens(:,:,1:km)
+
+!       IF(self%verbose) THEN
+!         CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
+!       END IF
+!     END IF
 
    CASE("GMICHEM")
 
