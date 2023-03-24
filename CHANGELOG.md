@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
+
+## [24Mar2023]
+
+### Changed
+
+- default aerosdust filename for AERO_PROVIDER: GMICHEM
+
+
 ## [1.0.0] - 2023-01-18
 
 ### Added
