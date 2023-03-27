@@ -137,8 +137,7 @@
      LOGICAL :: pr_diag
      LOGICAL :: do_drydep
      LOGICAL :: do_wetdep
-     LOGICAL :: do_emission             
-     LOGICAL :: do_aerocom             
+     LOGICAL :: do_emission            
      LOGICAL :: pr_const
      LOGICAL :: do_synoz
      LOGICAL :: do_gcr
@@ -399,10 +398,6 @@
 
     call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%pr_const, &
               label="pr_const:", default=.false., rc=STATUS )
-    VERIFY_(STATUS)
-
-    call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_aerocom, &
-              label="do_aerocom:", default=.false., rc=STATUS )
     VERIFY_(STATUS)
 
     call ESMF_ConfigGetAttribute(gmiConfigFile, self%metdata_name_org, &
@@ -815,7 +810,7 @@
    INTEGER,                 INTENT(IN)    :: nymd, nhms  ! time
    REAL,                    INTENT(IN)    :: tdt         ! chemical timestep (secs)
    LOGICAL,                 INTENT(IN)    :: mixPBL      ! whether to explicitly distribute
-                                                         ! aerosol emissions within the PBL
+                                                         ! emissions within the PBL
 ! !OUTPUT PARAMETERS:
 
    INTEGER,                 INTENT(OUT)   :: rc          ! Error return code:
@@ -1184,7 +1179,7 @@
                      ISSLT3, ISSLT4, IFSO2, INSO2, INDMS, IAN, IMGAS, INO,     &
                      IC5H8, INO, ICO, IC3H6, IHNO3, IO3, NSP, diffusePAR,      &
                      directPAR, T_15_AVG, self%met_opt, self%chem_opt,         &
-                     self%trans_opt, self%do_aerocom, self%do_drydep,          &
+                     self%trans_opt, self%do_drydep,          &
                      self%pr_diag, self%pr_const, self%pr_surf_emiss,          &
                      self%pr_emiss_3d, self%metdata_name_org,                  &
                      self%metdata_name_model, tdt, mixPBL, light_NO_prod)

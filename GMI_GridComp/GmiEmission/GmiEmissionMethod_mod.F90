@@ -38,10 +38,7 @@
       public  :: RunEmission
       public  :: FinalizeEmission
     
-!     public  :: Get_emissionArray
-      public  :: Get_lightning_opt       , Get_emiss_aero_opt
-      public  :: Get_emiss_dust_opt      , Get_num_emiss
-      public  :: Get_ndust               , Get_naero
+      public  :: Get_lightning_opt       , Get_num_emiss
       public  :: Get_do_gcr
       public  :: Get_do_semiss_inchem
 !
@@ -80,16 +77,6 @@
     real*8              :: emiss_conv_fac 
                            ! value to initialize emiss array to (kg/s)
     real*8              :: emiss_init_val
-                           ! sulfur aerosol emiss option
-    integer             :: emiss_aero_opt   
-                           ! number of aerosols
-    integer             :: naero           
-                           ! mapping of aerosol emiss number to const species #
-    integer             :: emiss_map_aero(MAX_NUM_CONST) 
-                           ! aerosol (sulf. code) input file name
-    character (len=MAX_LENGTH_FILE_NAME) :: emiss_aero_infile_name 
-                           ! dust (sulf. code) input file name
-    character (len=MAX_LENGTH_FILE_NAME) :: emiss_dust_infile_name 
                            ! do Galactic Cosmic Ray
     logical             :: do_gcr 
                            ! ! Galactic Cosmic Ray  input file name
@@ -104,20 +91,12 @@
     integer          :: lightning_opt		         ! lightning option
     real*8 , pointer :: lightning_NO   (:,:,:) => null() ! NO produced by parameterized lightning
 
-    real*8 , pointer    :: emissAero   (:,:,:)   => null() ! used in sulfur chemistry
-    real*8 , pointer    :: emissDust_t (:,:,:,:) => null() ! used in sulfur chemistry
-    real*8 , pointer    :: emissAero_t (:,:,:,:) => null() ! used in sulfur chemistry
-
     integer          :: emiss_timpyr             ! emission times per year
                                                  ! (1 => yearly, 12 => monthly)
     integer          :: emiss_opt                ! emission option
     integer          :: emiss_in_opt             ! emission input option
     integer          :: emiss_map(MAX_NUM_CONST) ! mapping of emission number to const species #
-    integer          :: emiss_map_dust(MAX_NUM_CONST) ! mapping of dust emiss number to const species #
     integer          :: emissionSpeciesLayers(MAX_NUMBER_SPECIES)
-    integer          :: ndust                     ! number of dust
-    integer          :: nst_dust                  ! starting index for dust
-    integer          :: nt_dust                   ! ending   index for dust
     logical          :: do_ShipEmission           ! do ship emissions?
     logical          :: doMEGANemission           ! do MEGAN emissions?
     logical          :: doMEGANviaHEMCO           ! use HEMCO for MEGAN? 
@@ -144,12 +123,10 @@
     real*8 , pointer :: aefOvoc  (:,:) => null()   ! Annual emission factor for other biogenic VOCs
     real*8 , pointer :: aefMonot (:,:) => null()   ! Annual emission factor for monoterpenes
     logical          :: do_semiss_inchem           ! do surface emissions inside chemistry solver?
-    integer          :: emiss_dust_opt                ! sulfur dust emiss option
     integer          :: num_emiss                     ! number of emissions
     integer          :: ship_o3_index                 ! index of ship O3   in emissionArray
     integer          :: ship_hno3_index               ! index of ship HNO3 in emissionArray
     real*8 , pointer :: emiss          (:,:,:,:)   => null() ! array of emissions (kg/s)
-    real*8 , pointer :: emissDust     (:,:,:)     => null() ! used in sulfur chemistry
     real*8 , pointer :: emiss_isop     (:,:)       => null() ! isoprene    emissions (kg/s)
     real*8 , pointer :: emiss_monot    (:,:)       => null() ! monoterpene emissions (kg/s)
     real*8 , pointer :: emiss_nox      (:,:)       => null() ! NOx         emissions (kg/s)
@@ -186,13 +163,7 @@
     real*8 , pointer    :: surf_emiss_out     (:,:,:)     => null()
     real*8 , pointer    :: surf_emiss_out2    (:,:,:)     => null()
     real*8 , pointer    :: emiss_3d_out       (:,:,:,:)   => null()
-    real*8 , pointer    :: aerosolEmiss3D     (:,:,:,:)   => null()
-    real*8 , pointer    :: aerosolSurfEmiss   (:,:,:)     => null()
-                   ! Array storing the surface emission diagnostics for
-                   ! aerosols. FSO2, NSO2, DMS, NSO4A, FSO4A, aerosol
-                   ! (OC, BC, sea salt) and dust.
-    integer, pointer    :: aerosolSurfEmissMap(:)     => null()
-                   ! mapping of SurfEmiss number for aerosols to const species #
+
     character (len=MAX_LENGTH_FILE_NAME) :: MEGAN_infile_name       ! File for MEGAN AEF and LAI
   end type t_Emission
 
@@ -239,8 +210,6 @@
       integer ::  STATUS, RC, ic, ios, n
       character (len=MAX_LENGTH_SPECIES_NAME) :: tempListNames(MAX_NUM_CONST)
       character (len=MAX_STRING_LENGTH      ) :: emissionSpeciesNames
-      character (len=MAX_STRING_LENGTH      ) :: emissionDustSpeciesNames
-      character (len=MAX_STRING_LENGTH      ) :: emissionAeroSpeciesNames
       character(len=ESMF_MAXSTR) :: IAm, err_msg, sp_name
 !.sds.. point emissions variables
       character (len=MAX_STRING_LENGTH      ) :: emissionPointTemp(MAX_NUM_CONST)
@@ -350,82 +319,6 @@
 
       call rcEsmfReadTable(config, self%emissionSpeciesLayers, &
                           "emissionSpeciesLayers::", rc=STATUS)
-
-! --------------------------------------
-! Aerosols and Sulfur from Penner et al.
-! --------------------------------------
-
-! emiss_aero_opt   0: for no     aerosol emissions
-!                  1: for GMI    aerosol emissions
-!                  2: for GOCART aerosol emissions
-  
-      call ESMF_ConfigGetAttribute(config, self%emiss_aero_opt, &
-                     label   = "emiss_aero_opt:", &
-                     default = 0, rc=STATUS )
-      VERIFY_(STATUS)
-
-! number of aerosol emissions
-     
-      call ESMF_ConfigGetAttribute(config, self%naero, &
-                     label   = "naero:", &
-                     default = 1, rc=STATUS )
-      VERIFY_(STATUS) 
-     
-      self%emiss_map_aero(:) = 0    ! map emissions to species #
-
-      call rcEsmfReadTable(config, emissionAeroSpeciesNames, &
-                          "emissionAeroSpeciesNames::", rc=STATUS)
-
-! aerosol emission input file
-
-      call ESMF_ConfigGetAttribute(config, self%emiss_aero_infile_name, &
-                     label   = "emiss_aero_infile_name:", &
-                     default = ' ', rc=STATUS )
-      VERIFY_(STATUS)
-
-! emiss_dust_opt   0: for no     dust emissions
-!                  1: for GMI    dust emissions
-!                  2: for GOCART dust emissions
-
-      call ESMF_ConfigGetAttribute(config, self%emiss_dust_opt, &
-                     label   = "emiss_dust_opt:", &
-                     default = 0, rc=STATUS )
-      VERIFY_(STATUS)
-
-! number of dust bins
-
-      call ESMF_ConfigGetAttribute(config, self%ndust, &
-                     label   = "ndust:", &
-                     default = 1, rc=STATUS )
-      VERIFY_(STATUS)
-
-! number of starting point for new dust emiss.
-      
-      call ESMF_ConfigGetAttribute(config, self%nst_dust, &
-                     label   = "nst_dust:", &
-                     default = 1, rc=STATUS )
-      VERIFY_(STATUS)
-      
-! number of dust emissions per emiss. file
-     
-      call ESMF_ConfigGetAttribute(config, self%nt_dust, &
-                     label   = "nt_dust:", &
-                     default = 1, rc=STATUS )
-      VERIFY_(STATUS)   
-     
-      self%emiss_map_dust(:) = 0    ! map emissions to species #
-      
-      emissionDustSpeciesNames = ""
-     
-      call rcEsmfReadTable(config, emissionDustSpeciesNames, &
-                          "emissionDustSpeciesNames::", rc=STATUS)
-      
-! dust emission input file
-      
-      call ESMF_ConfigGetAttribute(config, self%emiss_dust_infile_name, &
-                     label   = "emiss_dust_infile_name:", &
-                     default = ' ', rc=STATUS )
-      VERIFY_(STATUS)
      
 ! -----------------------------------------------------
 ! Information on scale factors for various NO emissions
@@ -549,8 +442,6 @@
       ! ---------------------------------------------------------------
     
       call CheckNamelistOptionRange ('emiss_opt'     , self%emiss_opt     , 0, 2)
-      call CheckNamelistOptionRange ('emiss_aero_opt', self%emiss_aero_opt, 0, 2)
-      call CheckNamelistOptionRange ('emiss_dust_opt', self%emiss_dust_opt, 0, 2)
       call CheckNamelistOptionRange ('emiss_in_opt'  , self%emiss_in_opt  , 0, 3)
       call CheckNamelistOptionRange ('lightning_opt' , self%lightning_opt , 0, 2)
 
@@ -566,140 +457,115 @@
       else
 
          ! Set the initial value of the list
-         tempListNames(:) = ''
+        tempListNames(:) = ''
 
          ! Construct the list of names using the long string
-         call constructListNames(tempListNames, emissionSpeciesNames)
+        call constructListNames(tempListNames, emissionSpeciesNames)
 
-         self%num_emiss = Count (tempListNames(:) /= '')
+        self%num_emiss = Count (tempListNames(:) /= '')
 !
 !.sds.. Is DMS in mechanism? If so, need to turn on emissions
-         ic = getSpeciesIndex('DMS',NOSTOP=.true.)
-         if(ic .gt. 0) then
-           self%GMIDMSEmissIndex = self%num_emiss + 1
-           self%num_emiss = self%num_emiss + 1
-           self%emiss_map(self%num_emiss) = ic
-           self%emissionSpeciesLayers(self%num_emiss) = 1
+        ic = getSpeciesIndex('DMS',NOSTOP=.true.)
+        if(ic .gt. 0) then
+          self%GMIDMSEmissIndex = self%num_emiss + 1
+          self%num_emiss = self%num_emiss + 1
+          self%emiss_map(self%num_emiss) = ic
+          self%emissionSpeciesLayers(self%num_emiss) = 1
 !... Add another entry to tempListNames
-           tempListNames(self%num_emiss) = 'DMS'
-         else
-           self%GMIDMSEmissIndex = 0
-         endif
+          tempListNames(self%num_emiss) = 'DMS'
+        else
+          self%GMIDMSEmissIndex = 0
+        endif
 !.sds.end
 ! MEM
-         IF ( self%do_ShipEmission ) THEN
-           ! Add 2 special entries
-           tempListNames( self%num_emiss + 1 ) = '*shipO3*'
-           tempListNames( self%num_emiss + 2 ) = '*shipHNO3*'
-           self%num_emiss = self%num_emiss + 2
-         END IF
+        IF ( self%do_ShipEmission ) THEN
+          ! Add 2 special entries
+          tempListNames( self%num_emiss + 1 ) = '*shipO3*'
+          tempListNames( self%num_emiss + 2 ) = '*shipHNO3*'
+          self%num_emiss = self%num_emiss + 2
+        END IF
 
          ! The species name precedes the underscore. In GEOS-5 we need to keep
          ! the entire emissionSpeciesName for use in the initialize method.
          ! -------------------------------------------------------------------
-         IF (self%num_emiss > 0) THEN
-            DO ic = 1, self%num_emiss
-               sp_name = tempListNames(ic)
-               self%emissionSpeciesNames(ic) = TRIM(sp_name)
-               ios = INDEX(sp_name,'_')
-               IF(ios > 0) sp_name = sp_name(1:ios-1)
+        IF (self%num_emiss > 0) THEN
+          DO ic = 1, self%num_emiss
+            sp_name = tempListNames(ic)
+            self%emissionSpeciesNames(ic) = TRIM(sp_name)
+            ios = INDEX(sp_name,'_')
+            IF(ios > 0) sp_name = sp_name(1:ios-1)
 
-               IF      ( TRIM(sp_name) ==        '*shipO3*'   ) THEN
-                 self%emiss_map(ic) = getSpeciesIndex('O3')
-                ELSE IF ( TRIM(sp_name) ==       '*shipHNO3*' ) THEN
-                 self%emiss_map(ic) = getSpeciesIndex('HNO3')
-                ELSE
-                 self%emiss_map(ic) = getSpeciesIndex(TRIM(sp_name))
-                ENDIF
+            IF      ( TRIM(sp_name) ==        '*shipO3*'   ) THEN
+              self%emiss_map(ic) = getSpeciesIndex('O3')
+            ELSE IF ( TRIM(sp_name) ==       '*shipHNO3*' ) THEN
+              self%emiss_map(ic) = getSpeciesIndex('HNO3')
+            ELSE
+              self%emiss_map(ic) = getSpeciesIndex(TRIM(sp_name))
+            ENDIF
 
-            END DO
-         END IF
+          END DO
+        END IF
 !.sds
 !... point emissions filenames and species
-         emissionPointTemp(:) = ''
-         call constructListNames(emissionPointTemp, emissionPointFilenames)
-         self%num_point_emiss = Count (emissionPointTemp(:) .ne. '')
+        emissionPointTemp(:) = ''
+        call constructListNames(emissionPointTemp, emissionPointFilenames)
+        self%num_point_emiss = Count (emissionPointTemp(:) .ne. '')
 !... get point emission prelim stuff set up
-         self%num_point_start = self%num_emiss + 1
-         if(self%num_point_emiss .gt. 0) then
-           do n = 1, self%num_point_emiss
-             sp_name = emissionPointTemp(n)
-             ios = INDEX(sp_name,':',.true.)
-             if(ios .gt. 0) then
-               self%emissionPointFilenames(n) = sp_name(ios+1:)
-               sp_name = sp_name(1:ios-1)
-               ios = INDEX(sp_name,':',.true.)
-               self%num_point_type(n) = sp_name(ios+1:)
-               sp_name = sp_name(1:ios-1)
-             else
-               err_msg = 'emissionPointFilenames problem in rc File.'
-               call GmiPrintError (err_msg, .true., ios, self%num_point_emiss, &
-                 self%num_emiss, 0, 0.0d0, 0.0d0)
-             endif
+        self%num_point_start = self%num_emiss + 1
+        if(self%num_point_emiss .gt. 0) then
+          do n = 1, self%num_point_emiss
+            sp_name = emissionPointTemp(n)
+            ios = INDEX(sp_name,':',.true.)
+            if(ios .gt. 0) then
+              self%emissionPointFilenames(n) = sp_name(ios+1:)
+              sp_name = sp_name(1:ios-1)
+              ios = INDEX(sp_name,':',.true.)
+              self%num_point_type(n) = sp_name(ios+1:)
+              sp_name = sp_name(1:ios-1)
+            else
+              err_msg = 'emissionPointFilenames problem in rc File.'
+              call GmiPrintError (err_msg, .true., ios, self%num_point_emiss, &
+                self%num_emiss, 0, 0.0d0, 0.0d0)
+            endif
 !... get index number of species
-             ic = getSpeciesIndex(sp_name,NOSTOP=.true.)
+            ic = getSpeciesIndex(sp_name,NOSTOP=.true.)
 !... add to emissionSpeciesNames, etc
-             self%num_emiss = self%num_emiss + 1
-             self%emissionSpeciesNames(self%num_emiss) = TRIM(sp_name)
-             self%emiss_map(self%num_emiss) = ic
-             self%emissionSpeciesLayers(self%num_emiss) = k2
-           enddo
-         endif
+            self%num_emiss = self%num_emiss + 1
+            self%emissionSpeciesNames(self%num_emiss) = TRIM(sp_name)
+            self%emiss_map(self%num_emiss) = ic
+            self%emissionSpeciesLayers(self%num_emiss) = k2
+          enddo
+        endif
 !.sds.end
-         self%num_emiss = count( self%emiss_map(:) > 0 )
+        self%num_emiss = count( self%emiss_map(:) > 0 )
 !
-         IF(MAPL_AM_I_ROOT()) THEN
-           print '('' '')'
-           print '(''Num_emiss='',i5)', self%num_emiss
-           print '(''Num_point_emiss='',i5)', self%num_point_emiss
-           print '('' '')'
-           print '(''EmissNo  InputName                  SpeciesNo   NumOfLevels'')'
-            do ic = 1, self%num_point_start-1
-             print '(i7,2x,a24,2x,i10,2x,i12)', ic, self%emissionSpeciesNames(ic) &
+        IF(MAPL_AM_I_ROOT()) THEN
+          print '('' '')'
+          print '(''Num_emiss='',i5)', self%num_emiss
+          print '(''Num_point_emiss='',i5)', self%num_point_emiss
+          print '('' '')'
+          print '(''EmissNo  InputName                  SpeciesNo   NumOfLevels'')'
+          do ic = 1, self%num_point_start-1
+            print '(i7,2x,a24,2x,i10,2x,i12)', ic, self%emissionSpeciesNames(ic) &
               , self%emiss_map(ic), self%emissionSpeciesLayers(ic)
-           enddo
-            do ic = self%num_point_start,self%num_emiss
-             print '(i7,2x,a10,1x,a18,1x,i6,2x,i12)', ic, self%num_point_type(ic-self%num_point_start+1) &
+          enddo
+          do ic = self%num_point_start,self%num_emiss
+            print '(i7,2x,a10,1x,a18,1x,i6,2x,i12)', ic, self%num_point_type(ic-self%num_point_start+1) &
               , self%emissionSpeciesNames(ic), self%emiss_map(ic), self%emissionSpeciesLayers(ic)
-           enddo
-         endif
-!
-         if (self%emiss_dust_opt > 0) then
-            ! Set the initial value of the list
-            tempListNames(:) = ''
-
-            ! Construct the list of names using the long string
-            call constructListNames(tempListNames, emissionDustSpeciesNames)
-         
-            do ic = 1, self%ndust
-               self%emiss_map_dust(ic) = getSpeciesIndex(tempListNames(ic))
-            end do
-         end if
-         
-         if (self%emiss_aero_opt > 0) then
-            ! Set the initial value of the list
-            tempListNames(:) = ''
-         
-            ! Construct the list of names using the long string
-            call constructListNames(tempListNames, emissionAeroSpeciesNames)
-
-            do ic = 1, self%naero
-               self%emiss_map_aero(ic) = getSpeciesIndex(tempListNames(ic))
-            end do
-         end if 
-         
+          enddo
+        endif
       endif
-
+!
       if (self%semiss_inchem_flag < 0) then  ! "auto set"
-         if ((self%emiss_opt /= 0) .and. (chem_opt == 2)) then
-            self%do_semiss_inchem = .true.
-         else
-            self%do_semiss_inchem = .false.
-         end if
+        if ((self%emiss_opt /= 0) .and. (chem_opt == 2)) then
+          self%do_semiss_inchem = .true.
+        else
+          self%do_semiss_inchem = .false.
+        end if
       else if (self%semiss_inchem_flag == 0) then
-         self%do_semiss_inchem   = .false.
+        self%do_semiss_inchem   = .false.
       else if (self%semiss_inchem_flag  > 0) then
-         self%do_semiss_inchem   = .true.
+        self%do_semiss_inchem   = .true.
       end if
 
       !###############
@@ -708,8 +574,8 @@
 
       if ((numSpecies > MAX_NUM_CONST) .or.  &
           (self%num_emiss   > MAX_NUM_CONST)) then
-         err_msg = 'MAX_NUM_CONST problem in rc File.'
-         call GmiPrintError (err_msg, .true., 2, numSpecies, &
+        err_msg = 'MAX_NUM_CONST problem in rc File.'
+        call GmiPrintError (err_msg, .true., 2, numSpecies, &
                 self%num_emiss, 0, 0.0d0, 0.0d0)
       end if
 
@@ -798,16 +664,6 @@
   rootProc = MAPL_AM_I_ROOT()
   rc = 0 
 
-  if (self%emiss_dust_opt == 1 ) then  ! GMI sulfurous dust emissions
-    call InitEmissDust (self, mcor, loc_proc, rootProc, &
-                        i1, i2, ju1, j2, i1_gl, ju1_gl, ilong, ilat)
-  end if
-
-  if (self%emiss_aero_opt /= 0 ) then
-    call InitEmissAero (self, mcor, loc_proc, rootProc, &
-                        i1, i2, ju1, j2, i1_gl, ju1_gl, ilong, ilat)
-  end if
-
   call Get_curGmiDate(gmiClock, nymd)
 
   if (self%do_gcr) then
@@ -834,9 +690,6 @@
   use ReadOtherEmissionData_mod, only : readLightData
   use ReadOtherEmissionData_mod, only : readIsopreneConvertData, readSoilData
   use ReadOtherEmissionData_mod, only : readMonoterpeneConvertData
-  use GocartDerivedVariables_mod, only : AllocateGocartDerivedVars
-  use GmiSeaSaltMethod_mod      , only : InitializationSeaSalt
-  use GmiDustMethod_mod         , only : InitializationDust
 
 !
 ! !INPUT PARAMETERS:
@@ -947,22 +800,10 @@
       call Allocate_surf_emiss_out (self, i1, i2, ju1, j2, numSpecies)
       call Allocate_surf_emiss_out2(self, i1, i2, ju1, j2)
    
-!        if ((self%emiss_aero_opt > 0) .or. (self%emiss_dust_opt > 0)) then
-!           call Allocate_aerosolSurfEmissMap(self)
-!           call setAerosolSurfEmissMap(self%aerosolSurfEmissMap, &
-!                                       self%emiss_map_aero, &
-!                                       self%emiss_map_dust, &
-!                                       self%naero, &
-!                                       self%ndust)
-!           call Allocate_aerosolSurfEmiss(self, i1, i2, ju1, j2)
-!        endif
     endif
    
     if (pr_emiss_3d) then
       call Allocate_emiss_3d_out (self, i1, i2, ju1, j2, k1, k2, numSpecies)
-      if ((self%emiss_aero_opt > 0) .or. (self%emiss_dust_opt > 0)) then
-        call Allocate_aerosolEmiss3D(self, i1, i2, ju1, j2, k1, k2)
-      end if
     end if
   end if
 
@@ -989,25 +830,9 @@
 
   endif
 
-  if (self%emiss_aero_opt /= 0) then
-    call Allocate_emissAero   (self, i1, i2, ju1, j2)
-    call Allocate_emissAero_t (self, i1, i2, ju1, j2)
-  endif
-
-  if (self%emiss_dust_opt /= 0) then
-    call Allocate_emissDust   (self, i1, i2, ju1, j2)
-    call Allocate_emissDust_t (self, i1, i2, ju1, j2)
-  endif
-
   if (self%lightning_opt == 1) then
-     call Allocate_lightning_NO (self, i1, i2, ju1, j2, k1, k2)
+    call Allocate_lightning_NO (self, i1, i2, ju1, j2, k1, k2)
   endif
-
-  if ((self%emiss_dust_opt == 2) .or. (self%emiss_aero_opt == 2))  then
-    call AllocateGocartDerivedVars(i1, i2, ju1, j2, k1, k2)
-    if (self%emiss_aero_opt == 2) call InitializationSeaSalt()
-    if (self%emiss_dust_opt == 2) call InitializationDust   ()
-  end if
 
 ! Set the intial emission array
 
@@ -1035,21 +860,20 @@
                    ISSLT1, ISSLT2, ISSLT3, ISSLT4, IFSO2, INSO2, INDMS, IAN,  &
                    IMGAS, INO, iisoprene_num, ino_num, ico_num, ipropene_num, &
                    ihno3_num, io3_num,  numSpecies, pardif, pardir, T_15_AVG, &
-                   met_opt, chem_opt, trans_opt, do_aerocom, do_drydep,       &
+                   met_opt, chem_opt, trans_opt, do_drydep,       &
                    pr_diag, pr_const, pr_surf_emiss, pr_emiss_3d,             &
                    metdata_name_org, metdata_name_model, tdt4, mixPBL,        &
                    light_NO_prod )
 !
 ! !USES:
       use GmiTimeControl_mod, only : Get_numTimeSteps
-      use GocartDerivedVariables_mod, only : SetGocartDerivedVars
 !
 ! !INPUT PARAMETERS:
       type(t_GmiClock), intent(in) :: gmiClock
       type (t_gmiGrid), intent(in) :: gmiGrid
 
       integer, intent(in) :: met_opt, chem_opt, trans_opt
-      logical, intent(in) :: do_aerocom, do_drydep
+      logical, intent(in) :: do_drydep
       logical, intent(in) :: pr_diag, pr_const, pr_surf_emiss, pr_emiss_3d
       integer, intent(in) :: IBOC, IBBC, INOC, IFOC, IFBC, ISSLT1, ISSLT2, ISSLT3, ISSLT4
       integer, intent(in) :: IFSO2, INSO2, INDMS, IAN, IMGAS, INO, iisoprene_num
@@ -1075,7 +899,7 @@
       character (len=MAX_LENGTH_MET_NAME), intent(in) :: metdata_name_model
       real   , intent(in) :: tdt4
       logical, intent(in) :: mixPBL   ! whether to explicitly distribute
-                                      ! aerosol emissions within the PBL
+                                      ! emissions within the PBL
       real*4 , intent(in) :: light_NO_prod(:, :, :)   ! (m-3 s-1) TOP-DOWN !!
 !
 ! !INPUT/OUTPUT VARIABLES:
@@ -1137,20 +961,13 @@
       call Get_tr_source_ocean(SpeciesConcentration, tr_source_ocean)
       call Get_concentration  (SpeciesConcentration, concentration  )
 
-     if (self%emiss_opt == 2) then
+      if (self%emiss_opt == 2) then
         self%emiss_monot = 0.0d0
         self%emiss_nox   = 0.0d0
         IF ( .not. self%doMEGANviaHEMCO ) THEN 
            self%emiss_isop  = 0.0d0 
         END IF
-     end if
-
-!... For GOCART emission
-     if ((self%emiss_dust_opt == 2) .or. (self%emiss_aero_opt == 2))  then
-        call SetGocartDerivedVars (u10m, v10m, gwet, press3c, &
-                         kel, mass, mcor, gridBoxHeight,     &
-                         i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi)
-     end if
+      end if
 
 !... Emission control routines
       rootProc = MAPL_AM_I_ROOT()
@@ -1161,10 +978,8 @@
                  ihno3_num, io3_num, radswg, TwoMeter_air_temp, surf_rough,    &
                  con_precip, tot_precip, ustar, mass, fracCloudCover, kel,     &
                  self%surf_emiss_out, self%surf_emiss_out2, self%emiss_3d_out, &
-                 self%aerosolEmiss3D, self%aerosolSurfEmiss,                   &
-                 self%aerosolSurfEmissMap, concentration, self%emissionArray,  &
-                 self%emissDust_t, self%emissDust, self%emissAero_t,           &
-                 self%emissAero, pbl, gridBoxHeight, self%index_soil,          &
+                 concentration, self%emissionArray,  &
+                 pbl, gridBoxHeight, self%index_soil,          &
                  self%ncon_soil, self%soil_fert, self%soil_precip,             &
                  self%soil_pulse, self%ireg, self%iland, self%iuse,            &
                  self%convert_isop, self%convert_monot, self%coeff_isop,       &
@@ -1173,10 +988,8 @@
                  INDMS, IAN, IMGAS, INO, iisoprene_num, ino_num, ico_num,      &
                  ipropene_num, pr_surf_emiss, pr_emiss_3d, pr_diag, loc_proc,  &
                  rootProc, met_opt, self%emiss_opt, chem_opt, trans_opt,       &
-                 self%emiss_aero_opt, self%emiss_dust_opt, do_aerocom,         &
                  self%do_semiss_inchem, self%do_gcr, do_drydep, self%emiss_map,&
-                 self%emiss_map_dust, self%emiss_map_aero, self%ndust,         &
-                 self%nst_dust, self%nt_dust, self%naero, nymd, num_time_steps,&
+                 nymd, num_time_steps,&
                  mw, tdt8, ndt, self%emiss_timpyr, self%num_emiss,             &
                  self%isop_scale, i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi,&
                  i1_gl, i2_gl, ju1_gl, j2_gl, ilong, numSpecies,               &
@@ -1213,13 +1026,13 @@
 
      	DEALLOCATE(productionNO)
 
-     END IF
+      END IF
 
-     CALL Set_concentration(SpeciesConcentration, concentration)
+      CALL Set_concentration(SpeciesConcentration, concentration)
 
-     RETURN
+      RETURN
 
-     END SUBROUTINE RunEmission
+      END SUBROUTINE RunEmission
 !EOC
 !-------------------------------------------------------------------------
 
@@ -1323,108 +1136,6 @@
   end subroutine InitEmiss
 
 !-------------------------------------------------------------------------
-! This routine sets the aerosol emissions.
-!-------------------------------------------------------------------------
-
-      subroutine InitEmissAero (self, mcor, loc_proc, rootProc, &
-                                 i1, i2, ju1, j2, i1_gl, ju1_gl, ilong, ilat)
-
-!     ----------------------
-!     Argument declarations.
-!     ----------------------
-
-      type (t_Emission), intent(inOut) :: self
-      integer          , intent(in   ) :: i1, i2, ju1, j2, i1_gl, ju1_gl, ilong, ilat
-      integer          , intent(in   ) :: loc_proc
-      logical          , intent(in   ) :: rootProc
-      real*8           , intent(in   ) :: mcor(i1:i2, ju1:j2)
-
-!     ----------------------
-!     Variable declarations.
-!     ----------------------
-
-      integer :: il, ij
-
-!     ----------------
-!     Begin execution.
-!     ----------------
-
-      if (self%emiss_aero_opt /= 0) then
-      
-       IF(rootProc) THEN
-        WRITE(6,*) 'GMI InitEmissAero: Must use Chem_UtilMPread from run method'
-       END IF
-       STOP
-
-!       -----------------------------------------------------------------
-!       Other aero (carbon & sslt) emissions in kg/m^2/s, change to kg/s.
-!       -----------------------------------------------------------------
-
-        do ij = ju1, j2
-          do il = i1, i2
-            self%emissAero_t(il,ij,:,:) = self%emissAero_t(il,ij,:,:) * mcor(il,ij)
-          end do
-        end do
-
-      end if
-
-      return
-
-      end subroutine InitEmissAero
-
-!-------------------------------------------------------------------------
-! This routine sets the dust emissions.
-!-------------------------------------------------------------------------
-
-      subroutine InitEmissDust  (self, mcor, loc_proc, rootProc, &
-                                i1, i2, ju1, j2, i1_gl, ju1_gl, ilong, ilat)
-
-!     ----------------------
-!     Argument declarations.
-!     ----------------------
-
-      type (t_Emission)  , intent(inOut) :: self
-      integer, intent(in) :: i1, i2, ju1, j2
-      integer, intent(in) :: i1_gl, ju1_gl, ilong, ilat
-      integer, intent(in) :: loc_proc
-      logical, intent(in) :: rootProc
-      real*8 , intent(in) :: mcor(i1:i2, ju1:j2)
-
-!     ----------------------
-!     Variable declarations.
-!     ----------------------
-
-      integer :: il, ij
-
-!     ----------------
-!     Begin execution.
-!     ----------------
-
-      if (self%emiss_dust_opt == 1) then  ! GMI dust emissions
-
-       IF(rootProc) THEN
-        WRITE(6,*) 'GMI InitEmissDust: Must use Chem_UtilMPread from run method'
-       END IF
-       STOP
-
-
-!       -------------------------------------------
-!       Dust emissions in kg/m^2/s, change to kg/s.
-!       -------------------------------------------
-
-        do ij = ju1, j2
-          do il = i1, i2
-            self%emissDust_t(il,ij,:,:) = self%emissDust_t(il,ij,:,:) * mcor(il,ij)
-          end do
-        end do
-
-      end if
-
-      return
-
-      end subroutine InitEmissDust
-
-!-------------------------------------------------------------------------
   subroutine Allocate_emissionArray (self, i1, i2, ju1, j2, k1, k2)
     integer          , intent(in   ) :: i1, i2, ju1, j2, k1, k2
     type (t_Emission), intent(inOut) :: self
@@ -1503,22 +1214,6 @@
     return
   end subroutine Allocate_ireg
 !-------------------------------------------------------------------------
-  subroutine Allocate_emissAero (self, i1, i2, ju1, j2)
-    integer          , intent(in   ) :: i1, i2, ju1, j2
-    type (t_Emission)       , intent(inOut) :: self
-    Allocate(self%emissAero(i1:i2, ju1:j2, self%naero))
-    self%emissAero = 0.0d0
-    return
-  end subroutine Allocate_emissAero
-!-------------------------------------------------------------------------
-  subroutine Allocate_emissDust (self, i1, i2, ju1, j2)
-    integer          , intent(in   ) :: i1, i2, ju1, j2
-    type (t_Emission)       , intent(inOut) :: self
-    Allocate(self%emissDust(i1:i2, ju1:j2, 1:self%ndust))
-    self%emissDust = 0.0d0
-    return
-  end subroutine Allocate_emissDust
-!-------------------------------------------------------------------------
   subroutine Allocate_lightning_NO (self, i1, i2, ju1, j2, k1, k2)
     integer          , intent(in   ) :: i1, i2, ju1, j2, k1, k2
     type (t_Emission)      , intent(inOut) :: self
@@ -1590,53 +1285,6 @@
     self%emiss_3d_out = 0.0d0
     return
   end subroutine Allocate_emiss_3d_out
-!-------------------------------------------------------------------------
-  subroutine Allocate_aerosolEmiss3D (self, i1, i2, ju1, j2, k1, k2)
-    integer          , intent(in   ) :: i1, i2, ju1, j2, k1, k2
-    type (t_Emission)      , intent(inOut) :: self
-    Allocate(self%aerosolEmiss3D(i1:i2, ju1:j2, k1:k2, 5))
-    self%aerosolEmiss3D = 0.0d0
-    return
-  end subroutine Allocate_aerosolEmiss3D
-!-------------------------------------------------------------------------
-  subroutine Allocate_aerosolSurfEmiss (self, i1, i2, ju1, j2)
-    integer          , intent(in   ) :: i1, i2, ju1, j2
-    type (t_Emission)      , intent(inOut) :: self
-    Allocate(self%aerosolSurfEmiss(i1:i2, ju1:j2, &
-        self%ndust + self%naero + 5))
-    self%aerosolSurfEmiss = 0.0d0
-    return
-  end subroutine Allocate_aerosolSurfEmiss
-!-------------------------------------------------------------------------
-  subroutine Allocate_aerosolSurfEmissMap (self)
-    type (t_Emission)      , intent(inOut) :: self
-    Allocate(self%aerosolSurfEmissMap &
-        (self%ndust + self%naero + 5))
-    return
-  end subroutine Allocate_aerosolSurfEmissMap
-!-------------------------------------------------------------------------
-  subroutine Allocate_emissDust_t (self, i1, i2, ju1, j2)
-    integer          , intent(in   ) :: i1, i2, ju1, j2
-    type (t_Emission), intent(inOut) :: self
-    integer                          :: ndust, nt_dust, nst_dust
-    ndust    = self%ndust
-    nst_dust = self%nst_dust
-    nt_dust  = self%nt_dust
-    Allocate(self%emissDust_t(i1:i2, ju1:j2, 1:ndust, nst_dust:nst_dust+nt_dust-1))    
-    self%emissDust_t = 0.0d0
-    return
-  end subroutine Allocate_emissDust_t
-!-------------------------------------------------------------------------
-  subroutine Allocate_emissAero_t (self, i1, i2, ju1, j2)
-    integer          , intent(in   ) :: i1, i2, ju1, j2
-    type (t_Emission), intent(inOut) :: self
-    integer                          :: naero, emiss_timpyr
-    naero        = self%naero
-    emiss_timpyr = self%emiss_timpyr
-    Allocate(self%emissAero_t(i1:i2, ju1:j2, 1:naero, emiss_timpyr))    
-    self%emissAero_t = 0.0d0
-    return
-  end subroutine Allocate_emissAero_t
 !-------------------------------------------------------------------------
   subroutine Get_do_gcr (self, do_gcr)
     logical        , intent(out)  :: do_gcr
@@ -1723,39 +1371,11 @@
     return
   end subroutine Get_lightning_opt
 !-------------------------------------------------------------------------
-  subroutine Get_emiss_aero_opt (self, emiss_aero_opt)
-    integer        , intent(out)  :: emiss_aero_opt
-    type (t_Emission), intent(in)   :: self
-    emiss_aero_opt = self%emiss_aero_opt
-    return
-  end subroutine Get_emiss_aero_opt
-!-------------------------------------------------------------------------
-  subroutine Get_emiss_dust_opt (self, emiss_dust_opt)
-    integer        , intent(out)  :: emiss_dust_opt
-    type (t_Emission), intent(in)   :: self
-    emiss_dust_opt = self%emiss_dust_opt
-    return
-  end subroutine Get_emiss_dust_opt
-!-------------------------------------------------------------------------
   subroutine Get_num_emiss (self, num_emiss)
     integer        , intent(out)  :: num_emiss
     type (t_Emission), intent(in)   :: self
     num_emiss = self%num_emiss
     return
   end subroutine Get_num_emiss
-!-------------------------------------------------------------------------
-  subroutine Get_ndust (self, ndust)
-    integer        , intent(out)  :: ndust
-    type (t_Emission), intent(in)   :: self
-    ndust = self%ndust
-    return
-  end subroutine Get_ndust
-!-------------------------------------------------------------------------
-  subroutine Get_naero (self, naero)
-    integer        , intent(out)  :: naero
-    type (t_Emission), intent(in)   :: self
-    naero = self%naero
-    return
-  end subroutine Get_naero
 !-------------------------------------------------------------------------
   end module GmiEmissionMethod_mod

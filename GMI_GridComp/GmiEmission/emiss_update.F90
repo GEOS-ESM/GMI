@@ -17,10 +17,6 @@
 !   - November 23, 2004 * Jules Kouatchou
 !     Modified the routine Update_Emiss by adding the variable
 !     "surf_emiss_out2" as argument of Update_Emiss and Add_Emiss_Harvard.
-!   - December 8, 2005 * Bigyani Das
-!     Added changes to update DMS, dust, sea salt emissions daily introducing
-!     medt = 86400.0d0 and changing mdt to medt for the aerocom runs
-!     when "do_aerocom" is true.
 !   - January 15, 2008 * Eric Nielsen
 !     Two-meter air temperature replaces surface air temperature
 !=============================================================================
@@ -53,9 +49,6 @@
 !   surf_emiss_out2: surface emissions to be written to output (kg/m^2/time)
 !   const         : species concentration, known at zone centers (mixing ratio)
 !   emiss         : array of emissions      (kg/s)
-!   emiss_dust_t  : array of dust emissions (kg/s)
-!   emiss_dust    : array of dust emissions for 6 hours (kg/s)
-!   emiss_aero    : array of aerosol emissions (kg/s)
 !   pbl           : boundary layer height (m)
 !   humidity      : specific humidity (g/kg)
 !   pctm1         : surface pressure at t1 (mb)
@@ -66,16 +59,16 @@
         emiss_nox, do_ShipEmission, emiss_hno3, emiss_o3, ihno3_num, io3_num, &
         radswg, TwoMeter_air_temp, surf_rough, con_precip, tot_precip, ustar, &
         mass, fracCloudCover, kel, surf_emiss_out, surf_emiss_out2, emiss_3d_out, &
-        aerosolEmiss3D, aerosolSurfEmiss, aerosolSurfEmissMap, concentration, &
-        emissionArray, emiss_dust_t, emiss_dust,emiss_aero_t, emiss_aero, pbl, &
+        concentration, &
+        emissionArray, pbl, &
         gridBoxHeight, index_soil, ncon_soil, soil_fert, soil_precip, soil_pulse, &
         ireg, iland, iuse, convert_isop, convert_monot, coeff_isop, base_isop, &
         base_monot, xlai, IBOC, IBBC, INOC, IFOC, IFBC, ISSLT1, ISSLT2, ISSLT3, &
         ISSLT4, IFSO2, INSO2, INDMS, IAN, IMGAS, INO, iisoprene_num, ino_num, &
         ico_num, ipropene_num, pr_surf_emiss, pr_emiss_3d, pr_diag, loc_proc,  &
-        rootProc, met_opt, emiss_opt, chem_opt, trans_opt, emiss_aero_opt, &
-        emiss_dust_opt, do_aerocom, do_semiss_inchem, do_gcr, do_drydep, emiss_map, &
-        emiss_map_dust, emiss_map_aero, ndust, nst_dust, nt_dust, naero, nymd, &
+        rootProc, met_opt, emiss_opt, chem_opt, trans_opt, &
+        do_semiss_inchem, do_gcr, do_drydep, emiss_map, &
+        nymd, &
         num_time_steps, mw, tdt, ndt, emiss_timpyr, num_emiss, isop_scale, &
         i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi, i1_gl, i2_gl, ju1_gl, j2_gl, &
         ilong, num_species, doMEGANemission, doMEGANviaHEMCO, aefIsop, aefMbo, &
@@ -84,7 +77,6 @@
 
       use GmiArrayBundlePointer_mod, only : t_GmiArrayBundle
       use GmiTimeControl_mod       , only : GmiSplitDateTime
-!     use CalcAerosolEmissDiagn_mod, only : calcAerosolEmissDiagn
       use GmiGrid_mod, only : t_gmiGrid
 
       implicit none
@@ -104,16 +96,14 @@
       integer, intent(in   ) :: i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi
       integer, intent(in   ) :: i1_gl, i2_gl, ju1_gl, j2_gl, ilong
       integer, intent(in   ) :: num_species, emiss_timpyr, num_emiss
-      integer, intent(in   ) :: ndust, nst_dust, nt_dust, naero
       integer, intent(in   ) :: nymd, num_time_steps, ndt
       integer, intent(in   ) :: iisoprene_num, ino_num, ico_num, ipropene_num, io3_num, ihno3_num
       real*8 , intent(in   ) :: mw(num_species)
       real*8 , intent(in   ) :: isop_scale(12)
       real*8 , intent(in   ) :: tdt
-      integer, intent(in   ) :: met_opt, emiss_opt, chem_opt, trans_opt, emiss_aero_opt, emiss_dust_opt
-      integer, intent(in   ) :: emiss_map(num_species), emiss_map_dust(num_species)
-      integer, intent(in   ) :: emiss_map_aero(num_species)
-      logical, intent(in   ) :: do_semiss_inchem, do_gcr, do_drydep, do_aerocom, do_ShipEmission
+      integer, intent(in   ) :: met_opt, emiss_opt, chem_opt, trans_opt
+      integer, intent(in   ) :: emiss_map(num_species)
+      logical, intent(in   ) :: do_semiss_inchem, do_gcr, do_drydep, do_ShipEmission
       integer, intent(in   ) :: lwis_flags(i1:i2, ju1:j2)    ! 0=water; 1=land; 2=ice; 3=snow
       real*8 , intent(in   ) :: cosSolarZenithAngle(i1:i2, ju1:j2)
       real*8 , intent(in   ) :: latdeg   (i1:i2, ju1:j2)
@@ -134,13 +124,6 @@
       real*8 , intent(inout) :: surf_emiss_out (i1:i2, ju1:j2, num_species)
       real*8 , intent(inout) :: surf_emiss_out2 (i1:i2, ju1:j2, 6)
       real*8 , intent(inout) :: emiss_3d_out (i1:i2, ju1:j2, k1:k2, num_species)
-      real*8 , intent(inout) :: aerosolSurfEmiss   (i1:i2, ju1:j2, ndust+naero+5)
-      real*8 , intent(inout) :: aerosolEmiss3D   (i1:i2, ju1:j2, k1:k2, 5)
-      integer, intent(in   ) :: aerosolSurfEmissMap(ndust+naero+5)
-      real*8 , intent(in   ) :: emiss_dust_t (i1:i2, ju1:j2, ndust, nst_dust:nst_dust+nt_dust-1)
-      real*8 , intent(  out) :: emiss_dust   (i1:i2, ju1:j2, ndust)
-      real*8 , intent(  out) :: emiss_aero   (i1:i2, ju1:j2, naero)
-      real*8 , intent(in   ) :: emiss_aero_t (i1:i2, ju1:j2, naero, emiss_timpyr)
       real*8 , intent(in   ) :: pbl          (i1:i2, ju1:j2)
       real*8 , intent(in   ) :: gridBoxHeight (i1:i2, ju1:j2, k1:k2) ! for Llnl emission
       real*8 , intent(in   ) :: fracCloudCover (i1:i2, ju1:j2) ! cloud fraction
@@ -157,7 +140,7 @@
       real*8 , intent(in) :: pardir    (i1:i2, ju1:j2)
       real*8 , intent(in) :: exp_fac(NPULSE)    ! pulsing decay per time step (day^-1)
       logical, intent(in) :: mixPBL             ! whether to explicitly distribute
-                                                ! aerosol emissions within the PBL
+                                                ! emissions within the PBL
       real*8 , intent(in) :: press3c(i1:i2,ju1:j2,k1:k2)
       
       INTEGER, INTENT(IN   ) :: emissionSpeciesLayers(num_species)
@@ -165,23 +148,22 @@
       type (t_GmiArrayBundle), intent(inout) :: concentration(num_species)
       type (t_GmiArrayBundle), intent(inout) :: emissionArray(num_emiss)
       
-     integer :: iland(i1:i2, ju1:j2, NTYPE), ireg(i1:i2, ju1:j2)
-     integer :: iuse (i1:i2, ju1:j2, NTYPE)
-     real*8  :: convert_isop (NVEGTYPE), convert_monot(NVEGTYPE)
-     real*8  :: base_isop (i1:i2, ju1:j2, NTYPE), base_monot(i1:i2, ju1:j2, NTYPE)
-     real*8  :: xlai      (i1:i2, ju1:j2, NTYPE)
-     real*8  :: soil_fert(i1:i2, ju1:j2), soil_precip(i1:i2, ju1:j2), soil_pulse(NPULSE+1,i1:i2, ju1:j2)
-     integer :: ncon_soil (NVEGTYPE), index_soil(2, i1:i2, ju1:j2)
-     real*8  :: coeff_isop   (NPOLY)
-     integer, intent(inOut) :: idaySoilType
-     logical, intent(inOut) :: firstBiogenicBase
+      integer :: iland(i1:i2, ju1:j2, NTYPE), ireg(i1:i2, ju1:j2)
+      integer :: iuse (i1:i2, ju1:j2, NTYPE)
+      real*8  :: convert_isop (NVEGTYPE), convert_monot(NVEGTYPE)
+      real*8  :: base_isop (i1:i2, ju1:j2, NTYPE), base_monot(i1:i2, ju1:j2, NTYPE)
+      real*8  :: xlai      (i1:i2, ju1:j2, NTYPE)
+      real*8  :: soil_fert(i1:i2, ju1:j2), soil_precip(i1:i2, ju1:j2), soil_pulse(NPULSE+1,i1:i2, ju1:j2)
+      integer :: ncon_soil (NVEGTYPE), index_soil(2, i1:i2, ju1:j2)
+      real*8  :: coeff_isop   (NPOLY)
+      integer, intent(inOut) :: idaySoilType
+      logical, intent(inOut) :: firstBiogenicBase
       
 !     ----------------------
 !     Variable declarations.
 !     ----------------------
 
       integer :: idumyr, month, idumday
-      integer :: num_new_emiss_dust
       real*8  :: medt
 
       real*8  :: tempk(i1:i2, ju1:j2)
@@ -194,61 +176,24 @@
         Write (6,*) 'Update_Emiss called by ', loc_proc
       end if
 
-!     -----------------------------------
-!     Update dust emission every 6 hours.
-!     -----------------------------------
-
-      if (emiss_dust_opt == 1) then    ! GMI dust emissions
-
-        if (do_aerocom) then
-           medt = 86400.0d0
-        else
-           medt = 21600.0d0
-        end if
-
-        num_new_emiss_dust =  &
-          (num_time_steps / (Nint (medt) / ndt)) + 1
-
-        if (Mod (num_time_steps, (Nint (medt) / ndt)) == 0) then
-
-          emiss_dust(i1:i2,ju1:j2,1:ndust) =  &
-            emiss_dust_t(i1:i2,ju1:j2,1:ndust,num_new_emiss_dust)
-
-        end if
-
-      end if
-
 
       if (btest(emiss_opt,0) .or. btest(emiss_opt,1)) then
 
 !       ===================
         call Add_Emiss_Llnl  &
 !       ===================
-          (do_aerocom, pr_surf_emiss, pr_emiss_3d, mcor, surf_emiss_out, emiss_3d_out,  &
-           mass, concentration, emissionArray, emiss_dust,  emiss_aero_t, emiss_aero, pbl, &
+          (pr_surf_emiss, pr_emiss_3d, mcor, surf_emiss_out, emiss_3d_out,  &
+           mass, concentration, emissionArray, pbl, &
            gridBoxHeight, IBOC, IBBC, INOC, IFOC, IFBC, ISSLT1, ISSLT2, ISSLT3, ISSLT4, &
-           IFSO2, INSO2, INDMS, pr_diag, loc_proc, chem_opt, trans_opt, emiss_aero_opt, &
-           emiss_dust_opt, do_semiss_inchem, emiss_map, emiss_map_dust, emiss_map_aero, &
-           emissionSpeciesLayers, ndust, naero, nymd, mw, tdt, emiss_timpyr, num_emiss, &
+           IFSO2, INSO2, INDMS, pr_diag, loc_proc, chem_opt, trans_opt, &
+           do_semiss_inchem, emiss_map, &
+           emissionSpeciesLayers, nymd, mw, tdt, emiss_timpyr, num_emiss, &
            i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi, num_species, mixPBL)
- 
-        ! Compute surface emission diagnostics for aerosols.
-
-!        if ((pr_surf_emiss) .or. (pr_emiss_3d)) then
-!           if ((emiss_aero_opt > 0) .or. (emiss_dust_opt > 0)) then
-!              call calcAerosolEmissDiagn(aerosolEmiss3D, aerosolSurfEmiss, &
-!                       aerosolSurfEmissMap, &
-!                       emissionArray, emiss_dust, emiss_aero, tdt, mcor, &
-!                       pr_surf_emiss, pr_emiss_3d, &
-!                       emiss_aero_opt, emiss_dust_opt, emiss_map, num_species, &
-!                       ndust, naero, i1, i2, ju1, j2, k1, k2, num_emiss)
-!           end if
-!        end if
 
         if (btest(emiss_opt,1)) then
 
           IF ( .not. doMEGANviaHEMCO ) THEN 
-             emiss_isop (:,:) = 0.0d0 
+            emiss_isop (:,:) = 0.0d0 
           END IF
           emiss_monot(:,:) = 0.0d0
           emiss_nox  (:,:) = 0.0d0
@@ -290,7 +235,6 @@
                pr_diag, loc_proc, i1, i2, ju1, j2, k1, k2, num_species)
 
           end if
-
 
         end if
 
@@ -509,37 +453,37 @@
             tdt / mcor(:,:)
         end do
 
-          surf_emiss_out2(:,:,1) = surf_emiss_out2(:,:,1) +  &
+        surf_emiss_out2(:,:,1) = surf_emiss_out2(:,:,1) +  &
             surf_emiss2(:,:,1) / conv_emiss(:,:) * mw(ico_num) *  &
             tdt / mcor(:,:)
-          surf_emiss_out2(:,:,2) = surf_emiss_out2(:,:,2) +  &
+        surf_emiss_out2(:,:,2) = surf_emiss_out2(:,:,2) +  &
             surf_emiss2(:,:,2) / conv_emiss(:,:) * mw(ico_num) *  &
             tdt / mcor(:,:)
-          surf_emiss_out2(:,:,3) = surf_emiss_out2(:,:,3) +  &
+        surf_emiss_out2(:,:,3) = surf_emiss_out2(:,:,3) +  &
             surf_emiss2(:,:,3) / conv_emiss(:,:) * mw(ipropene_num) *  &
             tdt / mcor(:,:)
 
-          surf_emiss_out2(:,:,4) = surf_emiss_out2(:,:,4) +  &
+        surf_emiss_out2(:,:,4) = surf_emiss_out2(:,:,4) +  &
             surf_emiss2(:,:,4) / conv_emiss(:,:) * mw(ino_num) *  &
             tdt / mcor(:,:)
      
-          if (do_ShipEmission) then
+        if (do_ShipEmission) then
 
-             surf_emiss_out2(:,:,5) = surf_emiss_out2(:,:,5) +  &
+          surf_emiss_out2(:,:,5) = surf_emiss_out2(:,:,5) +  &
                surf_emiss2(:,:,5) / conv_emiss(:,:) * mw(ihno3_num) *  &
                tdt / mcor(:,:)
 
-             surf_emiss_out2(:,:,6) = surf_emiss_out2(:,:,6) +  &
+          surf_emiss_out2(:,:,6) = surf_emiss_out2(:,:,6) +  &
                surf_emiss2(:,:,6) / conv_emiss(:,:) * mw(io3_num) *  &
                tdt / mcor(:,:)
 
-          end if
-       end if
+        end if
+      end if
 
-       if (pr_emiss_3d) then
+      if (pr_emiss_3d) then
         do ic = 1, num_species
 
-             emiss_3d_out(:,:,k1,ic) =  &
+          emiss_3d_out(:,:,k1,ic) =  &
                 emiss_3d_out(:,:,k1,ic) +  &
                 emiss_3d(:,:,k1,ic) / conv_emiss(:,:) * mw(ic) *  &
                 tdt / mcor(:,:)
@@ -551,4 +495,3 @@
       return
 
       end
-

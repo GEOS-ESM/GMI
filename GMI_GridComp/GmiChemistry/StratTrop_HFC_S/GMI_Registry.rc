@@ -142,23 +142,22 @@
   MEGAN_LAI_010      |  cm cm-2        | xy  |   |    |   |   |     |	   |  x | AVHRR_leaf_area_index_oct_2000
   MEGAN_LAI_011      |  cm cm-2        | xy  |   |    |   |   |     |	   |  x | AVHRR_leaf_area_index_nov_2000
   MEGAN_LAI_012      |  cm cm-2        | xy  |   |    |   |   |     |	   |  x | AVHRR_leaf_area_index_dec_2000
-  BC1                |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophobic_black_carbon
-  BC2                |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophilic_black_carbon
-  OC1                |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophobic_organic_carbon
-  OC2                |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophilic_organic_carbon
-  SS1                |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
-  SS2                |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
-  SS3                |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
-  SS4                |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  BCphobic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophobic_black_carbon
+  BCphilic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophilic_black_carbon
+  OCphobic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophobic_organic_carbon
+  OCphilic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophilic_organic_carbon
+  ss001              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss002              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss003              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss004              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss005              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
   SO4                |  kg m-3         | xyz | C |    |   |   |     |      |  x | sulfate
   SO4v               |  kg m-3         | xyz | C |    |   |   |     |      |  x | sulfate_from_volcanos
-  MDUST1             |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  MDUST2             |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  MDUST3             |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  MDUST4             |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  MDUST5             |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  MDUST6             |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  MDUST7             |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  du001              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  du002              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  du003              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  du004              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  du005              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
 # -------------------|-----------------|-----|---|----|---|---|-----|------|--------------------------
 </ImportSpec>
 
@@ -171,19 +170,21 @@
 #  Short	    |		     |     | V |Item|Intervl| Sub |	     Long
 #  Name 	    |   Units	     | Dim |Loc|Type| R | A |Tiles|	     Name
 # ------------------|----------------|-----|---|----|---|---|-----|---------------------------------
-  GMICHEM::BCphobic | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_hydrophobic_black_carbon_from_GMICHEM
-  GMICHEM::BCphilic | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_hydrophylic_black_carbon_from_GMICHEM
-  GMICHEM::du001    | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_dust_bin_1_from_GMICHEM
-  GMICHEM::du002    | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_dust_bin_2_from_GMICHEM
-  GMICHEM::du003    | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_dust_bin_3_from_GMICHEM
-  GMICHEM::du004    | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_dust_bin_4_from_GMICHEM
-  GMICHEM::OCphobic | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_hydrophobic_organic_carbon_from_GMICHEM
-  GMICHEM::OCphilic | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_hydrophylic_organic_carbon_from_GMICHEM
-  GMICHEM::ss001    | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_sea_salt_bin_1_from_GMICHEM
-  GMICHEM::ss003    | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_sea_salt_bin_3_from_GMICHEM
-  GMICHEM::ss004    | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_sea_salt_bin_4_from_GMICHEM
-  GMICHEM::ss005    | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_sea_salt_bin_5_from_GMICHEM
-  GMICHEM::SO4      | kg kg-1  	     | xyz | C |    |	|   |     | prescribed_sulfate_from_GMICHEM
+  BCphobic | kg kg-1        | xyz | C |    |   |   |     | prescribed_hydrophobic_black_carbon_from_GMICHEM
+  BCphilic | kg kg-1        | xyz | C |    |   |   |     | prescribed_hydrophylic_black_carbon_from_GMICHEM
+  du001    | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_1_from_GMICHEM
+  du002    | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_2_from_GMICHEM
+  du003    | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_3_from_GMICHEM
+  du004    | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_4_from_GMICHEM
+  du005    | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_4_from_GMICHEM
+  OCphobic | kg kg-1        | xyz | C |    |   |   |     | prescribed_hydrophobic_organic_carbon_from_GMICHEM
+  OCphilic | kg kg-1        | xyz | C |    |   |   |     | prescribed_hydrophylic_organic_carbon_from_GMICHEM
+  ss001    | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_1_from_GMICHEM
+  ss002    | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_1_from_GMICHEM
+  ss003    | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_3_from_GMICHEM
+  ss004    | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_4_from_GMICHEM
+  ss005    | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_5_from_GMICHEM
+  SO4      | kg kg-1        | xyz | C |    |   |   |     | prescribed_sulfate_from_GMICHEM
   REFFICE  	    | cm  	     | xyz | C |    |	|   |	  | ice_aerosol_effective_radius
   REFFSTS 	    | cm  	     | xyz | C |    |	|   |	  | STS_aerosol_effective_radius
   VFALL   	    | cm s-1	     | xyz | C |    |	|   |	  | effective_aerosol_fall_velocity
