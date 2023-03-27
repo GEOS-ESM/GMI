@@ -18,10 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 
+## [as of 24Mar2023]
+
 ### Added
 
 - Capability for AERO_PROVIDER=GMICHEM
 - Capability for AERO_PROVIDER=CARMA (uses GMICHEM right now)
+
+### Changed
+
+- Changed default aerosdust filename (for case AERO_PROVIDER=GMICHEM)
 
 ### Removed
 
