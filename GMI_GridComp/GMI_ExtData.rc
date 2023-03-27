@@ -79,22 +79,22 @@ MEGAN_LAI_009      'cm cm-1'    Y   N	-			 none	 none  AVHRR_LAI_009	 ExtData/g5
 MEGAN_LAI_010      'cm cm-1'    Y   N	-			 none	 none  AVHRR_LAI_010	 ExtData/g5chem/sfc/MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
 MEGAN_LAI_011      'cm cm-1'    Y   N	-			 none	 none  AVHRR_LAI_011	 ExtData/g5chem/sfc/MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
 MEGAN_LAI_012      'cm cm-1'    Y   N	-			 none	 none  AVHRR_LAI_012	 ExtData/g5chem/sfc/MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-BCphobic           'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  BCPHOBIC          /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-BCphilic           'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  BCPHILIC          /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-OCphobic           'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  OCPHOBIC          /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-OCphilic           'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  OCPHILIC          /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-ss001              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS001             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-ss002              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS002             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-ss003              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS003             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-ss004              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS004             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-ss005              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS005             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-SO4                'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SO4               /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
+BCphobic           'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  BCPHOBIC          ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+BCphilic           'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  BCPHILIC          ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+OCphobic           'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  OCPHOBIC          ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+OCphilic           'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  OCPHILIC          ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+ss001              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS001             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+ss002              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS002             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+ss003              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS003             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+ss004              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS004             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+ss005              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SS005             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+SO4                'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SO4               ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
 SO4v               'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  SO4v              /dev/null
-du001              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU001             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-du002              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU002             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-du003              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU003             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-du004              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU004             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
-du005              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU005             /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
+du001              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU001             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+du002              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU002             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+du003              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU003             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+du004              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU004             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
+du005              'kg m-3'     Y   Y   %y4-%m2-%d2T12:00:00     none    none  DU005             ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
 # -----------|--------------|-----|---|----------------------|--------|-------|-----------------|----------------------   
 %%
 
