@@ -1197,10 +1197,6 @@ CONTAINS
    REAL, POINTER, DIMENSION(:,:,:) :: OCphobic, OCphilic
    REAL, POINTER, DIMENSION(:,:,:) :: SS001, SS002, SS003, SS004, SS005
    REAL, POINTER, DIMENSION(:,:,:) :: DMS, SO2, SO4, SO4v, MSA
-   REAL, POINTER, DIMENSION(:,:,:) :: BRphobic,BRphilic
-
-   REAL, POINTER, DIMENSION(:,:,:,:) :: SS ! 4d ! Imported from GOCART2G
-   REAL, POINTER, DIMENSION(:,:,:,:) :: DU ! 4d ! Imported from GOCART2G
 
 !  Exports not part of internal state
 !  ----------------------------------
