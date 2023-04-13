@@ -36,7 +36,7 @@ Collections:
   GMI_veg_fraction_x720_y360_t12_2008.nc:
     template: ExtData/g5chem/sfc/LAI/veg_fraction_x720_y360_t12_2008.nc
   GMI_aerodust_file:
-    template: /discover/nobackup/ssteenro/GEOS/GEOSCCM_aerodust_MERRA2_tavg3D_2012.nc
+    template: ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4
 
 Samplings:
   GMI_sample_0:

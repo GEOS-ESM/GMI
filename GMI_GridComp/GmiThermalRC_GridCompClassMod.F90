@@ -509,7 +509,6 @@ CONTAINS
    USE GmiTimeControl_mod,            ONLY : Set_numTimeSteps, Get_numTimeSteps
    USE GmiTimeControl_mod,            ONLY : Set_gmiSeconds, GetSecondsFromJanuary1
    USE GmiSpcConcentrationMethod_mod, ONLY : resetFixedConcentration
-   USE GmiSolar_mod,                  ONLY : CalcCosSolarZenithAngle
    use GmiThermalRateConstants_mod  , only : calcThermalRateConstants
 
    IMPLICIT none

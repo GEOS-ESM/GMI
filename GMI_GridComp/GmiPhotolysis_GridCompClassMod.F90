@@ -1104,8 +1104,9 @@ CONTAINS
    USE GmiTimeControl_mod,            ONLY : Set_gmiSeconds, GetSecondsFromJanuary1
    USE GmiTimeControl_mod,            ONLY : GetDaysFromJanuary1, ConvertTimeToSeconds
    USE GmiSpcConcentrationMethod_mod, ONLY : resetFixedConcentration
-   USE GmiSolar_mod,                  ONLY : computeSolarZenithAngle_Photolysis
    USE GmiPhotRateConst_mod,          ONLY : calcPhotolysisRateConstants
+
+   USE SZA_from_MAPL_mod,             ONLY : compute_SZA
 
    IMPLICIT none
 
@@ -1224,8 +1225,6 @@ CONTAINS
    INTEGER, PARAMETER :: ToGMI = 1
    INTEGER, PARAMETER :: FromGMI = -1
 
-   REAL :: pi,degToRad,radToDeg,OneOverDt
-
    REAL, PARAMETER :: mwtAir = 28.9
    REAL, PARAMETER :: rStar = 8.314E+03
    REAL, PARAMETER :: Pa2hPa = 0.01
@@ -1279,23 +1278,9 @@ CONTAINS
    REAL(KIND=DBL), ALLOCATABLE :: ri_(:,:,:)
    REAL(KIND=DBL), ALLOCATABLE :: rl_(:,:,:)
 
-! VV adding Mike's MAPL SZA edits
-   REAL          , ALLOCATABLE ::  ZTH(:,:)
-   REAL          , ALLOCATABLE ::  SLR(:,:)
-   REAL          , ALLOCATABLE :: ZTHP(:,:)
 
    REAL(KIND=DBL), ALLOCATABLE :: solarZenithAngle(:,:)
 
-   TYPE (ESMF_TimeInterval)    ::  GMI_timestep
-   TYPE (ESMF_TimeInterval)    :: MAPL_timestep
-   TYPE (ESMF_Time)            :: CURRENTTIME
-   TYPE (ESMF_Time)            :: SZA_start_time   ! compute average SZA starting at this time
-   TYPE (ESMF_Time)            :: SZA_midpoint
-
-   LOGICAL :: verbose_time   ! To see details on SZA time averaging
-
-   verbose_time = .FALSE.
- 
    loc_proc = -99
 
 !  Grid specs
@@ -1326,11 +1311,7 @@ CONTAINS
 
 !  Some real constants
 !  -------------------
-   pi = 4.00*ATAN(1.00)
-   degToRad = pi/180.00
-   radToDeg = 180.00/pi
    chemDt = tdt
-   OneOverDt = 1.00/tdt
 
    rootProc=.FALSE.
    IF( MAPL_AM_I_ROOT() ) THEN
@@ -1373,17 +1354,7 @@ CONTAINS
    ALLOCATE(               ri_(i1:i2,j1:j2,1:km), __STAT__ )
    ALLOCATE(               rl_(i1:i2,j1:j2,1:km), __STAT__ )
 
-   ALLOCATE(               ZTH(i1:i2,j1:j2), &
-                           SLR(i1:i2,j1:j2), &
-                          ZTHP(i1:i2,j1:j2),     __STAT__ )
-
    
-
-! Geolocation
-! -----------
-!   lonDeg(i1:i2,j1:j2)=self%lonRad(i1:i2,j1:j2)*radToDeg !VV adding Mike's MAPL SZA
-!   latDeg(i1:i2,j1:j2)=self%latRad(i1:i2,j1:j2)*radToDeg
-
 !  Layer mean pressures. NOTE: ple(:,:,0:km)
 !  -----------------------------------------
    DO k=1,km
@@ -1459,85 +1430,10 @@ CONTAINS
 
       IF (self%gotImportRst) THEN
         if (self%phot_opt == 3) then
-! GMI routine, provided SZA > 90
-!         if ((self%phot_opt == 3) then 
 
-!            call GetSecondsFromJanuary1 (nsec_jan1, nymd, nhms)
-
-!            call GetDaysFromJanuary1 (jday, nymd)
-!            time_sec = ConvertTimeToSeconds (nhms)
-
-!            solarZenithAngle(i1:i2,j1:j2) = &
-!                 computeSolarZenithAngle_Photolysis (jday, time_sec, &
-!                          self%fastj_offset_sec, latDeg, lonDeg, i1, i2, j1, j2)
-
-! MEM 6.30.20
-!     Now get the SZA using a MAPL call:
-
-          call ESMF_ClockGet(self%clock, TIMESTEP=MAPL_timestep, currTIME=CURRENTTIME, __RC__ )
-
-          IF( verbose_time .AND. MAPL_AM_I_ROOT() ) THEN
-
-            call ESMF_TimePrint(CURRENTTIME, preString="CURRENTTIME = ", __RC__ )
-
-            print *, "MAPL_timestep = "
-            call ESMF_TimeIntervalPrint(MAPL_timestep, options="string", __RC__ )
-
-          ENDIF
-
-          call ESMF_TimeIntervalSet(GMI_timestep, s=INT(tdt+0.1), __RC__ )
-
-          IF( verbose_time .AND. MAPL_AM_I_ROOT() ) THEN
-
-            print *, "GMI_timestep = "
-            call ESMF_TimeIntervalPrint(GMI_timestep, options="string", __RC__ )
-
-            print *, "computing Photolysis w/ tdt = ", tdt
-
-          ENDIF
-
-          ! We want a starting time = MAPL time + 1/2 MAPL timestep - 1/2 GMI timestep
-          ! We want a time interval == GMI timestep
-
-          ! Position SZA_midpoint to be midpoint of MAPL_timestep
-          SZA_midpoint = CURRENTTIME + (MAPL_timestep/2)
-
-          ! Position SZA_start_time to be half of a GMI timestep earlier
-          SZA_start_time = SZA_midpoint - (GMI_timestep/2)
-
-          IF( verbose_time .AND. MAPL_AM_I_ROOT() ) THEN
-            call ESMF_TimePrint(SZA_start_time,              preString="SZA averaging start_time = ", __RC__ )
-            call ESMF_TimePrint(SZA_start_time+GMI_timestep, preString="SZA averaging   end_time = ", __RC__ )
-          ENDIF
-
-! Calling sequence from SOLAR GridComp:
-!     call MAPL_SunGetInsolation(   &
-!             self%lonRad,          &    !  from the MAPL_Get  REAL, pointer, (IM,JM)
-!             self%latRad,          &    !  from the MAPL_Get  REAL, pointer, (IM,JM)
-!             self%orbit,           &    !  from MAPL_Get      type (MAPL_SunOrbit)
-!             ZTH,                  &    !  OUT                REAL,          (IM,JM)
-!             SLR,                  &    !  OUT                REAL,          (IM,JM)
-!             INTV = MAPL_timestep, &    !  INOUT              type (ESMF_TimeInterval)
-!                                   &    !   the CLOCK timestep    [optional]   Why INOUT?
-!             CLOCK = self%clock,   &    !  IN   [optional]    type(ESMF_Clock)
-!         !   TIME = SUNFLAG,       &    !  IN   [optional]    INTEGER
-!         !   ZTHN = ZTHN,          &    !  OUT  [optional]    REAL,          (IM,JM )
-!             ZTHP = ZTHP,          &    !  OUT  [optional]    REAL,          (IM,JM)
-!             RC=STATUS )
-!     VERIFY_(STATUS)
-
-          call MAPL_SunGetInsolation(        &
-                  self%lonRad,               &
-                  self%latRad,               &
-                  self%orbit,                &
-                  ZTH,                       &
-                  SLR,                       &
-                  CURRTIME = SZA_start_time, &
-                  INTV     = GMI_timestep,   &
-                  ZTHP     = ZTHP,           &
-                  __RC__ )
-
-          solarZenithAngle(i1:i2,j1:j2) = ACOS( ZTHP ) * radToDeg
+          call compute_SZA ( LONS=self%lonRad, LATS=self%latRad, ORBIT=self%orbit, &
+                             CLOCK=self%clock, tdt=tdt, label='GMI-PHOT', &
+                             SZA=solarZenithAngle, __RC__ )
 
           call calcPhotolysisRateConstants (self%JXbundle,                     &
                      tropopausePress,                         &
@@ -1593,7 +1489,7 @@ CONTAINS
               moistq, STAT=STATUS)
    VERIFY_(STATUS)
 
-   DEALLOCATE(tau_clw, tau_cli, qi_, ql_, ri_, rl_, ZTH, SLR, ZTHP, STAT=STATUS)
+   DEALLOCATE(tau_clw, tau_cli, qi_, ql_, ri_, rl_, STAT=STATUS)
    VERIFY_(STATUS)
 
 ! IMPORTANT: Reset this switch to .TRUE. after first pass.
