@@ -86,14 +86,6 @@
 ! -------------------------------------------------
    LOGICAL :: BCRealTime
 
-! Switches for coupling with GOCART dust and aerosols
-! ---------------------------------------------------
-   LOGICAL :: usingGOCART_BC
-   LOGICAL :: usingGOCART_DU
-   LOGICAL :: usingGOCART_OC
-   LOGICAL :: usingGOCART_SS
-   LOGICAL :: usingGOCART_SU
-
 ! Perhaps GMICHEM is the AERO_PROVIDER
 ! ------------------------------------
    LOGICAL :: AM_I_AERO_PROVIDER    ! Even if another GC is the real AERO_PROVIDER, set this TRUE to have GMI export the AERO state, etc.
@@ -724,53 +716,17 @@ CONTAINS
      &                default = hugeReal, rc=STATUS )
       VERIFY_(STATUS)
 
-      ! ----------------------------------------
-      ! Do we want to couple to GOCART aerosols?
-      ! ----------------------------------------
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%usingGOCART_BC, &
-     &           label="usingGOCART_BC:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%usingGOCART_DU, &
-     &           label="usingGOCART_DU:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%usingGOCART_OC, &
-     &           label="usingGOCART_OC:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%usingGOCART_SS, &
-     &           label="usingGOCART_SS:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%usingGOCART_SU, &
-     &           label="usingGOCART_SU:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-
-
-   IF( MAPL_AM_I_ROOT() ) THEN
-    PRINT *," "
-    PRINT *,TRIM(IAm)//":"
-    PRINT *," Using GOCART   Black Carbon: ",self%usingGOCART_BC
-    PRINT *," Using GOCART           Dust: ",self%usingGOCART_DU
-    PRINT *," Using GOCART Organic Carbon: ",self%usingGOCART_OC
-    PRINT *," Using GOCART       Sea Salt: ",self%usingGOCART_SS
-    PRINT *," Using GOCART        Sulfate: ",self%usingGOCART_SU
-    PRINT *," "
-   END IF
 
 ! Perform consistency checks for aerosols
 ! ---------------------------------------
    IF(self%AM_I_AERO_PROVIDER) THEN
-    IF(self%usingGOCART_BC .OR. self%usingGOCART_DU .OR. self%usingGOCART_OC .OR. &
-       self%usingGOCART_SS .OR. self%usingGOCART_SU) THEN
+    IF (TRIM(self%aeroProviderName) == 'GOCART2G') THEN 
      STATUS = 1
      IF( MAPL_AM_I_ROOT() ) THEN
       PRINT *," "
       PRINT *,TRIM(IAm)//":"
       PRINT *," AM_I_AERO_PROVIDER: ",self%AM_I_AERO_PROVIDER
-      PRINT *," Cannot couple GOCART aerosols to GMICHEM when GMICHEM is the AERO_PROVIDER"
+      PRINT *," Cannot couple GOCART2G aerosols to GMICHEM when GMICHEM is the AERO_PROVIDER"
      END IF
      VERIFY_(STATUS)
     END IF
@@ -1202,6 +1158,37 @@ CONTAINS
    REAL, POINTER, DIMENSION(:,:,:) :: rl => NULL()
    REAL, POINTER, DIMENSION(:,:,:) :: rh2,dqdt
 
+
+! Adding GOCART2G fields from AERO BUNDLE
+! ---------------------------------------
+   type(ESMF_State)   :: aero_state
+   type(ESMF_State)   :: bc_state
+   type(ESMF_State)   :: oc_state
+   type(ESMF_State)   :: br_state
+   type(ESMF_State)   :: su_state
+   type(ESMF_State)   :: du_state
+   type(ESMF_State)   :: ss_state
+
+   type(ESMF_Field)   :: bc_phobic_3d_field
+   type(ESMF_Field)   :: bc_philic_3d_field
+   type(ESMF_Field)   :: oc_phobic_3d_field
+   type(ESMF_Field)   :: oc_philic_3d_field
+   type(ESMF_Field)   :: br_phobic_3d_field
+   type(ESMF_Field)   :: br_philic_3d_field
+   type(ESMF_Field)   ::       so4_3d_field
+   type(ESMF_Field)   ::        du_4d_field
+   type(ESMF_Field)   ::        ss_4d_field
+
+   real, pointer, dimension(:,:,:)   :: bc_phobic_3d_array
+   real, pointer, dimension(:,:,:)   :: bc_philic_3d_array
+   real, pointer, dimension(:,:,:)   :: oc_phobic_3d_array
+   real, pointer, dimension(:,:,:)   :: oc_philic_3d_array
+   real, pointer, dimension(:,:,:)   :: br_phobic_3d_array
+   real, pointer, dimension(:,:,:)   :: br_philic_3d_array
+   real, pointer, dimension(:,:,:)   ::       so4_3d_array
+   real, pointer, dimension(:,:,:,:) ::        du_4d_array
+   real, pointer, dimension(:,:,:,:) ::        ss_4d_array
+
 !  Dust and aerosols.  May serve as imports from GOCART
 !  or as exports to fill the AERO_BUNDLE, but not both.
 !  ----------------------------------------------------
@@ -1414,6 +1401,16 @@ CONTAINS
    CALL Get_numTimeSteps(self%gmiClock, ic)
    CALL Set_numTimeSteps(self%gmiClock, ic+1)
    CALL Set_gmiSeconds(self%gmiClock, (ic+1)*chemDt)
+
+! Get the AERO state and individual Aerosol states
+! ------------------------------------------------
+   call ESMF_StateGet(impChem, 'AERO', aero_state, __RC__)
+   call ESMF_StateGet(aero_state, 'CA.bc_AERO', bc_state, __RC__)
+   call ESMF_StateGet(aero_state, 'CA.oc_AERO', oc_state, __RC__)
+   call ESMF_StateGet(aero_state, 'CA.br_AERO', br_state, __RC__)
+   call ESMF_StateGet(aero_state,    'SU_AERO', su_state, __RC__)
+   call ESMF_StateGet(aero_state,    'DU_AERO', du_state, __RC__)
+   call ESMF_StateGet(aero_state,    'SS_AERO', ss_state, __RC__)
 
 ! Update the following time-dependent boundary conditions:
 !  Fixed concentration species
@@ -1641,66 +1638,25 @@ CONTAINS
   REAL, POINTER, DIMENSION(:,:,:) :: PTR3D
   REAL :: qmin,qmax
   
-  TYPE(ESMF_State)           :: aero
-  TYPE(ESMF_FieldBundle)     :: aerosols
-
   rc = 0
   IAm = "Acquire_BC"
 
   SELECT CASE (TRIM(self%aeroProviderName))
 
-   CASE("GOCART.data")
-
-    CALL ESMF_StateGet(impChem, 'AERO', aero, RC=STATUS)
-    VERIFY_(STATUS)
-    CALL ESMF_StateGet(aero, 'AEROSOLS', aerosols, RC=STATUS)
-    VERIFY_(STATUS)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'BCphobic', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%dAersl(:,:,km:1:-1,1) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('BCphobic:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'BCphilic', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,2) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('BCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-
-   CASE("GOCART")
-
-    IF(self%usingGOCART_BC) THEN
-
-     CALL MAPL_GetPointer(impChem, BCphobic, 'GOCART::BCphobic', RC=STATUS)
-     VERIFY_(STATUS)
-     CALL MAPL_GetPointer(impChem, BCphilic, 'GOCART::BCphilic', RC=STATUS)
-     VERIFY_(STATUS)
-
-     self%dAersl(:,:,km:1:-1,1) = BCphobic(:,:,1:km)*airdens(:,:,1:km)
-     self%wAersl(:,:,km:1:-1,2) = BCphilic(:,:,1:km)*airdens(:,:,1:km)
-
-     IF(self%verbose) THEN
-      CALL pmaxmin('BCphobic:', BCphobic, qmin, qmax, iXj, km, 1. )
-      CALL pmaxmin('BCphilic:', BCphilic, qmin, qmax, iXj, km, 1. )
-     END IF
-
-    END IF
-
    CASE("GOCART2G")
-   
-    CALL MAPL_GetPointer(impChem, BCphilic, 'CA.bcphilic', RC=STATUS)
-    VERIFY_(STATUS)
-    CALL MAPL_GetPointer(impChem, BCphobic, 'CA.bcphobic', RC=STATUS)
-    VERIFY_(STATUS)
-   
-    self%dAersl(:,:,km:1:-1,1) = BCphobic(:,:,1:km)*airdens(:,:,1:km)
-    self%wAersl(:,:,km:1:-1,2) = BCphilic(:,:,1:km)*airdens(:,:,1:km)
-   
+
+    call ESMF_StateGet(bc_state, 'CA.bcphobic', bc_phobic_3d_field, __RC__)
+    call ESMF_StateGet(bc_state, 'CA.bcphilic', bc_philic_3d_field, __RC__)
+
+    call ESMF_FieldGet( field=bc_phobic_3d_field, farrayPtr=bc_phobic_3d_array, __RC__ )
+    call ESMF_FieldGet( field=bc_philic_3d_field, farrayPtr=bc_philic_3d_array, __RC__ )
+
+    self%dAersl(:,:,km:1:-1,1) = bc_phobic_3d_array(:,:,1:km)*airdens(:,:,1:km)
+    self%wAersl(:,:,km:1:-1,2) = bc_philic_3d_array(:,:,1:km)*airdens(:,:,1:km)
+
     IF(self%verbose) THEN
-     CALL pmaxmin('BCphobic:', BCphobic, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('BCphilic:', BCphilic, qmin, qmax, iXj, km, 1. )
+     CALL MAPL_MaxMin('BCphobic:', bc_phobic_3d_array)
+     CALL MAPL_MaxMin('BCphilic:', bc_philic_3d_array)
     END IF
 
    CASE("GMICHEM")
@@ -1837,96 +1793,28 @@ CONTAINS
   REAL, POINTER, DIMENSION(:,:,:) :: PTR3D
   REAL :: qmin,qmax
   
-  TYPE(ESMF_State)           :: aero
-  TYPE(ESMF_FieldBundle)     :: aerosols
-
   rc = 0
   IAm = "Acquire_DU"
 
   SELECT CASE (TRIM(self%aeroProviderName))
 
-   CASE("GOCART.data")
-
-    CALL ESMF_StateGet(impChem, 'AERO', aero, RC=STATUS)
-    VERIFY_(STATUS)
-    CALL ESMF_StateGet(aero, 'AEROSOLS', aerosols, RC=STATUS)
-    VERIFY_(STATUS)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'du001', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%dust(:,:,km:1:-1,1) = PTR3D(:,:,1:km)*airdens(:,:,1:km)*0.009
-    self%dust(:,:,km:1:-1,2) = PTR3D(:,:,1:km)*airdens(:,:,1:km)*0.081
-    self%dust(:,:,km:1:-1,3) = PTR3D(:,:,1:km)*airdens(:,:,1:km)*0.234
-    self%dust(:,:,km:1:-1,4) = PTR3D(:,:,1:km)*airdens(:,:,1:km)*0.676
-    IF(self%verbose) CALL pmaxmin('du001:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'du002', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%dust(:,:,km:1:-1,5) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('du002:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'du003', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%dust(:,:,km:1:-1,6) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('du003:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'du004', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%dust(:,:,km:1:-1,7) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('du004:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-
-   CASE("GOCART")
-
-    IF(self%usingGOCART_DU) THEN
-
-     CALL MAPL_GetPointer(impChem, DU001, 'GOCART::du001', RC=STATUS)
-     VERIFY_(STATUS)
-     CALL MAPL_GetPointer(impChem, DU002, 'GOCART::du002', RC=STATUS)
-     VERIFY_(STATUS)
-     CALL MAPL_GetPointer(impChem, DU003, 'GOCART::du003', RC=STATUS)
-     VERIFY_(STATUS)
-     CALL MAPL_GetPointer(impChem, DU004, 'GOCART::du004', RC=STATUS)
-     VERIFY_(STATUS)
-
-     IF(self%verbose) THEN
-      CALL pmaxmin('DU001:', DU001, qmin, qmax, iXj, km, 1. )
-      CALL pmaxmin('DU002:', DU002, qmin, qmax, iXj, km, 1. )
-      CALL pmaxmin('DU003:', DU003, qmin, qmax, iXj, km, 1. )
-      CALL pmaxmin('DU004:', DU004, qmin, qmax, iXj, km, 1. )
-     END IF
-
-     self%dust(:,:,km:1:-1,1) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.009
-     self%dust(:,:,km:1:-1,2) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.081
-     self%dust(:,:,km:1:-1,3) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.234
-     self%dust(:,:,km:1:-1,4) = DU001(:,:,1:km)*airdens(:,:,1:km)*0.676
-     self%dust(:,:,km:1:-1,5) = DU002(:,:,1:km)*airdens(:,:,1:km)
-     self%dust(:,:,km:1:-1,6) = DU003(:,:,1:km)*airdens(:,:,1:km)
-     self%dust(:,:,km:1:-1,7) = DU004(:,:,1:km)*airdens(:,:,1:km)
-
-    END IF
-
    CASE("GOCART2G")
 
-    ! 'DU' 5 'bin' dimensions, kg kg-1 mass mixing ratio     
-    CALL MAPL_GetPointer(impChem, DU, 'DU', RC=STATUS)
-    VERIFY_(STATUS)
+    ! 'DU' 5 'bin' dimensions, kg kg-1 mass mixing ratio, top-down
+    call ESMF_StateGet(du_state,     'DU',           du_4d_field, __RC__)  ! note: 4-D
+    call ESMF_FieldGet(field=du_4d_field, farrayPtr=du_4d_array, __RC__ )  ! note: 4-D
     
     ! Create DU001-4 from DU bin dimension
-    DU001 => DU(:,:,1:km,1)
-    DU002 => DU(:,:,1:km,2)
-    DU003 => DU(:,:,1:km,3)
-    DU004 => DU(:,:,1:km,4)
+    DU001 => du_4d_array(:,:,1:km,1)
+    DU002 => du_4d_array(:,:,1:km,2)
+    DU003 => du_4d_array(:,:,1:km,3)
+    DU004 => du_4d_array(:,:,1:km,4)
      
     IF(self%verbose) THEN
-     CALL pmaxmin('DU001:', DU001, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('DU002:', DU002, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('DU003:', DU003, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('DU004:', DU004, qmin, qmax, iXj, km, 1. )
+     CALL MAPL_MaxMin('DU001:', DU001)
+     CALL MAPL_MaxMin('DU002:', DU002)
+     CALL MAPL_MaxMin('DU003:', DU003)
+     CALL MAPL_MaxMin('DU004:', DU004)
     END IF
 
     ! then create dust with the 7 bins created from the 4 dust bins
@@ -2054,78 +1942,35 @@ CONTAINS
   REAL, POINTER, DIMENSION(:,:,:) :: PTR3D
   REAL :: qmin,qmax
   
-  TYPE(ESMF_State)           :: aero
-  TYPE(ESMF_FieldBundle)     :: aerosols
-  TYPE(ESMF_StateItem_Flag)  :: itemtype
-
   rc = 0
   IAm = "Acquire_OC"
 
   SELECT CASE (TRIM(self%aeroProviderName))
 
-   CASE("GOCART.data")
-
-    CALL ESMF_StateGet(impChem, 'AERO', aero, RC=STATUS)
-    VERIFY_(STATUS)
-    CALL ESMF_StateGet(aero, 'AEROSOLS', aerosols, RC=STATUS)
-    VERIFY_(STATUS)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'OCphobic', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%dAersl(:,:,km:1:-1,2) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('OCphobic:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'OCphilic', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,3) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('OCphilic:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-
-   CASE("GOCART")
-
-    IF(self%usingGOCART_OC) THEN
-
-     CALL MAPL_GetPointer(impChem, OCphobic, 'GOCART::OCphobic', RC=STATUS)
-     VERIFY_(STATUS)
-     CALL MAPL_GetPointer(impChem, OCphilic, 'GOCART::OCphilic', RC=STATUS)
-     VERIFY_(STATUS)
-
-     self%dAersl(:,:,km:1:-1,2) = OCphobic(:,:,1:km)*airdens(:,:,1:km)
-     self%wAersl(:,:,km:1:-1,3) = OCphilic(:,:,1:km)*airdens(:,:,1:km)
-
-     IF(self%verbose) THEN
-      CALL pmaxmin('OCphobic:', OCphobic, qmin, qmax, iXj, km, 1. )
-      CALL pmaxmin('OCphilic:', OCphilic, qmin, qmax, iXj, km, 1. )
-     END IF
-
-    END IF
-
    CASE("GOCART2G")
     
-    CALL MAPL_GetPointer(impChem, OCphobic, 'CA.ocphobic', RC=STATUS)
-    VERIFY_(STATUS)
-    CALL MAPL_GetPointer(impChem, OCphilic, 'CA.ocphilic', RC=STATUS)
-    VERIFY_(STATUS)
-   
-    self%dAersl(:,:,km:1:-1,2) = OCphobic(:,:,1:km)*airdens(:,:,1:km)
-    self%wAersl(:,:,km:1:-1,3) = OCphilic(:,:,1:km)*airdens(:,:,1:km)
+    call ESMF_StateGet(oc_state, 'CA.ocphobic', oc_phobic_3d_field, __RC__)
+    call ESMF_StateGet(oc_state, 'CA.ocphilic', oc_philic_3d_field, __RC__)
+    call ESMF_StateGet(br_state, 'CA.brphobic', br_phobic_3d_field, __RC__)
+    call ESMF_StateGet(br_state, 'CA.brphilic', br_philic_3d_field, __RC__)
+
+    call ESMF_FieldGet( field=oc_phobic_3d_field, farrayPtr=oc_phobic_3d_array, __RC__ )
+    call ESMF_FieldGet( field=oc_philic_3d_field, farrayPtr=oc_philic_3d_array, __RC__ )
+    call ESMF_FieldGet( field=br_phobic_3d_field, farrayPtr=br_phobic_3d_array, __RC__ )
+    call ESMF_FieldGet( field=br_philic_3d_field, farrayPtr=br_philic_3d_array, __RC__ )
+
+    self%dAersl(:,:,km:1:-1,2) = oc_phobic_3d_array(:,:,1:km)*airdens(:,:,1:km)
+    self%wAersl(:,:,km:1:-1,3) = oc_philic_3d_array(:,:,1:km)*airdens(:,:,1:km)
 
     !GOCART2G has brown carbon broken out 
-    CALL MAPL_GetPointer(impChem, BRphobic, 'CA.brphobic', RC=STATUS)
-    VERIFY_(STATUS)
-    CALL MAPL_GetPointer(impChem, BRphilic, 'CA.brphilic', RC=STATUS)
-    VERIFY_(STATUS)
-
-    self%dAersl(:,:,km:1:-1,2) = self%dAersl(:,:,km:1:-1,2)+BRphobic(:,:,1:km)*airdens(:,:,1:km)
-    self%wAersl(:,:,km:1:-1,3) = self%wAersl(:,:,km:1:-1,3)+BRphilic(:,:,1:km)*airdens(:,:,1:km)
+    self%dAersl(:,:,km:1:-1,2) = self%dAersl(:,:,km:1:-1,2)+br_phobic_3d_array(:,:,1:km)*airdens(:,:,1:km)
+    self%wAersl(:,:,km:1:-1,3) = self%wAersl(:,:,km:1:-1,3)+br_philic_3d_array(:,:,1:km)*airdens(:,:,1:km)
 
     IF(self%verbose) THEN
-     CALL pmaxmin('OCphobic:', OCphobic, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('OCphilic:', OCphilic, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('BRphobic:', BRphobic, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('BRphilic:', BRphilic, qmin, qmax, iXj, km, 1. )
+     CALL MAPL_MaxMin('OCphobic:', oc_phobic_3d_array)   
+     CALL MAPL_MaxMin('OCphilic:', oc_philic_3d_array)   
+     CALL MAPL_MaxMin('BRphobic:', br_phobic_3d_array)   
+     CALL MAPL_MaxMin('BRphilic:', br_philic_3d_array)   
     END IF
 
    CASE("GMICHEM")
@@ -2215,104 +2060,31 @@ CONTAINS
   REAL, POINTER, DIMENSION(:,:,:) :: PTR3D
   REAL :: qmin,qmax
   
-  TYPE(ESMF_State)           :: aero
-  TYPE(ESMF_FieldBundle)     :: aerosols
-
   rc = 0
   IAm = "Acquire_SS"
 
   SELECT CASE (TRIM(self%aeroProviderName))
 
-   CASE("GOCART.data")
-
-    CALL ESMF_StateGet(impChem, 'AERO', aero, RC=STATUS)
-    VERIFY_(STATUS)
-    CALL ESMF_StateGet(aero, 'AEROSOLS', aerosols, RC=STATUS)
-    VERIFY_(STATUS)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'ss001', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,4) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('ss001:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'ss002', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,4) = self%wAersl(:,:,km:1:-1,4)+PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('ss002:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'ss003', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,5) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('ss003:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'ss004', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,5) = self%wAersl(:,:,km:1:-1,5)+PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('ss004:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'ss005', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,5) = self%wAersl(:,:,km:1:-1,5)+PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('ss005:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-
-   CASE("GOCART")
-
-    IF(self%usingGOCART_SS) THEN
-
-     CALL MAPL_GetPointer(impChem, SS001, 'GOCART::ss001', RC=STATUS)
-     VERIFY_(STATUS)
-     CALL MAPL_GetPointer(impChem, SS002, 'GOCART::ss002', RC=STATUS)
-     VERIFY_(STATUS)
-     CALL MAPL_GetPointer(impChem, SS003, 'GOCART::ss003', RC=STATUS)
-     VERIFY_(STATUS)
-     CALL MAPL_GetPointer(impChem, SS004, 'GOCART::ss004', RC=STATUS)
-     VERIFY_(STATUS)
-     CALL MAPL_GetPointer(impChem, SS005, 'GOCART::ss005', RC=STATUS)
-     VERIFY_(STATUS)
-
-     IF(self%verbose) THEN
-      CALL pmaxmin('SS001:', SS001, qmin, qmax, iXj, km, 1. )
-      CALL pmaxmin('SS002:', SS002, qmin, qmax, iXj, km, 1. )
-      CALL pmaxmin('SS003:', SS003, qmin, qmax, iXj, km, 1. )
-      CALL pmaxmin('SS004:', SS004, qmin, qmax, iXj, km, 1. )
-      CALL pmaxmin('SS005:', SS005, qmin, qmax, iXj, km, 1. )
-     END IF
-
-! Accumulated
-! -----------
-     self%wAersl(:,:,km:1:-1,4) = (SS001(:,:,1:km)+SS002(:,:,1:km))*airdens(:,:,1:km)
-
-! Coarse
-! ------
-     self%wAersl(:,:,km:1:-1,5) = (SS003(:,:,1:km)+SS004(:,:,1:km)+SS005(:,:,1:km))*airdens(:,:,1:km)
-
-    END IF
-
    CASE("GOCART2G")
-    
-    CALL MAPL_GetPointer(impChem, SS, 'SS', RC=STATUS)
-    VERIFY_(STATUS)
-    
+
+    ! 'SS' 5 'bin' dimensions, kg kg-1 mass mixing ratio, top-down
+    call ESMF_StateGet(ss_state,           'SS',    ss_4d_field, __RC__)  ! note: 4-D
+    call ESMF_FieldGet(field=ss_4d_field, farrayPtr=ss_4d_array, __RC__)  ! note: 4-D
+
 ! Create SS001-5 from SS bin dimension 
 ! ------------------------------------
-    SS001 => SS(:,:,:,1)
-    SS002 => SS(:,:,:,2)
-    SS003 => SS(:,:,:,3)
-    SS004 => SS(:,:,:,4)
-    SS005 => SS(:,:,:,5)
+    SS001 => ss_4d_array(:,:,:,1)
+    SS002 => ss_4d_array(:,:,:,2)
+    SS003 => ss_4d_array(:,:,:,3)
+    SS004 => ss_4d_array(:,:,:,4)
+    SS005 => ss_4d_array(:,:,:,5)
      
     IF(self%verbose) THEN
-     CALL pmaxmin('SS001:', SS001, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('SS002:', SS002, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('SS003:', SS003, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('SS004:', SS004, qmin, qmax, iXj, km, 1. )
-     CALL pmaxmin('SS005:', SS005, qmin, qmax, iXj, km, 1. )
+     CALL MAPL_MaxMin('SS001:', SS001)
+     CALL MAPL_MaxMin('SS002:', SS002)
+     CALL MAPL_MaxMin('SS003:', SS003)
+     CALL MAPL_MaxMin('SS004:', SS004)
+     CALL MAPL_MaxMin('SS005:', SS005)
     END IF
 
 ! Accumulated
@@ -2434,8 +2206,6 @@ CONTAINS
   REAL, POINTER, DIMENSION(:,:,:) :: PTR3D
   REAL :: qmin,qmax
 
-  TYPE(ESMF_State)           :: aero
-  TYPE(ESMF_FieldBundle)     :: aerosols
   TYPE(ESMF_StateItem_Flag)  :: itemtype
 
   rc = 0
@@ -2443,58 +2213,15 @@ CONTAINS
 
   SELECT CASE (TRIM(self%aeroProviderName))
 
-   CASE("GOCART.data")
-
-    CALL ESMF_StateGet(impChem, 'AERO', aero, RC=STATUS)
-    VERIFY_(STATUS)
-    CALL ESMF_StateGet(aero, 'AEROSOLS', aerosols, RC=STATUS)
-    VERIFY_(STATUS)
-
-    CALL ESMFL_BundleGetPointertoData(aerosols, 'SO4', PTR3D, RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,1) = PTR3D(:,:,1:km)*airdens(:,:,1:km)
-    IF(self%verbose) CALL pmaxmin('SO4:', PTR3D, qmin, qmax, iXj, km, 1. )
-    NULLIFY(PTR3D)
-
-
-   CASE("GOCART")
-
-    IF(self%usingGOCART_SU) THEN
-
-     CALL MAPL_GetPointer(impChem, SO4, 'GOCART::SO4', RC=STATUS)
-     VERIFY_(STATUS)
-     self%wAersl(:,:,km:1:-1,1) = SO4(:,:,1:km)*airdens(:,:,1:km)
-
-     IF(self%verbose) THEN
-      CALL pmaxmin('SO4:', SO4, qmin, qmax, iXj, km, 1. )
-     END IF
-
-     ! If volcanic SU exists, use it too:
-     CALL ESMF_StateGet(impChem, 'GOCART::SO4v', itemtype, RC=STATUS)
-     VERIFY_(STATUS)
-
-     IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
-       CALL MAPL_GetPointer(impChem, SO4, 'GOCART::SO4v', RC=STATUS)
-       VERIFY_(STATUS)
-
-       self%wAersl(:,:,km:1:-1,1) = &
-       self%wAersl(:,:,km:1:-1,1) + SO4(:,:,1:km)*airdens(:,:,1:km)
-
-       IF(self%verbose) THEN
-         CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
-       END IF
-     END IF
-
-    END IF
-
    CASE("GOCART2G")
 
-    CALL MAPL_GetPointer(impChem, SO4, 'SO4', RC=STATUS)
-    VERIFY_(STATUS)
-    self%wAersl(:,:,km:1:-1,1) = SO4(:,:,1:km)*airdens(:,:,1:km)
+    call ESMF_StateGet(su_state,    'SO4',           so4_3d_field, __RC__)
+    call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
+
+    self%wAersl(:,:,km:1:-1,1) = so4_3d_array(:,:,1:km)*airdens(:,:,1:km)
 
     IF(self%verbose) THEN
-     CALL pmaxmin('SO4:', SO4, qmin, qmax, iXj, km, 1. )
+     CALL MAPL_MaxMin('SO4:', so4_3d_array)
     END IF
 
  ! Currently, no volcanic SU exists, suggest ignoring by Pete 
