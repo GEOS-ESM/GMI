@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Capability for AERO_PROVIDER=GMICHEM
 - Capability for AERO_PROVIDER=CARMA (uses GMICHEM right now)
+- Connectivity from GOCART2G to GMI chem
 
 ### Changed
 

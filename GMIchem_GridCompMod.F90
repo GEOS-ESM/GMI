@@ -299,6 +299,19 @@ CONTAINS
 							RC=STATUS  )
       VERIFY_(STATUS)
 
+     CASE("GOCART2G")
+!   GOCART2G aerosols and dust
+!   --------------------------
+
+      call MAPL_AddImportSpec(GC,                       &
+         short_name = 'AERO',                           &
+         long_name  = 'aerosol_mass_mixing_ratios_ng',  &
+         units      = 'kg kg-1',                        &
+         dims       = MAPL_DimsHorzVert,                &
+         vlocation  = MAPL_VLocationCenter,             &
+         RESTART    = MAPL_RestartSkip,                 &
+         datatype   = MAPL_StateItem, __RC__)
+
 
      CASE("GMICHEM")
 
