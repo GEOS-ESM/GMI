@@ -1398,15 +1398,17 @@ CONTAINS
    CALL Set_numTimeSteps(self%gmiClock, ic+1)
    CALL Set_gmiSeconds(self%gmiClock, (ic+1)*chemDt)
 
+   IF ( TRIM(self%aeroProviderName) .EQ. "GOCART2G" ) THEN
 ! Get the AERO state and individual Aerosol states
 ! ------------------------------------------------
-   call ESMF_StateGet(impChem, 'AERO', aero_state, __RC__)
-   call ESMF_StateGet(aero_state, 'CA.bc_AERO', bc_state, __RC__)
-   call ESMF_StateGet(aero_state, 'CA.oc_AERO', oc_state, __RC__)
-   call ESMF_StateGet(aero_state, 'CA.br_AERO', br_state, __RC__)
-   call ESMF_StateGet(aero_state,    'SU_AERO', su_state, __RC__)
-   call ESMF_StateGet(aero_state,    'DU_AERO', du_state, __RC__)
-   call ESMF_StateGet(aero_state,    'SS_AERO', ss_state, __RC__)
+      call ESMF_StateGet(impChem, 'AERO', aero_state, __RC__)
+      call ESMF_StateGet(aero_state, 'CA.bc_AERO', bc_state, __RC__)
+      call ESMF_StateGet(aero_state, 'CA.oc_AERO', oc_state, __RC__)
+      call ESMF_StateGet(aero_state, 'CA.br_AERO', br_state, __RC__)
+      call ESMF_StateGet(aero_state,    'SU_AERO', su_state, __RC__)
+      call ESMF_StateGet(aero_state,    'DU_AERO', du_state, __RC__)
+      call ESMF_StateGet(aero_state,    'SS_AERO', ss_state, __RC__)
+   END IF
 
 ! Update the following time-dependent boundary conditions:
 !  Fixed concentration species
