@@ -137,8 +137,7 @@
      LOGICAL :: pr_diag
      LOGICAL :: do_drydep
      LOGICAL :: do_wetdep
-     LOGICAL :: do_emission             
-     LOGICAL :: do_aerocom             
+     LOGICAL :: do_emission            
      LOGICAL :: pr_const
      LOGICAL :: do_synoz
      LOGICAL :: do_gcr
@@ -399,10 +398,6 @@
 
     call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%pr_const, &
               label="pr_const:", default=.false., rc=STATUS )
-    VERIFY_(STATUS)
-
-    call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_aerocom, &
-              label="do_aerocom:", default=.false., rc=STATUS )
     VERIFY_(STATUS)
 
     call ESMF_ConfigGetAttribute(gmiConfigFile, self%metdata_name_org, &
@@ -783,9 +778,10 @@
    USE GmiTimeControl_mod,            ONLY : Set_numTimeSteps, Get_numTimeSteps
    USE GmiTimeControl_mod,            ONLY : Set_gmiSeconds, GetSecondsFromJanuary1
    USE GmiSpcConcentrationMethod_mod, ONLY : resetFixedConcentration
-   USE GmiSolar_mod,                  ONLY : CalcCosSolarZenithAngle
    USE GmiEmissionMethod_mod,         ONLY : RunEmission
    USE GmiEmissionMethod_mod,         ONLY : Get_lightning_opt
+   USE SZA_from_MAPL_mod,             ONLY : compute_SZA
+
 !.sds
    USE Gmi_SEmissMethod_Mod
    use GmiSpeciesRegistry_mod, only : getSpeciesIndex
@@ -794,6 +790,7 @@
    use GOCART2G_Process,              only : ReadPointEmissions
    use MAPL_BaseMod,                  only : MAPL_GetHorzIJIndex
 !.sds.end
+
    IMPLICIT none
 
 ! !INPUT/OUTPUT PARAMETERS:
@@ -815,7 +812,7 @@
    INTEGER,                 INTENT(IN)    :: nymd, nhms  ! time
    REAL,                    INTENT(IN)    :: tdt         ! chemical timestep (secs)
    LOGICAL,                 INTENT(IN)    :: mixPBL      ! whether to explicitly distribute
-                                                         ! aerosol emissions within the PBL
+                                                         ! emissions within the PBL
 ! !OUTPUT PARAMETERS:
 
    INTEGER,                 INTENT(OUT)   :: rc          ! Error return code:
@@ -890,7 +887,7 @@
    REAL, PARAMETER :: secPerDay = 86400.00
    REAL, PARAMETER :: err = 1.00E-04
 
-   REAL(KIND=DBL) :: chemDt, dayOfYear
+   REAL(KIND=DBL) :: chemDt
 
    CHARACTER(LEN=ESMF_MAXSTR) :: speciesName
    CHARACTER(LEN=ESMF_MAXSTR) :: importName
@@ -1095,6 +1092,11 @@
    CALL SatisfyImports(STATUS)
    VERIFY_(STATUS)
 
+! SZA
+! ---                           
+   call compute_SZA ( GC=gc, CLOCK=clock, tdt=tdt, label='GMI-EMISS', &
+                      SZA=cosSolarZenithAngle, __RC__ )
+
 ! Daily or monthly emissions inventories
 ! -----------------------------------------
    CALL Refresh_Daily(STATUS)
@@ -1184,7 +1186,7 @@
                      ISSLT3, ISSLT4, IFSO2, INSO2, INDMS, IAN, IMGAS, INO,     &
                      IC5H8, INO, ICO, IC3H6, IHNO3, IO3, NSP, diffusePAR,      &
                      directPAR, T_15_AVG, self%met_opt, self%chem_opt,         &
-                     self%trans_opt, self%do_aerocom, self%do_drydep,          &
+                     self%trans_opt, self%do_drydep,          &
                      self%pr_diag, self%pr_const, self%pr_surf_emiss,          &
                      self%pr_emiss_3d, self%metdata_name_org,                  &
                      self%metdata_name_model, tdt, mixPBL, light_NO_prod)
@@ -2441,13 +2443,6 @@ CONTAINS
                        (zle(:,:,k-1)-zle(:,:,k))
     gridBoxThickness(:,:,kReverse) = zle(:,:,k-1)-zle(:,:,k)                ! m
   END DO
-
-! Obtain instantaneous apparent sun
-! ---------------------------------
-  CALL GetSecondsFromJanuary1(ic, nymd, nhms)
-  dayOfYear = (1.00*ic)/secPerDay
-  CALL CalcCosSolarZenithAngle(dayOfYear, latDeg, lonDeg, cosSolarZenithAngle, &
-                                i1, i2, j1, j2)
 
   RETURN
  END SUBROUTINE SatisfyImports

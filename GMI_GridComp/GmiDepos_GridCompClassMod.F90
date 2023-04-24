@@ -109,6 +109,11 @@
    REAL, POINTER :: lonRad(:,:)
    REAL, POINTER :: latRad(:,:)
 
+! Needed for SZA
+! ----------------------------------
+   TYPE(MAPL_SunOrbit)  :: ORBIT
+   TYPE(ESMF_Clock)     :: CLOCK
+
 ! Extra diagnostics
 ! -----------------
    LOGICAL :: verbose
@@ -478,11 +483,11 @@ CONTAINS
    USE GmiTimeControl_mod,            ONLY : Set_numTimeSteps, Get_numTimeSteps
    USE GmiTimeControl_mod,            ONLY : Set_gmiSeconds, GetSecondsFromJanuary1
    USE GmiSpcConcentrationMethod_mod, ONLY : resetFixedConcentration
-   USE GmiSolar_mod,                  ONLY : CalcCosSolarZenithAngle
    USE GmiDepositionMethod_mod,       ONLY : RunDryDeposition, RunWetDeposition
    USE GmiDepositionMethod_mod,       ONLY : Set_dry_depos, Set_wet_depos, Set_scav3d
    USE GmiDepositionMethod_mod,       ONLY : Get_dry_depos, Get_wet_depos, Get_scav3d
    USE GmiGravitationalSettling_mod,  ONLY : updateGravitationalSettling
+   USE SZA_from_MAPL_mod,             ONLY : compute_SZA
 
    IMPLICIT none
 
@@ -549,8 +554,6 @@ CONTAINS
    INTEGER, PARAMETER :: ToGMI = 1
    INTEGER, PARAMETER :: FromGMI = -1
 
-   REAL :: pi,degToRad,radToDeg,OneOverDt
-
    REAL, PARAMETER :: mwtAir = 28.9
    REAL, PARAMETER :: rStar = 8.314E+03
    REAL, PARAMETER :: Pa2hPa = 0.01
@@ -558,7 +561,7 @@ CONTAINS
    REAL, PARAMETER :: secPerDay = 86400.00
    REAL, PARAMETER :: err = 1.00E-04
 
-   REAL(KIND=DBL) :: chemDt, dayOfYear
+   REAL(KIND=DBL) :: chemDt
 
    CHARACTER(LEN=255) :: speciesName
    CHARACTER(LEN=255) :: importName
@@ -572,9 +575,6 @@ CONTAINS
 
    REAL, ALLOCATABLE :: var3d(:,:,:)
    REAL, ALLOCATABLE :: pl(:,:,:)
-
-   REAL(KIND=DBL), ALLOCATABLE :: lonDeg(:,:)
-   REAL(KIND=DBL), ALLOCATABLE :: latDeg(:,:)
 
    REAL(KIND=DBL), ALLOCATABLE :: TwoMeter_air_temp(:,:)
    REAL(KIND=DBL), ALLOCATABLE :: fracCloudCover(:,:)
@@ -621,11 +621,7 @@ CONTAINS
 
 !  Some real constants
 !  -------------------
-   pi = 4.00*ATAN(1.00)
-   degToRad = pi/180.00
-   radToDeg = 180.00/pi
    chemDt = tdt
-   OneOverDt = 1.00/tdt
 
    rootProc=.FALSE.
    IF( MAPL_AM_I_ROOT() ) THEN
@@ -638,11 +634,6 @@ CONTAINS
 
 !  Reserve some local work space
 !  -----------------------------
-   ALLOCATE(lonDeg(i1:i2,j1:j2),STAT=STATUS)
-   VERIFY_(STATUS)
-   ALLOCATE(latDeg(i1:i2,j1:j2),STAT=STATUS)
-   VERIFY_(STATUS)
-
    ALLOCATE(         lwis_flags(i1:i2,j1:j2),STAT=STATUS)
    VERIFY_(STATUS)
    ALLOCATE(     fracCloudCover(i1:i2,j1:j2),STAT=STATUS)
@@ -692,11 +683,6 @@ CONTAINS
    ALLOCATE(s_velocity(i1:i2,j1:j2,NSP),STAT=STATUS)
    VERIFY_(STATUS)
 
-! Geolocation
-! -----------
-   lonDeg(i1:i2,j1:j2)=self%lonRad(i1:i2,j1:j2)*radToDeg
-   latDeg(i1:i2,j1:j2)=self%latRad(i1:i2,j1:j2)*radToDeg
-
 !  Layer mean pressures. NOTE: ple(:,:,0:km)
 !  -----------------------------------------
    DO k=1,km
@@ -724,6 +710,12 @@ CONTAINS
 ! -------------------------------------
    CALL SatisfyImports(STATUS)
    VERIFY_(STATUS)
+
+! SZA
+! ---
+   call compute_SZA ( LONS=self%lonRad, LATS=self%latRad, ORBIT=self%orbit, &
+                      CLOCK=self%clock, tdt=tdt, label='GMI-DEPOS', &
+                      SZA=cosSolarZenithAngle, __RC__ )
 
 ! Hand the species concentrations to GMI's bundle
 ! -----------------------------------------------
@@ -824,9 +816,6 @@ CONTAINS
 
 ! Scratch local work space
 ! ------------------------
-   DEALLOCATE(lonDeg, latDeg, STAT=STATUS)
-   VERIFY_(STATUS)
-
    DEALLOCATE(lwis_flags, TwoMeter_air_temp, &
               fracCloudCover, surf_rough, cosSolarZenithAngle, &
               radswg, frictionVelocity, con_precip, tot_precip, STAT=STATUS)
@@ -1208,13 +1197,6 @@ CONTAINS
                        (zle(:,:,k-1)-zle(:,:,k))
     gridBoxThickness(:,:,kReverse) = zle(:,:,k-1)-zle(:,:,k)                ! m
    END DO
-
-! Obtain instantaneous apparent sun
-! ---------------------------------
-   CALL GetSecondsFromJanuary1(ic, nymd, nhms)
-   dayOfYear = (1.00*ic)/secPerDay
-   CALL CalcCosSolarZenithAngle(dayOfYear, latDeg, lonDeg, cosSolarZenithAngle, &
-                                i1, i2, j1, j2)
 
   RETURN
  END SUBROUTINE SatisfyImports

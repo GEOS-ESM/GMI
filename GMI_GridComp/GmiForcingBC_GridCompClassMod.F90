@@ -563,7 +563,6 @@ CONTAINS
    USE GmiTimeControl_mod,            ONLY : Set_gmiSeconds, GetSecondsFromJanuary1
    USE GmiTimeControl_mod,            ONLY : Get_gmiSeconds, Get_begGmiDate
    USE GmiSpcConcentrationMethod_mod, ONLY : resetFixedConcentration
-   USE GmiSolar_mod,                  ONLY : CalcCosSolarZenithAngle
    use GmiUpdateForcingBC_mod       , only : updateForcingBC
 
    IMPLICIT none

@@ -643,7 +643,6 @@ CONTAINS
    USE GmiTimeControl_mod,            ONLY : Set_curGmiDate, Set_curGmiTime
    USE GmiTimeControl_mod,            ONLY : Set_numTimeSteps, Get_numTimeSteps
    USE GmiTimeControl_mod,            ONLY : Set_gmiSeconds, GetSecondsFromJanuary1
-   USE GmiSolar_mod,                  ONLY : CalcCosSolarZenithAngle
    USE GmiSpcConcentrationMethod_mod, ONLY : resetFixedConcentration
    USE GmiUpdateSAD_mod,              ONLY : updateSurfaceAreaDensities
 
