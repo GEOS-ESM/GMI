@@ -430,3 +430,5 @@ stOX_loss_reactions::
   QQK259  1.0   'NO2 + RCO3 = PPN'
   QQK310  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3'
 ::
+
+OCS_JRATE: QJ073
