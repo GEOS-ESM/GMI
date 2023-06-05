@@ -447,3 +447,5 @@ stOX_loss_reactions::
   QQK324  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3'
   QQK331  1.0   'O3 + SO2 = H2SO4'
 ::
+
+OCS_JRATE: QJ075

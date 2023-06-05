@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Capability for AERO_PROVIDER=GOCART2G data-driven (GOCART.data)
+- Export OCS_JRATE for use by ACHEM
+
 ### Changed
 
 ### Fixed

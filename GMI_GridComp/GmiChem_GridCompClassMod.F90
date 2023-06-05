@@ -120,6 +120,10 @@
    REAL(KIND=DBL), allocatable                 :: rmult(:)  ! vector of multipliers
    CHARACTER(LEN=RXN_LONGNAME_LENGTH), pointer :: rdesc(:)  ! vector of reaction long  names
 
+! for exporting OCS_JRATE
+! -----------------------
+   CHARACTER (LEN=20) :: ocs_jrate_name
+
 ! Extra diagnostics
 ! -----------------
    LOGICAL :: verbose
@@ -323,6 +327,10 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%do_grav_set, &
      &           label="do_grav_set:", default=.false., rc=STATUS)
+      VERIFY_(STATUS)
+
+      call ESMF_ConfigGetAttribute(gmiConfig, value=self%ocs_jrate_name, &
+     &           label="OCS_JRATE:", default='UNDEFINED_OCS_JRATE', rc=STATUS)
       VERIFY_(STATUS)
 
       !------------------------------
@@ -722,7 +730,7 @@ CONTAINS
 
 !  Exports not part of internal state
 !  ----------------------------------
-   REAL, POINTER, DIMENSION(:,:,:) :: O3ppmv, O3, stOX_loss
+   REAL, POINTER, DIMENSION(:,:,:) :: O3ppmv, O3, stOX_loss, OCS_jrate
 
 !  Exports for reactions diagnostics
 !  ---------------------------------
@@ -1090,6 +1098,23 @@ CONTAINS
    IF(ASSOCIATED(O3)) &
         O3(i1:i2,j1:j2,1:km) = bgg%qa(ic)%data3d(i1:i2,j1:j2,1:km)*(MAPL_O3MW/MAPL_AIRMW)
 
+   IF(ASSOCIATED(OCS_jrate)) THEN
+     ! Assume name is QJnnn
+     READ( self%ocs_jrate_name(3:5),*,IOSTAT=rc) rxn_index
+     _ASSERT(rc==0, TRIM(Iam)//': trouble extracting index from '//TRIM(self%ocs_jrate_name))
+
+!    IF(MAPL_AM_I_ROOT( ))PRINT *,TRIM(IAm),': DEFINE OCS_JRATE as '//TRIM(self%ocs_jrate_name)//' index ',rxn_index
+
+     SELECT CASE (self%ocs_jrate_name(1:2))
+
+       CASE("QJ")
+         OCS_jrate(i1:i2,j1:j2,1:km) = gmiQJ(rxn_index)%pArray3D(i1:i2,j1:j2,km:1:-1)
+       CASE DEFAULT
+         _ASSERT(.FALSE., TRIM(Iam)//': reaction must be QJ : '//TRIM(self%ocs_jrate_name))
+
+     END SELECT
+   END IF
+
 ! --------------------------------------------------------------------
 ! Reaction rate constants (q) and rates (qq)
 ! --------------------------------------------------------------------
@@ -1339,6 +1364,8 @@ CONTAINS
    CALL MAPL_GetPointer(expChem,        O3,         'O3', RC=STATUS)
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(expChem, stOX_loss,  'stOX_loss', RC=STATUS)
+   VERIFY_(STATUS)
+   CALL MAPL_GetPointer(expChem, OCS_jrate,  'OCS_JRATE', RC=STATUS)
    VERIFY_(STATUS)
 
 #include "Reactions_GetPointer___.h"
