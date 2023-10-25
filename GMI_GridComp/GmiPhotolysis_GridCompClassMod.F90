@@ -936,7 +936,7 @@ CONTAINS
          !=========
       end if
 
-      if ((self%phot_opt == 3)) then
+      if (self%phot_opt == 3) then
          Allocate(self%dust(i1:i2, ju1:j2, k1:k2, nSADdust))
          self%dust = 0.0d0
 
@@ -2323,49 +2323,55 @@ CONTAINS
       ! For the QJ Bundle
       !==================
 
-      call ESMF_StateGet(expChem, "gmiQJ", qjBundle, rc=STATUS)
-      VERIFY_(STATUS)
+      if (self%phot_opt /= 0) then
+        call ESMF_StateGet(expChem, "gmiQJ", qjBundle, rc=STATUS)
+        VERIFY_(STATUS)
 
-      call ESMF_FieldBundleGet(qjBundle, fieldCount=numVars, rc=STATUS)
-      VERIFY_(STATUS)
-      _ASSERT(numVars == self%num_qjo,'GMI qjo bundle populate')
+        call ESMF_FieldBundleGet(qjBundle, fieldCount=numVars, rc=STATUS)
+        VERIFY_(STATUS)
+        _ASSERT(numVars == self%num_qjo,'GMI qjo bundle populate')
 
-      do ib = 1, numVars
-         ptr3D(:,:,:) = self%qjgmi(ib)%pArray3D(:,:,km:1:-1)
-         call updateTracerToBundle(qjBundle, ptr3D, ib)
-      end do
+        do ib = 1, numVars
+           ptr3D(:,:,:) = self%qjgmi(ib)%pArray3D(:,:,km:1:-1)
+           call updateTracerToBundle(qjBundle, ptr3D, ib)
+        end do
+      end if
 
       !=====================
       ! For the tArea Bundle
       !=====================
 
-      call ESMF_StateGet(expChem, "gmiTAREA", tAreaBundle, rc=STATUS)
-      VERIFY_(STATUS)
+      if (self%phot_opt == 3) then
+        call ESMF_StateGet(expChem, "gmiTAREA", tAreaBundle, rc=STATUS)
+        VERIFY_(STATUS)
 
-      call ESMF_FieldBundleGet(tAreaBundle, fieldCount=numVars, rc=STATUS)
-      VERIFY_(STATUS)
-      _ASSERT(numVars == nSADdust+nSADaer,'GMI tArea bundle populate')
+        call ESMF_FieldBundleGet(tAreaBundle, fieldCount=numVars, rc=STATUS)
+        VERIFY_(STATUS)
+        _ASSERT(numVars == nSADdust+nSADaer,'GMI tArea bundle populate')
 
-      do ib = 1, numVars
-         ptr3D(:,:,:) = self%tArea(:,:,km:1:-1,ib)
-         call updateTracerToBundle(tAreaBundle, ptr3D, ib)
-      end do
+        do ib = 1, numVars
+           ptr3D(:,:,:) = self%tArea(:,:,km:1:-1,ib)
+           call updateTracerToBundle(tAreaBundle, ptr3D, ib)
+        end do
+      end if
 
       !=======================
       ! For the eRadius Bundle
       !=======================
 
-      call ESMF_StateGet(expChem, "gmiERADIUS", eRadiusBundle, rc=STATUS)
-      VERIFY_(STATUS)
+      if (self%phot_opt == 3) then
+        call ESMF_StateGet(expChem, "gmiERADIUS", eRadiusBundle, rc=STATUS)
+        VERIFY_(STATUS)
 
-      call ESMF_FieldBundleGet(eRadiusBundle, fieldCount=numVars, rc=STATUS)
-      VERIFY_(STATUS)
-      _ASSERT(numVars == nSADdust+nSADaer,'GMI eRadius bundle populate')
+        call ESMF_FieldBundleGet(eRadiusBundle, fieldCount=numVars, rc=STATUS)
+        VERIFY_(STATUS)
+        _ASSERT(numVars == nSADdust+nSADaer,'GMI eRadius bundle populate')
 
-      do ib = 1, numVars
-         ptr3D(:,:,:) = self%eRadius(:,:,km:1:-1,ib)
-         call updateTracerToBundle(eRadiusBundle, ptr3D, ib)
-      end do
+        do ib = 1, numVars
+           ptr3D(:,:,:) = self%eRadius(:,:,km:1:-1,ib)
+           call updateTracerToBundle(eRadiusBundle, ptr3D, ib)
+        end do
+      end if
 
       deallocate (ptr3D)
 
@@ -2619,6 +2625,8 @@ CONTAINS
 !...(if you prefer to use maximally overlapping clouds, remove the exponent)
               tau_clw(:,:,km:1:-1) = tauclw(:,:,1:km)*(fcld(:,:,1:km)**1.5)
               tau_cli(:,:,km:1:-1) = taucli(:,:,1:km)*(fcld(:,:,1:km)**1.5)
+!             tau_clw(:,:,km:1:-1) = tauclw(:,:,1:km)*(fcld(:,:,1:km)     )
+!             tau_cli(:,:,km:1:-1) = taucli(:,:,1:km)*(fcld(:,:,1:km)     )
 
             tau_cloud(:,:,:) = tau_clw(:,:,:) + tau_cli(:,:,:)
 

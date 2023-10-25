@@ -1092,10 +1092,11 @@
    CALL SatisfyImports(STATUS)
    VERIFY_(STATUS)
 
-! SZA
+! SZA  (don't forget to take the cosine)
 ! ---                           
    call compute_SZA ( GC=gc, CLOCK=clock, tdt=tdt, label='GMI-EMISS', &
                       SZA=cosSolarZenithAngle, __RC__ )
+   cosSolarZenithAngle = COS( cosSolarZenithAngle * degToRad )
 
 ! Daily or monthly emissions inventories
 ! -----------------------------------------
@@ -1733,11 +1734,13 @@ CONTAINS
 !... scale needed for emissions, volcano files are in kg(S) emitted into SO2 so scale .ne. 1.0
             scale = 1.0
 !... volcanic point emissions are only in the top 1/3 of emission column, move ebot
-            if (TRIM(tmpstr) .eq. 'volcano' .and. etop .ne. ebot) then
-              ebot = etop - (etop-ebot)/3.
+            if (TRIM(tmpstr) .eq. 'volcano') then
+              if (etop .ne. ebot) then
+                ebot = etop - (etop-ebot)/3.
+              endif
 !... volcanic emissions are in kg(S), need kg(SO2)
-              CALL getMW(TRIM('EM_SO2'), itmp, mw, rc)
-              scale = mw/32.06
+                CALL getMW(TRIM('EM_SO2'), itmp, mw, rc)
+                scale = mw/32.06
             endif
 !
 !... distribute into column (z1 is gridbox top, z0 is gridbox bottom, arrays are bottom-up)

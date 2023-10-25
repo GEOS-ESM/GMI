@@ -561,6 +561,8 @@ CONTAINS
    REAL, PARAMETER :: secPerDay = 86400.00
    REAL, PARAMETER :: err = 1.00E-04
 
+   REAL            :: degToRad
+
    REAL(KIND=DBL) :: chemDt
 
    CHARACTER(LEN=255) :: speciesName
@@ -621,6 +623,8 @@ CONTAINS
 
 !  Some real constants
 !  -------------------
+   degToRad = MAPL_PI/180.00
+
    chemDt = tdt
 
    rootProc=.FALSE.
@@ -711,11 +715,12 @@ CONTAINS
    CALL SatisfyImports(STATUS)
    VERIFY_(STATUS)
 
-! SZA
+! SZA (don't forget to take the cosine)
 ! ---
    call compute_SZA ( LONS=self%lonRad, LATS=self%latRad, ORBIT=self%orbit, &
                       CLOCK=self%clock, tdt=tdt, label='GMI-DEPOS', &
                       SZA=cosSolarZenithAngle, __RC__ )
+   cosSolarZenithAngle = COS( cosSolarZenithAngle * degToRad )
 
 ! Hand the species concentrations to GMI's bundle
 ! -----------------------------------------------
