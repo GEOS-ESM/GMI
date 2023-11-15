@@ -2076,40 +2076,56 @@
 !
 !_1_
 !
-!.... JPL 97-4
+!.... JPL 19-5
 !
-        FUNCTION sksts_n2o5 (tk,pr,sad,ptrop)
-          real*8, OPTIONAL :: ptrop
-          real*8  tk(:) ,pr(:) ,sad(:)
-          real*8, DIMENSION (size(tk)) :: sksts_n2o5
-          real*8  gamma ,pi
-          real*8  avgvel(size(tk))
+      FUNCTION sksts_n2o5 (tk,pr,sad,ptrop)
 !
-          pi = acos(-1.0d0)
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:)
+      real*8, DIMENSION (size(tk)) :: sksts_n2o5
+      real*8  pi
+      real*8  avgvel(size(tk))
+!.sds..      real*8  gamma
+!... update
+      real*8  gamma(size(tk)), wt, k0, k1, k2
+!
+      pi = acos(-1.0d0)
 !
 !=======================================================================
 !     N2O5 + stratospheric sulfate aerosol = 2 HNO3
 !=======================================================================
+!           
+!.sds..!.... First order reaction rate constant
+!.sds..!.... PSC 3/30/99
+!.sds..      gamma     = 0.10d0
 !
-!.... First order reaction rate constant
-!.... PSC 3/30/99
+!... update gamma calc (older than JPL15)
 !
-          gamma    = 0.10d0
+!... weight % of H2SO4
+!.STS..      wt = 60.0d0
+      wt = 75.0d0
 !
-          avgvel(:)= 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &               (pi * mw(IN2O5)))**0.5d0
+!... JPL19
+      k0 = -25.5265 - 0.133188*wt + 0.00930846*wt*wt - 9.0194e-5*wt*wt*wt
+      k1 =  9283.76 +  115.345*wt -    5.19258*wt*wt + 0.0483464*wt*wt*wt
+      k2 = -851801. -  22191.2*wt +    766.916*wt*wt -   6.85427*wt*wt*wt
+      gamma(:) = exp (k0 + k1/tk(:) + k2/(tk(:)*tk(:)))
+!.end update
 !
-          where( sad > 0.0d0 )
-            sksts_n2o5   = 0.25d0 * gamma * avgvel * sad
-          elsewhere
-            sksts_n2o5   = 0.0d0
-          end where
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+                 (pi * mw(IN2O5)))**0.5d0
 !
-          if ( present(ptrop) ) then
-            where( pr > ptrop ) sksts_n2o5 = 0.0d0
-          end if
+      where ( sad > 0.0d0 )
+        sksts_n2o5   = 0.25d0 * gamma * avgvel * sad
+      elsewhere
+        sksts_n2o5   = 0.0d0
+      endwhere
 !
-        END FUNCTION sksts_n2o5
+      if ( present(ptrop) ) then
+        where ( pr > ptrop ) sksts_n2o5 = 0.0d0
+      endif
+!
+      END FUNCTION sksts_n2o5
 !
 !.... sksts_clono2 (temperature ,adcol ,pressure ,sad_lbs ,specarr( HCl,:) ,water ,ptrop)
 !
@@ -2220,7 +2236,7 @@
 !
 !_3_
 !
-!.... JPL 97-4
+!.... JPL 15-10
 !
         FUNCTION sksts_brono2 (tk,pr,sad,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -2228,6 +2244,7 @@
           real*8, DIMENSION (size(tk)) :: sksts_brono2
           real*8  gamma ,pi
           real*8  avgvel(size(tk))
+          real*8  wt
 !
           pi = acos(-1.0d0)
 !
@@ -2239,10 +2256,24 @@
 !
 !.... David Hanson, personal communication, May 13, 1997
 !
-          avgvel = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &              (pi * mw(IBRONO2)))**0.5d0
+!.orig          gamma = 0.8d0
 !
-          gamma  = 0.8d0
+!... JPL15-6 formulation
+!   Hanson has fit an empirical expression for measured gammas for BrONO2 + H2O in the form
+!    of:
+!      1/gamma = 1/alpha + 1/gamma(rxn)
+!    where
+!      gamma(rxn) = exp(a+b*wt)
+!      alpha = 0.80,
+!      a = 29.2,
+!      b = -0.40.
+!... assumed %wt for GMI
+      wt = 75.0d0
+!
+      gamma = 1.0d0 / ( 1.0d0/0.80d0 + 1.0d0/(exp(29.2d0-0.40d0*wt)) )
+!
+          avgvel = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+                  (pi * mw(IBRONO2)))**0.5d0
 !
           sksts_brono2 = 0.25d0 * gamma * avgvel * sad
 !
@@ -2926,7 +2957,7 @@
 !.... JPL 00-003
 !.... PSC 1/16/2002
 !
-          gprob            = 0.30d0
+          gprob            = 0.26d0   ! sds JPL19
           avgvel(:)        = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
      &                       (pi * mw(IBRONO2)))**0.5d0
 !
@@ -3047,7 +3078,7 @@
 !.... PSC 1/16/2002
 !
           minconc              = 1.0d0
-          gprob                = 0.30d0
+          gprob                = 0.26d0   ! sds JPL19
           avgvel(:)            = 100.0d0 *  &
      &                           (8.0d0 * 8.31448d0 * tk(:) *  &
      &                            1000.0d0 /  &
@@ -3091,7 +3122,7 @@
 !.... PSC 1/16/2002
 !
           minconc            = 1.0d0
-          gprob              = 0.20d0
+          gprob              = 0.30d0   ! sds JPL19
           avgvel(:)          = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
      &                         (pi * mw(IHOBR)))**0.5d0
 !
