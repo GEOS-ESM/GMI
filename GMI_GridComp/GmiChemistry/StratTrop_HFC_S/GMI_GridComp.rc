@@ -140,13 +140,22 @@ MEK_biom
 CO_biom
 NO_biom
 NO_air
+ALD2_biof
 ALK4_fosf
+ALK4_biof
 C2H6_fosf
+C2H6_biof
 PRPE_fosf
+PRPE_biof
 C3H8_fosf
+C3H8_biof
+CH2O_biof
 MEK_fosf
+MEK_biof
 CO_fosf
+CO_biof
 NO_fosf
+NO_biof
 SO2_FIRES-FLUX
 SO2_NONENERGY-FLUX
 SO2_ENERGY-FLUX
@@ -176,32 +185,51 @@ emissionSpeciesLayers::
 1
 1
 1
+1
+1
+1
+1
+1
+1
+1
+1
+1
 72
 ::
 
 emissionPointFilenames::
-SO2:volcano:/discover/nobackup/projects/gmao/share/dao_ops/fvInput_nc3/PIESA/sfc/volcanic_v7/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
+SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
 ::
-#SO2:volcano:/discover/nobackup/projects/gmao/share/dao_ops/fvInput_nc3/PIESA/sfc/volcanic_v7/so2_volcanic_effusive.v2.rc 
+# NOTE: Units for the volcano point source files: kg(S)/s
+#       Units that GMI wants                    : kg(SO2)/s
+#       GMI does the conversion in Refresh_Daily within the Emission section
+# from GOCART2G SU (AMIP):
+#   ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
+# from GOCART2G SU (OPS):
+#   ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_CARN_v202106.degassing_only.rc
+# includes eruptions:
+#   /discover/nobackup/projects/gmao/share/dao_ops/fvInput_nc3/PIESA/sfc/volcanic_v7/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
+# does not include eruptions:
+#   /discover/nobackup/projects/gmao/share/dao_ops/fvInput_nc3/PIESA/sfc/volcanic_v7/so2_volcanic_effusive.v2.rc 
 
 # Ship Emissions requires SHIP_NO in ExtData:
 do_ShipEmission: T
 doMEGANemission: T
-doMEGANviaHEMCO: F
+doMEGANviaHEMCO: T
 
 isop_scale::
-1.0d0
-1.0d0
-1.0d0
-1.0d0
-1.0d0
-1.0d0
-1.0d0
-1.0d0
-1.0d0
-1.0d0
-1.0d0
-1.0d0
+0.7d0
+0.7d0
+0.7d0
+0.7d0
+0.7d0
+0.7d0
+0.7d0
+0.7d0
+0.7d0
+0.7d0
+0.7d0
+0.7d0
 ::
 
 soil_infile_name:      ExtData/g5chem/x/GMI_SoilType.asc
@@ -262,7 +290,11 @@ forc_bc_kmax: 2
 #forc_bc_infile_name: /discover/nobackup/ldoman/fvInput/RCP6.0_5BrWMO2014_ch4latvar_1950_2100.asc
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/RCP6.0_5BrWMO2014_ch4latvar_1950_2100.asc
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/RCP6.0_5BrWMO2018_ch4latvar_1950_2100.asc
-forc_bc_infile_name:               ExtData/g5chem/x/GMI/ccmiRefD1_GMIbc_1950_2018.asc
+#forc_bc_infile_name:              ExtData/g5chem/x/GMI/ccmiRefD1_GMIbc_1950_2018.asc
+#forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/bench_10-26-0_gmi_free_c360_72lev/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_1950_2018.asc
+forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_no5Br_1950_2018.asc
+
+#alternative /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/RCP6.0_WMO2018_QingHFCs_ch4latvarGMDscl_1950_2022Hindcast.asc
 
 forcedBcSpeciesNames:: 
 CFC11
@@ -283,7 +315,18 @@ CH3Br
 CH3Cl
 CH4
 N2O
+HFC23
+HFC32
+HFC125
+HFC134A
+HFC143A
+HFC152A
+xxx
+xxx
 ::
+
+# The xxx entries above are for SF6 and CO2
+
 
 #     ----------------------------------------------------
 #     sad_opt
@@ -371,8 +414,8 @@ do_ozone_inFastJX: F
 
 ## For FastJX 6.5 & JPL10
  fastj_opt: 4
-# cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65_jpl10update2_JNOx1_0.dat
  cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65wSO4_jpl10update2_JNOx1_0.dat
+# cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65_jpl10update2_JNOx1_0.dat
 # rate_file not needed for FastJX6.5; new approach only differs by roundoff
 # rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_124spc_jx_gmiv2.dat
 # rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_119spc_jx_gmiv3.dat
@@ -414,7 +457,7 @@ FeedBack_QV: T
 NoPSCZone: 45
 PSC_Max_P_hPa: 175
 # Upper limit for HNO3COND [integer, ppbv]
-Condensed_HNO3_limit: 25
+Condensed_HNO3_limit: 75
 # Upper limit for HCl [real, ppbv]
 HCl_limit: 5.0
 

@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update CI to Baselibs 7.13.0
 - Changed a few SAD reactions to use JPL 2019 approach
+- ExtData now uses Benchmark G configuration
+- Emissions including 2D, 3D and point source (volcano) now are done as in Benchmark G
+- Isoprene scaling changed from 1 to 0.7
+- Boundary condition file now includes HFCs, and no longer includes extra Br (when HFC mech is chosen)
 
 ### Removed
 
