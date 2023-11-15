@@ -205,7 +205,7 @@ emissionSpeciesLayers::
 # Ship Emissions requires SHIP_NO in ExtData:
 do_ShipEmission: T
 doMEGANemission: T
-doMEGANviaHEMCO: T
+doMEGANviaHEMCO: F
 
 isop_scale::
 0.7d0

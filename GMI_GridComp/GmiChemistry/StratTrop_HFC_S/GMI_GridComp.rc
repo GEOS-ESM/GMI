@@ -215,7 +215,7 @@ SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%
 # Ship Emissions requires SHIP_NO in ExtData:
 do_ShipEmission: T
 doMEGANemission: T
-doMEGANviaHEMCO: T
+doMEGANviaHEMCO: F
 
 isop_scale::
 0.7d0

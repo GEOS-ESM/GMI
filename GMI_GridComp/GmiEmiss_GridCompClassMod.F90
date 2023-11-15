@@ -1578,10 +1578,10 @@ CONTAINS
 
       IF(i <= self%num_diurnal_emiss) THEN
         weightedField2D(:,:) = PTR2D(:,:)*cellWeighting(:,:)
-        CALL Chem_BiomassDiurnal(var2D,                                     &
-                               weightedField2D(:,:),                        &
-                               self%lonRad(:,:)*MAPL_RADIANS_TO_DEGREES,    &
-                               self%latRad(:,:)*MAPL_RADIANS_TO_DEGREES,    &
+        CALL Chem_BiomassDiurnal(var2D,                                         &
+                               weightedField2D(:,:),                            &
+                               self%lonRad(:,:)*real(MAPL_RADIANS_TO_DEGREES),  &
+                               self%latRad(:,:)*real(MAPL_RADIANS_TO_DEGREES),  &
                                nhms, tdt)
         self%Emission%emissionArray(i)%pArray3D(:,:,1) = var2D(:,:)
       ELSE
