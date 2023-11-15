@@ -711,11 +711,12 @@ CONTAINS
    CALL SatisfyImports(STATUS)
    VERIFY_(STATUS)
 
-! SZA
+! SZA (don't forget to take the cosine)
 ! ---
    call compute_SZA ( LONS=self%lonRad, LATS=self%latRad, ORBIT=self%orbit, &
                       CLOCK=self%clock, tdt=tdt, label='GMI-DEPOS', &
                       SZA=cosSolarZenithAngle, __RC__ )
+   cosSolarZenithAngle = COS( cosSolarZenithAngle * MAPL_DEGREES_TO_RADIANS )
 
 ! Hand the species concentrations to GMI's bundle
 ! -----------------------------------------------

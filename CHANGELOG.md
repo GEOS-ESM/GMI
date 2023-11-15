@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - QQJK diag calc had bug, used time(t+dt) constituents ibstead of time(t) fields, fixed on 2023Jul19
+- Fixed bug in Emissions and Deposition where SZA degrees was used instead of cosine(SZA)
+- Fixed units for degassing volcano point emissions
 
 ### Added
 
@@ -19,8 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update CI to Baselibs 7.13.0
-
-### Fixed
 
 ### Removed
 

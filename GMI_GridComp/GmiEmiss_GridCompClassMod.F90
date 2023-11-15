@@ -878,7 +878,7 @@
    INTEGER, PARAMETER :: ToGMI = 1
    INTEGER, PARAMETER :: FromGMI = -1
 
-   REAL :: mw, pi, degToRad, radToDeg, OneOverDt
+   REAL :: mw, OneOverDt
 
    REAL, PARAMETER :: mwtAir = 28.9
    REAL, PARAMETER :: rStar = 8.314E+03
@@ -972,9 +972,6 @@
 !  Some real constants
 !  -------------------
 !   pi = 4.00*ATAN(1.00)
-   pi = MAPL_PI
-   degToRad = pi/180.00
-   radToDeg = 180.00/pi
    chemDt = tdt
    OneOverDt = 1.00/tdt
 
@@ -1062,8 +1059,8 @@
 
 ! Geolocation
 ! -----------
-   lonDeg(i1:i2,j1:j2)=self%lonRad(i1:i2,j1:j2)*radToDeg
-   latDeg(i1:i2,j1:j2)=self%latRad(i1:i2,j1:j2)*radToDeg
+   lonDeg(i1:i2,j1:j2)=self%lonRad(i1:i2,j1:j2)*MAPL_RADIANS_TO_DEGREES
+   latDeg(i1:i2,j1:j2)=self%latRad(i1:i2,j1:j2)*MAPL_RADIANS_TO_DEGREES
 
 !  Layer mean pressures. NOTE: ple(:,:,0:km)
 !  -----------------------------------------
@@ -1092,10 +1089,11 @@
    CALL SatisfyImports(STATUS)
    VERIFY_(STATUS)
 
-! SZA
+! SZA  (don't forget to take the cosine)
 ! ---                           
    call compute_SZA ( GC=gc, CLOCK=clock, tdt=tdt, label='GMI-EMISS', &
                       SZA=cosSolarZenithAngle, __RC__ )
+   cosSolarZenithAngle = COS( cosSolarZenithAngle * MAPL_DEGREES_TO_RADIANS )
 
 ! Daily or monthly emissions inventories
 ! -----------------------------------------
@@ -1580,10 +1578,10 @@ CONTAINS
 
       IF(i <= self%num_diurnal_emiss) THEN
         weightedField2D(:,:) = PTR2D(:,:)*cellWeighting(:,:)
-        CALL Chem_BiomassDiurnal(var2D,                      &
-                               weightedField2D(:,:),         &
-                               self%lonRad(:,:)*radToDeg,    &
-                               self%latRad(:,:)*radToDeg,    &
+        CALL Chem_BiomassDiurnal(var2D,                                     &
+                               weightedField2D(:,:),                        &
+                               self%lonRad(:,:)*MAPL_RADIANS_TO_DEGREES,    &
+                               self%latRad(:,:)*MAPL_RADIANS_TO_DEGREES,    &
                                nhms, tdt)
         self%Emission%emissionArray(i)%pArray3D(:,:,1) = var2D(:,:)
       ELSE
@@ -1733,11 +1731,13 @@ CONTAINS
 !... scale needed for emissions, volcano files are in kg(S) emitted into SO2 so scale .ne. 1.0
             scale = 1.0
 !... volcanic point emissions are only in the top 1/3 of emission column, move ebot
-            if (TRIM(tmpstr) .eq. 'volcano' .and. etop .ne. ebot) then
-              ebot = etop - (etop-ebot)/3.
+            if (TRIM(tmpstr) .eq. 'volcano') then
+              if (etop .ne. ebot) then
+                ebot = etop - (etop-ebot)/3.
+              endif
 !... volcanic emissions are in kg(S), need kg(SO2)
-              CALL getMW(TRIM('EM_SO2'), itmp, mw, rc)
-              scale = mw/32.06
+                CALL getMW(TRIM('EM_SO2'), itmp, mw, rc)
+                scale = mw/32.06
             endif
 !
 !... distribute into column (z1 is gridbox top, z0 is gridbox bottom, arrays are bottom-up)
