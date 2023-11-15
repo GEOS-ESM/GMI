@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update CI to Baselibs 7.13.0
+- Changed a few SAD reactions to use JPL 2019 approach
 
 ### Removed
 
