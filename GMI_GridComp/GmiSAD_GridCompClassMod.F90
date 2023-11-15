@@ -977,7 +977,9 @@ CONTAINS
      if ( ASSOCIATED(DBLptr3D) ) DBLptr3D(:,:,:) = DBLE(MAPL_UNDEF)
    end if
 
-   CALL populateBundleSAD (expChem)
+   if (self%sad_opt /= 0) then
+     CALL populateBundleSAD (expChem)
+   end if
 
 ! Scratch local work space
 ! ------------------------
@@ -1053,14 +1055,16 @@ CONTAINS
 
 ! Sulfate surface area. 12 month climatology, zonal average.
 ! ----------------------------------------------------------
-  self%lbssad(:,:,:) = self%lbssad_init_val
-  IF(self%lbssad_opt == 4) THEN
-    importName = 'SAD'
-    CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
-    VERIFY_(STATUS)
-    self%lbssad(:,:,1:km) = PTR3D(:,:,km:1:-1)
-    NULLIFY(PTR3D)
-  END IF
+  if ((self%sad_opt == 2) .OR. (self%sad_opt == 3)) then
+    self%lbssad(:,:,:) = self%lbssad_init_val
+    IF(self%lbssad_opt == 4) THEN
+      importName = 'SAD'
+      CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
+      VERIFY_(STATUS)
+      self%lbssad(:,:,1:km) = PTR3D(:,:,km:1:-1)
+      NULLIFY(PTR3D)
+    END IF
+  end if
 
   RETURN
  END SUBROUTINE Acquire_Clims
@@ -1094,18 +1098,33 @@ CONTAINS
 
 ! Ice effective radius
 ! --------------------
-   IF(self%gotImportRst .AND. ASSOCIATED(reffice)) &
-    reffice(i1:i2,j1:j2,km:1:-1) = self%reffice(i1:i2,j1:j2,1:km)
+   IF(self%gotImportRst .AND. ASSOCIATED(reffice)) THEN
+     if (self%sad_opt == 2) then
+        reffice(i1:i2,j1:j2,km:1:-1) = self%reffice(i1:i2,j1:j2,1:km)
+     else
+        reffice(i1:i2,j1:j2,km:1:-1) = -99.0
+     end if
+   END IF
 
 ! STS effective radius
 ! --------------------
-   IF(self%gotImportRst .AND. ASSOCIATED(reffsts)) &
-    reffsts(i1:i2,j1:j2,km:1:-1) = self%reffsts(i1:i2,j1:j2,1:km)
+   IF(self%gotImportRst .AND. ASSOCIATED(reffsts)) THEN
+     if (self%sad_opt == 2) then
+        reffsts(i1:i2,j1:j2,km:1:-1) = self%reffsts(i1:i2,j1:j2,1:km)
+     else
+        reffsts(i1:i2,j1:j2,km:1:-1) = -99.0
+     end if
+   END IF
 
 ! Effective aerosol fall velocity
 ! -------------------------------
-   IF(self%gotImportRst .AND. ASSOCIATED(fallVel)) &
-    fallVel(i1:i2,j1:j2,km:1:-1) = self%vfall(i1:i2,j1:j2,1:km)
+   IF(self%gotImportRst .AND. ASSOCIATED(fallVel)) THEN
+     if (self%sad_opt == 2) then
+        fallVel(i1:i2,j1:j2,km:1:-1) = self%vfall(i1:i2,j1:j2,1:km)
+     else
+        fallVel(i1:i2,j1:j2,km:1:-1) = -99.0
+     end if
+   END IF
 
   RETURN
  END SUBROUTINE FillExports
@@ -1268,7 +1287,9 @@ CONTAINS
 
 ! Set the condensed water to QCTOT, the total cloud water                    GEOS-5 Units       GMI Units
 ! -------------------------------------------------------                    ------------       -------------
+  if (self%sad_opt == 2) then
    self%h2ocond(i1:i2,j1:j2,km:1:-1) = qctot(i1:i2,j1:j2,1:km)*(MWTAIR/MWTH2O) ! kg kg^{-1}    mol mol^{-1}
+  end if
 
 
 ! Layer edges                                                               GEOS-5 Units       GMI Units

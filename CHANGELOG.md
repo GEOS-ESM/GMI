@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - QQJK diag calc had bug, used time(t+dt) constituents ibstead of time(t) fields, fixed on 2023Jul19
 - Fixed bug in Emissions and Deposition where SZA degrees was used instead of cosine(SZA)
 - Fixed units for degassing volcano point emissions
+- Improved handling of phot_opt cases; allows for phot_opt == 0 again
+- Improved handling of sad_opt cases; allows for sad_opt == 0 again
 
 ### Added
 
