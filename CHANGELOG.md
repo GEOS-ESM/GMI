@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+### Added
+### Changed
+### Removed
+### Deprecated
+
+
+## [1.2.0] - 2023-12-07
 
 ### Fixed
 
@@ -28,10 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Emissions including 2D, 3D and point source (volcano) now are done as in Benchmark G
 - Isoprene scaling changed from 1 to 0.7
 - Boundary condition file now includes HFCs, and no longer includes extra Br (when HFC mech is chosen)
-
-### Removed
-
-### Deprecated
 
 
 ## [1.1.0] - 2023-04-24
