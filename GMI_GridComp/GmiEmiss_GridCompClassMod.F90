@@ -1736,8 +1736,8 @@ CONTAINS
                 ebot = etop - (etop-ebot)/3.
               endif
 !... volcanic emissions are in kg(S), need kg(SO2)
-                CALL getMW(TRIM('EM_SO2'), itmp, mw, rc)
-                scale = mw/32.06
+              CALL getMW(TRIM('EM_SO2'), itmp, mw, rc)
+              scale = mw/32.06
             endif
 !
 !... distribute into column (z1 is gridbox top, z0 is gridbox bottom, arrays are bottom-up)
