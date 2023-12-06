@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update CI to Baselibs 7.13.0
+- Update CI to use Baselibs default from the CircleCI orb
 - Changed a few SAD reactions to use JPL 2019 approach
 - ExtData now uses Benchmark G configuration
 - Emissions including 2D, 3D and point source (volcano) now are done as in Benchmark G
