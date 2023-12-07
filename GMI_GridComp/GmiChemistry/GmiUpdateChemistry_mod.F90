@@ -55,7 +55,6 @@
 !
       implicit none
 
-#     include "gmi_sad_constants.h"
 #     include "setkin_par.h"
 #     include "gmi_AerDust_const.h"
 !
@@ -119,6 +118,7 @@
       integer :: ix
       integer :: num_loops
       real*8  :: chemintv
+      type (t_GmiArrayBundle) :: tm1Conc(num_species)
 !
 ! !REVISION HISTORY:
 !  Initial code.
@@ -135,6 +135,14 @@
       else
          num_loops = 1
       end if
+!
+!... save initial concentration for calc of qqj/qqk diags
+      if (pr_qqjk .and. .not. do_qqjk_inchem) then
+        do ix = 1, num_species
+          allocate ( tm1Conc(ix)%pArray3D (i1:i2, ju1:j2, k1:k2) )
+          tm1Conc(ix)%pArray3D(:,:,:) = concentration(ix)%pArray3D(:,:,:)
+        enddo
+      end if
 
       do ix = 1, num_loops
          call Update_Smv2chem (savedVars, chemintv, surfEmissForChem,            &
@@ -149,10 +157,13 @@
       end do
 
       if (pr_qqjk .and. .not. do_qqjk_inchem) then
-         call Accum_Qqjk (do_qqjk_reset, imgas_num, concentration,  &
+        call Accum_Qqjk (do_qqjk_reset, imgas_num, tm1Conc,  &
                    qjgmi, qkgmi,  qqjgmi, qqkgmi, num_molefrac,     &
                    num_species, num_qks, num_qjs, num_qjo,          &
                    pr_diag, loc_proc, ilong, i1, i2, ju1, j2, k1, k2)
+        do ix = 1, num_species
+          deallocate ( tm1Conc(ix)%pArray3D )
+        enddo
       end if
 
       return

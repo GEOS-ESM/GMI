@@ -936,7 +936,7 @@ CONTAINS
          !=========
       end if
 
-      if ((self%phot_opt == 3)) then
+      if (self%phot_opt == 3) then
          Allocate(self%dust(i1:i2, ju1:j2, k1:k2, nSADdust))
          self%dust = 0.0d0
 
@@ -1221,6 +1221,7 @@ CONTAINS
    INTEGER :: ihi, julo, jhi, ju1,  k1, k2, ilong, ilat
    INTEGER :: loc_proc
    INTEGER :: n, STATUS
+   INTEGER :: itemCount
 
    INTEGER, PARAMETER :: ToGMI = 1
    INTEGER, PARAMETER :: FromGMI = -1
@@ -1237,6 +1238,9 @@ CONTAINS
 
    CHARACTER(LEN=255) :: speciesName
    CHARACTER(LEN=255) :: importName
+
+   CHARACTER(LEN=255), POINTER :: itemNameList(:)
+   LOGICAL :: data_driven
 
    LOGICAL :: found, rootProc
    LOGICAL, PARAMETER :: doThis = .FALSE.
@@ -1370,15 +1374,38 @@ CONTAINS
    CALL Set_gmiSeconds(self%gmiClock, (ic+1)*chemDt)
 
    IF ( TRIM(self%aeroProviderName) .EQ. "GOCART2G" ) THEN
+
 ! Get the AERO state and individual Aerosol states
 ! ------------------------------------------------
-      call ESMF_StateGet(impChem, 'AERO', aero_state, __RC__)
-      call ESMF_StateGet(aero_state, 'CA.bc_AERO', bc_state, __RC__)
-      call ESMF_StateGet(aero_state, 'CA.oc_AERO', oc_state, __RC__)
-      call ESMF_StateGet(aero_state, 'CA.br_AERO', br_state, __RC__)
-      call ESMF_StateGet(aero_state,    'SU_AERO', su_state, __RC__)
-      call ESMF_StateGet(aero_state,    'DU_AERO', du_state, __RC__)
-      call ESMF_StateGet(aero_state,    'SS_AERO', ss_state, __RC__)
+
+     call ESMF_StateGet(impChem, 'AERO', aero_state, __RC__)
+
+! Determine if DATA_DRIVEN:
+     data_driven = .FALSE.
+     call ESMF_StateGet( aero_state, itemCount=itemCount, __RC__)
+     ALLOCATE( itemNameList(itemCount), __STAT__ )
+     call ESMF_StateGet( aero_state, itemNameList=itemNameList, __RC__)
+     do i=1,itemCount
+       IF ( TRIM(itemNameList(i)) == 'CA.bc.data_AERO' ) data_driven = .TRUE.
+     end do
+     DEALLOCATE(itemNameList, __STAT__ )
+
+     IF ( data_driven ) THEN
+       call ESMF_StateGet(aero_state, 'CA.bc.data_AERO', bc_state, __RC__)
+       call ESMF_StateGet(aero_state, 'CA.oc.data_AERO', oc_state, __RC__)
+       call ESMF_StateGet(aero_state, 'CA.br.data_AERO', br_state, __RC__)
+       call ESMF_StateGet(aero_state,    'SU.data_AERO', su_state, __RC__)
+       call ESMF_StateGet(aero_state,    'DU.data_AERO', du_state, __RC__)
+       call ESMF_StateGet(aero_state,    'SS.data_AERO', ss_state, __RC__)
+     ELSE
+       call ESMF_StateGet(aero_state,      'CA.bc_AERO', bc_state, __RC__)
+       call ESMF_StateGet(aero_state,      'CA.oc_AERO', oc_state, __RC__)
+       call ESMF_StateGet(aero_state,      'CA.br_AERO', br_state, __RC__)
+       call ESMF_StateGet(aero_state,         'SU_AERO', su_state, __RC__)
+       call ESMF_StateGet(aero_state,         'DU_AERO', du_state, __RC__)
+       call ESMF_StateGet(aero_state,         'SS_AERO', ss_state, __RC__)
+     END IF
+
    END IF
 
 ! Update the following time-dependent boundary conditions:
@@ -1539,8 +1566,13 @@ CONTAINS
 
    CASE("GOCART2G")
 
-    call ESMF_StateGet(bc_state, 'CA.bcphobic', bc_phobic_3d_field, __RC__)
-    call ESMF_StateGet(bc_state, 'CA.bcphilic', bc_philic_3d_field, __RC__)
+    IF ( data_driven ) THEN
+      call ESMF_StateGet(bc_state, 'CA.bc.dataphobic', bc_phobic_3d_field, __RC__)
+      call ESMF_StateGet(bc_state, 'CA.bc.dataphilic', bc_philic_3d_field, __RC__)
+    ELSE
+      call ESMF_StateGet(bc_state,      'CA.bcphobic', bc_phobic_3d_field, __RC__)
+      call ESMF_StateGet(bc_state,      'CA.bcphilic', bc_philic_3d_field, __RC__)
+    END IF
 
     call ESMF_FieldGet( field=bc_phobic_3d_field, farrayPtr=bc_phobic_3d_array, __RC__ )
     call ESMF_FieldGet( field=bc_philic_3d_field, farrayPtr=bc_philic_3d_array, __RC__ )
@@ -1843,10 +1875,17 @@ CONTAINS
 
    CASE("GOCART2G")
     
-    call ESMF_StateGet(oc_state, 'CA.ocphobic', oc_phobic_3d_field, __RC__)
-    call ESMF_StateGet(oc_state, 'CA.ocphilic', oc_philic_3d_field, __RC__)
-    call ESMF_StateGet(br_state, 'CA.brphobic', br_phobic_3d_field, __RC__)
-    call ESMF_StateGet(br_state, 'CA.brphilic', br_philic_3d_field, __RC__)
+    IF ( data_driven ) THEN
+      call ESMF_StateGet(oc_state, 'CA.oc.dataphobic', oc_phobic_3d_field, __RC__)
+      call ESMF_StateGet(oc_state, 'CA.oc.dataphilic', oc_philic_3d_field, __RC__)
+      call ESMF_StateGet(br_state, 'CA.br.dataphobic', br_phobic_3d_field, __RC__)
+      call ESMF_StateGet(br_state, 'CA.br.dataphilic', br_philic_3d_field, __RC__)
+    ELSE
+      call ESMF_StateGet(oc_state,      'CA.ocphobic', oc_phobic_3d_field, __RC__)
+      call ESMF_StateGet(oc_state,      'CA.ocphilic', oc_philic_3d_field, __RC__)
+      call ESMF_StateGet(br_state,      'CA.brphobic', br_phobic_3d_field, __RC__)
+      call ESMF_StateGet(br_state,      'CA.brphilic', br_philic_3d_field, __RC__)
+    END IF
 
     call ESMF_FieldGet( field=oc_phobic_3d_field, farrayPtr=oc_phobic_3d_array, __RC__ )
     call ESMF_FieldGet( field=oc_philic_3d_field, farrayPtr=oc_philic_3d_array, __RC__ )
@@ -2323,49 +2362,55 @@ CONTAINS
       ! For the QJ Bundle
       !==================
 
-      call ESMF_StateGet(expChem, "gmiQJ", qjBundle, rc=STATUS)
-      VERIFY_(STATUS)
+      if (self%phot_opt /= 0) then
+        call ESMF_StateGet(expChem, "gmiQJ", qjBundle, rc=STATUS)
+        VERIFY_(STATUS)
 
-      call ESMF_FieldBundleGet(qjBundle, fieldCount=numVars, rc=STATUS)
-      VERIFY_(STATUS)
-      _ASSERT(numVars == self%num_qjo,'GMI qjo bundle populate')
+        call ESMF_FieldBundleGet(qjBundle, fieldCount=numVars, rc=STATUS)
+        VERIFY_(STATUS)
+        _ASSERT(numVars == self%num_qjo,'GMI qjo bundle populate')
 
-      do ib = 1, numVars
-         ptr3D(:,:,:) = self%qjgmi(ib)%pArray3D(:,:,km:1:-1)
-         call updateTracerToBundle(qjBundle, ptr3D, ib)
-      end do
+        do ib = 1, numVars
+           ptr3D(:,:,:) = self%qjgmi(ib)%pArray3D(:,:,km:1:-1)
+           call updateTracerToBundle(qjBundle, ptr3D, ib)
+        end do
+      end if
 
       !=====================
       ! For the tArea Bundle
       !=====================
 
-      call ESMF_StateGet(expChem, "gmiTAREA", tAreaBundle, rc=STATUS)
-      VERIFY_(STATUS)
+      if (self%phot_opt == 3) then
+        call ESMF_StateGet(expChem, "gmiTAREA", tAreaBundle, rc=STATUS)
+        VERIFY_(STATUS)
 
-      call ESMF_FieldBundleGet(tAreaBundle, fieldCount=numVars, rc=STATUS)
-      VERIFY_(STATUS)
-      _ASSERT(numVars == nSADdust+nSADaer,'GMI tArea bundle populate')
+        call ESMF_FieldBundleGet(tAreaBundle, fieldCount=numVars, rc=STATUS)
+        VERIFY_(STATUS)
+        _ASSERT(numVars == nSADdust+nSADaer,'GMI tArea bundle populate')
 
-      do ib = 1, numVars
-         ptr3D(:,:,:) = self%tArea(:,:,km:1:-1,ib)
-         call updateTracerToBundle(tAreaBundle, ptr3D, ib)
-      end do
+        do ib = 1, numVars
+           ptr3D(:,:,:) = self%tArea(:,:,km:1:-1,ib)
+           call updateTracerToBundle(tAreaBundle, ptr3D, ib)
+        end do
+      end if
 
       !=======================
       ! For the eRadius Bundle
       !=======================
 
-      call ESMF_StateGet(expChem, "gmiERADIUS", eRadiusBundle, rc=STATUS)
-      VERIFY_(STATUS)
+      if (self%phot_opt == 3) then
+        call ESMF_StateGet(expChem, "gmiERADIUS", eRadiusBundle, rc=STATUS)
+        VERIFY_(STATUS)
 
-      call ESMF_FieldBundleGet(eRadiusBundle, fieldCount=numVars, rc=STATUS)
-      VERIFY_(STATUS)
-      _ASSERT(numVars == nSADdust+nSADaer,'GMI eRadius bundle populate')
+        call ESMF_FieldBundleGet(eRadiusBundle, fieldCount=numVars, rc=STATUS)
+        VERIFY_(STATUS)
+        _ASSERT(numVars == nSADdust+nSADaer,'GMI eRadius bundle populate')
 
-      do ib = 1, numVars
-         ptr3D(:,:,:) = self%eRadius(:,:,km:1:-1,ib)
-         call updateTracerToBundle(eRadiusBundle, ptr3D, ib)
-      end do
+        do ib = 1, numVars
+           ptr3D(:,:,:) = self%eRadius(:,:,km:1:-1,ib)
+           call updateTracerToBundle(eRadiusBundle, ptr3D, ib)
+        end do
+      end if
 
       deallocate (ptr3D)
 
@@ -2619,6 +2664,8 @@ CONTAINS
 !...(if you prefer to use maximally overlapping clouds, remove the exponent)
               tau_clw(:,:,km:1:-1) = tauclw(:,:,1:km)*(fcld(:,:,1:km)**1.5)
               tau_cli(:,:,km:1:-1) = taucli(:,:,1:km)*(fcld(:,:,1:km)**1.5)
+!             tau_clw(:,:,km:1:-1) = tauclw(:,:,1:km)*(fcld(:,:,1:km)     )
+!             tau_cli(:,:,km:1:-1) = taucli(:,:,1:km)*(fcld(:,:,1:km)     )
 
             tau_cloud(:,:,:) = tau_clw(:,:,:) + tau_cli(:,:,:)
 

@@ -244,6 +244,7 @@
   ICESAD  	    | cm+2 cm-3      | xyz | C |    |	|   |	  | ice_surface_area_density
   LBSSAD  	    | cm+2 cm-3      | xyz | C |    |	|   |	  | LBS_surface_area_density
   AIRMASS           | kg m-2         | xyz | C |    |   |   |     | mass_of_air_in_layer
+  OCS_JRATE         | s-1            | xyz | C |    |   |   |     | Jrate_for_OCS
 # ------------------|----------------|-----|---|----|---|---|-----|---------------------------------
 </ExportSpec>
 
