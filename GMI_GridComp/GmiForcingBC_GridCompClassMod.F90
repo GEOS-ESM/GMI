@@ -17,7 +17,7 @@
 
    USE ESMF
    USE MAPL
-   USE Chem_Mod 	     ! Chemistry Base Class
+   USE Chem_Mod             ! Chemistry Base Class
    USE Chem_UtilMod
 
    USE Species_BundleMod
@@ -86,9 +86,13 @@
     integer             :: forc_bc_years
     integer             :: forc_bc_start_num
     integer             :: forc_bc_kmin
+    integer             ::  ext_bc_kmin
     integer             :: forc_bc_kmax
+    integer             ::  ext_bc_kmax
     integer             :: forc_bc_num
+    integer             ::  ext_bc_count
     integer             :: forc_bc_map (MAX_NUM_CONST)
+    integer             ::  ext_bc_map (MAX_NUM_CONST)
     real*8              :: forc_bc_init_val
     real*8              :: forc_bc_incrpyr
     real*8              :: forc_bc_lz_val
@@ -189,7 +193,8 @@ CONTAINS
    CHARACTER(LEN=255) :: importRestartFile
    CHARACTER(LEN=255) :: string
       character (len=MAX_LENGTH_SPECIES_NAME), pointer :: tempListNames(:)
-      character (len=MAX_STRING_LENGTH      ) :: forcedBcSpeciesNames
+      character (len=MAX_STRING_LENGTH      ) ::  forcedBcSpeciesNames
+      character (len=MAX_STRING_LENGTH      ) :: extdataBcSpeciesNames
    
    type (ESMF_Config) :: gmiConfigFile
 
@@ -326,15 +331,31 @@ CONTAINS
      &                default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
+      call ESMF_ConfigGetAttribute(gmiConfigFile, self%ext_bc_kmin, &
+     &                label   = "ext_bc_kmin:", &
+     &                default = 1, rc=STATUS )
+      VERIFY_(STATUS)
+
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_kmax, &
      &                label   = "forc_bc_kmax:", &
      &                default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
+      call ESMF_ConfigGetAttribute(gmiConfigFile, self%ext_bc_kmax, &
+     &                label   = "ext_bc_kmax:", &
+     &                default = 1, rc=STATUS )
+      VERIFY_(STATUS)
+
       self%forc_bc_map(:)      = 0
+      self%ext_bc_map(:)       = 0
 
       call rcEsmfReadTable(gmiConfigFile, forcedBcSpeciesNames, &
      &                     "forcedBcSpeciesNames::", rc=STATUS)
+      VERIFY_(STATUS)
+
+      call rcEsmfReadTable(gmiConfigFile, extdataBcSpeciesNames, &
+     &                     "extdataBcSpeciesNames::", rc=STATUS)
+      VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_init_val, &
      &                label   = "forc_bc_init_val:", &
@@ -371,10 +392,38 @@ CONTAINS
 
          IF (rootProc) THEN
             PRINT *," "
-            PRINT *,"Number of GHG and ODP gases: ",self%forc_bc_num
+            PRINT *,"Number of ASCII GHG and ODP gases: ",self%forc_bc_num
             PRINT *," "
             PRINT *,"forc_bc_map:"
             PRINT *, self%forc_bc_map
+            PRINT *," "
+         END IF
+
+      end if
+
+
+      !! Now do ExtData (ext) same as ASCII (forc):
+ 
+      ! Set the initial value of the list
+      ! allocate(tempListNames(NSP))   already done above
+      tempListNames(:) = ''
+
+      ! Construct the list of names using the long string
+      call constructListNames(tempListNames, extdataBcSpeciesNames)
+
+
+      self%ext_bc_count = Count (tempListNames(:) /= '')
+      if (self%ext_bc_count > 0) then
+         do ic = 1, self%ext_bc_count
+            self%ext_bc_map(ic) = getSpeciesIndex(tempListNames(ic))
+         end do
+
+         IF (rootProc) THEN
+            PRINT *," "
+            PRINT *,"Number of ExtData GHG and ODP gases: ",self%ext_bc_count
+            PRINT *," "
+            PRINT *,"ext_bc_map:"
+            PRINT *, self%ext_bc_map
             PRINT *," "
          END IF
 
@@ -637,6 +686,8 @@ CONTAINS
    CHARACTER(LEN=255) :: speciesName
    CHARACTER(LEN=255) :: importName
 
+   REAL, POINTER, DIMENSION(:,:) :: PTR2D
+
    LOGICAL :: found, rootProc
    LOGICAL, PARAMETER :: doThis = .FALSE.
    
@@ -734,16 +785,33 @@ CONTAINS
 ! ------------------------------------------------------------------------
 
       IF (self%gotImportRst) then
+
+         ! ASCII
          if (self%forc_bc_num > 0) then
-            call updateForcingBC (self%forc_bc_data, &
-                       self%SpeciesConcentration%concentration, self%jlatmd, &
-     &                 self%last_year, nymd, gmi_sec, self%fbc_j1, self%fbc_j2, &
-     &                 self%forc_bc_num, self%forc_bc_kmax, self%forc_bc_kmin, &
-     &                 self%forc_bc_opt, self%forc_bc_map, self%forc_bc_incrpyr, &
-     &                 self%forc_bc_start_num, self%forc_bc_years, self%gmiGrid%i1, &
-     &                 self%gmiGrid%i2, self%gmiGrid%ju1, self%gmiGrid%j2,       &
-     &                 self%gmiGrid%k1, self%gmiGrid%k2, NSP)
+            call updateForcingBC (self%forc_bc_data,                                 &
+                       self%SpeciesConcentration%concentration, self%jlatmd,         &
+                       self%last_year, nymd, gmi_sec, self%fbc_j1, self%fbc_j2,      &
+                       self%forc_bc_num, self%forc_bc_kmax, self%forc_bc_kmin,       &
+                       self%forc_bc_opt, self%forc_bc_map, self%forc_bc_incrpyr,     &
+                       self%forc_bc_start_num, self%forc_bc_years, self%gmiGrid%i1,  &
+                       self%gmiGrid%i2, self%gmiGrid%ju1, self%gmiGrid%j2,           &
+                       self%gmiGrid%k1, self%gmiGrid%k2, NSP)
          end if
+
+         ! ExtData
+         if (self%ext_bc_count > 0) then
+           DO ic = 1,self%ext_bc_count
+             speciesName = TRIM(lchemvar(self%ext_bc_map(ic)))
+             importName = TRIM(speciesName)//'_BC'
+             CALL MAPL_GetPointer(impChem, PTR2D, TRIM(importName), RC=STATUS)
+             VERIFY_(STATUS)
+
+             do k = self%ext_bc_kmin,self%ext_bc_kmax
+               self%SpeciesConcentration%concentration(self%ext_bc_map(ic))%pArray3D(:,:,k) =  PTR2D(:,:)
+             end do
+           end do
+         end if
+
       END IF
 
 ! Return species concentrations to the chemistry bundle

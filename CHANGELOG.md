@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 ### Added
+
+- Capability to use 2D ExtData files as Boundary Conditions
+
 ### Changed
 ### Removed
 ### Deprecated
