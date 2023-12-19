@@ -327,6 +327,15 @@ xxx
 
 # The xxx entries above are for SF6 and CO2
 
+        ###########################################################
+        # GHG and ODS surface source gases - read with ExtData
+        ###########################################################
+ext_bc_kmin: 1
+ext_bc_kmax: 2
+extdataBcSpeciesNames:: 
+#CH4
+::
+
 
 #     ----------------------------------------------------
 #     sad_opt

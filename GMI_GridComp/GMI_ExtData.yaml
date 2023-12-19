@@ -6,7 +6,7 @@ Collections:
 
   ## Monthly values
 
-  GMI.CH4_surf_values.clim:                            {                                                   template: /gpfsm/dnb33/mmanyin/CCM/run/aug2_GMI/aug2_GMI.test_ch4.20500315_1200z.nc4 }
+  GMI.CH4_surf_values.monthly.2000-2009:               { valid_range: "2000-01-16T12:00/2009-12-16T12:00", template: /discover/nobackup/mmanyin/CCM/CH4/qOHreplay2.CH4_at_surface.%y4%m2.nc4 }
 
   GMI.CMIP6_BB.emis.monthly.1950-2015:                 { valid_range: "1950-01-16T00:00/2015-12-16T00:00", template: ExtData/CMIP6/sfc/biomass_burning/CMIP6_BB.emis.x1440_y720_t12.%y4.nc4 }
   GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100:          { valid_range: "2015-01-16T00:00/2100-12-16T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4 }
@@ -259,4 +259,4 @@ Exports:
   du004:                       { variable: DU004,                collection: GMI.aero_MERRA2.monthly_clim,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
   du005:                       { variable: DU005,                collection: GMI.aero_MERRA2.monthly_clim,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
 
-  CH4_BC:                      { variable: CH4,       collection: GMI.CH4_surf_values.clim,                              regrid: CONSERVE,  sample: GMI.constant             }
+  CH4_BC:                      { variable: CH4,                  collection: GMI.CH4_surf_values.monthly.2000-2009,                regrid: CONSERVE,  sample: GMI.daily_wrap        }

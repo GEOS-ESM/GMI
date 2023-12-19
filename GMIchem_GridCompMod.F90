@@ -17,11 +17,13 @@
    USE MAPL
    USE Runtime_RegistryMod
    USE Species_BundleMod
-   USE Chem_Mod 	                        ! Chemistry Base Class
+   USE Chem_Mod                                 ! Chemistry Base Class
    USE GMI_GridCompMod                          ! ESMF parent component
    USE Chem_UtilMod, ONLY : Chem_UtilNegFiller  ! Eliminates negative vmr
    USE Chem_GroupMod                            ! For Family Transport
    USE OVP,     ONLY:  OVP_init, OVP_end_of_timestep_hms, OVP_mask, OVP_apply_mask
+   USE GmiESMFrcFileReading_mod,      ONLY : rcEsmfReadTable
+   USE GmiStringManipulation_mod,     ONLY : constructListNames
 
    IMPLICIT NONE
    PRIVATE
@@ -34,6 +36,10 @@
    INTEGER, SAVE              :: OVP_RUN_DT
    INTEGER, SAVE              :: OVP_GC_DT
    INTEGER, SAVE              :: OVP_MASK_DT
+
+#include "setkin_par.h"
+#include "GmiParameters.h"
+
 
 !
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -149,6 +155,10 @@ CONTAINS
     CHARACTER(LEN=255) :: gmi_rcfilen = 'GMI_GridComp.rc'
     TYPE (ESMF_Config) :: gmi_config
     LOGICAL :: doMEGANviaHEMCO
+
+    CHARACTER (LEN=MAX_STRING_LENGTH) :: extdataBcSpeciesNames
+    CHARACTER (LEN=MAX_LENGTH_SPECIES_NAME), pointer :: tempListNames(:)
+    INTEGER :: bc_count, ic
 
 !   Get my name and set-up traceback handle
 !   ---------------------------------------
@@ -342,6 +352,27 @@ CONTAINS
     gmiConfig = ESMF_ConfigCreate(__RC__)
 
     call ESMF_ConfigLoadFile(gmiConfig, 'GMI_GridComp.rc', __RC__)
+
+    ! This duplicates the call in the Forced BC code; really should only be done once!
+    call rcEsmfReadTable(gmiConfig, extdataBcSpeciesNames, "extdataBcSpeciesNames::", __RC__)
+
+    ! Set the initial value of the list
+    allocate(tempListNames(NSP))
+    tempListNames(:) = ''
+      
+    call constructListNames(tempListNames, extdataBcSpeciesNames)
+
+    bc_count = COUNT (tempListNames(:) /= '')
+    do ic = 1, bc_count
+       call MAPL_AddImportSpec(GC,                                 &
+          SHORT_NAME = TRIM(tempListNames(ic))//'_BC',             &
+          LONG_NAME  = 'Surface BC for '//TRIM(tempListNames(ic)), &
+          UNITS      = 'mol mol-1',                                &
+          DIMS       = MAPL_DimsHorzOnly,                          &
+          VLOCATION  = MAPL_VLocationNone,   __RC__) 
+    end do
+
+    deallocate(tempListNames)
 
 !   This duplicates the call in the Emissions code; really should only be done once!
 !   call rcEsmfReadLogical(gmiConfig, do_ShipEmission, "do_ShipEmission:", default=.false., __RC__)
