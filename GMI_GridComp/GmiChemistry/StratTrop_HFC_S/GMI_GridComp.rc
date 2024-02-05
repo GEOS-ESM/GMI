@@ -198,7 +198,8 @@ emissionSpeciesLayers::
 ::
 
 emissionPointFilenames::
-SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
+SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
+H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
 ::
 # NOTE: Units for the volcano point source files: kg(S)/s
 #       Units that GMI wants                    : kg(SO2)/s
