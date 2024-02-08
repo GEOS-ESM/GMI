@@ -1,390 +1,260 @@
 Collections:
-  GMI.CH4_surf_values.clim: 
-    template: /gpfsm/dnb33/mmanyin/CCM/run/aug2_GMI/aug2_GMI.test_ch4.20500315_1200z.nc4
-  GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4:
-    template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-  GMI_CMIP6_SSP245.airNOemis.x720_y360_z72_t12.%y4.nc4:
-    template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/L72/CMIP6_SSP245.airNOemis.x720_y360_z72_t12.%y4.nc4
-  GMI_CMIP6_SSP245.airSO2emis.x720_y360_z72_t12.%y4.nc4:
-    template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/L72/CMIP6_SSP245.airSO2emis.x720_y360_z72_t12.%y4.nc4
-  GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4:
-    template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-  GMI_CMIP6ssp245.emis_SO2.biomassburning.x720_y360_t12.%y4.nc4:
-    template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/SU/CMIP6ssp245.emis_SO2.biomassburning.x720_y360_t12.%y4.nc4
-  GMI_CMIP6ssp245.emis_SO2.energy.x720_y360_t12.%y4.nc4:
-    template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/SU/CMIP6ssp245.emis_SO2.energy.x720_y360_t12.%y4.nc4
-  GMI_CMIP6ssp245.emis_SO2.sfcanthro.x720_y360_t12.%y4.nc4:
-    template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/SU/CMIP6ssp245.emis_SO2.sfcanthro.x720_y360_t12.%y4.nc4
-  GMI_CMIP6ssp245.emis_SO2.ships.x720_y360_t12.%y4.nc4:
-    template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/SU/CMIP6ssp245.emis_SO2.ships.x720_y360_t12.%y4.nc4
-  GMI_DMS_lana.geos.1x1.esmf.nc:
-    template: /discover/nobackup/cakelle2/data/OCEAN/DMS_lana.geos.1x1.esmf.nc
-  GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc:
-    template: /discover/nobackup/projects/gmao/share/dasilva/fvInput/g5chem/sfc/MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-  GMI_OCS_vmr.x360_y181_z72.t12.2016.nc4:
-    template: ExtData/g5chem/L72/OCS_vmr.x360_y181_z72.t12.2016.nc4
-  GMI_SC.ODS.Emission.x360_y181.%y4.V1.nc:
-    template: /discover/nobackup/ssteenro/qing/SC.ODS.Emission.x360_y181.%y4.V1.nc
-  GMI_acetone_fixed_GMI.x288_y181_z72_t12.2001.nc:
-    template: ExtData/g5chem/L72/acetone_fixed_GMI.x288_y181_z72_t12.2001.nc
-  GMI_fertilizer_GMI.x288_y181_t12.2006.nc:
-    template: /discover/nobackup/projects/gmao/share/dasilva/fvInput/g5chem/sfc/fertilizer_GMI.x288_y181_t12.2006.nc
-  GMI_lai_x720_y360_v72_t12_1985.nc:
-    template: ExtData/g5chem/sfc/LAI/lai_x720_y360_v72_t12_1985.nc
-  GMI_precipitation_GMI.x288_y181_t12.2006.nc:
-    template: /discover/nobackup/projects/gmao/share/dasilva/fvInput/g5chem/sfc/precipitation_GMI.x288_y181_t12.2006.nc
-  GMI_sad_wt_CMIP6_288x181x72_clim.nc:
-    template: /discover/nobackup/projects/gmao/ccmdev/input/GMIforcing/sad_wt_CMIP6_288x181x72_clim.nc
-  GMI_veg_fraction_x720_y360_t12_1985.nc:
-    template: ExtData/g5chem/sfc/LAI/veg_fraction_x720_y360_t12_1985.nc
+
+  ## GOLF (benchmark G)
+  ## Adapted from RefD2: new FF dataset includes fugitive emissions
+  ## Set the aerosol files to /dev/null
+  ## Removed the CH4 surface values (used for testing)
+
+  ## Monthly values
+
+  GMI.CMIP6_BB.emis.monthly.1950-2015:                 { valid_range: "1950-01-16T00:00/2015-12-16T00:00", template: ExtData/CMIP6/sfc/biomass_burning/CMIP6_BB.emis.x1440_y720_t12.%y4.nc4 }
+  GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100:          { valid_range: "2015-01-16T00:00/2100-12-16T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4 }
+
+  # note: 2014 file for SSP245 is actually a pointer to CEDS
+  #  GMI.CMIP6_CEDS.emis.monthly.1950-2014:            { valid_range: "1950-01-16T00:00/2014-12-16T00:00", template: ExtData/CMIP6/sfc/fossil_fuels/CMIP6_CEDS.emis.x720_y360_t12.%y4.nc4 }
+  #  GMI.CMIP6_SSP245.emis.monthly.2014-2100:          { valid_range: "2014-01-16T00:00/2100-12-16T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4 }
+  GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014:            { valid_range: "1950-01-16T00:00/2014-12-16T00:00", template: /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/EMISS/CEDS_ff_plus_fugitive/CMIP6_CEDS.emis_fg.x720_y360_t12.%y4.nc4 }
+  GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100:          { valid_range: "2014-01-16T00:00/2100-12-16T00:00", template: /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/EMISS/SSP_ff_plus_fugitive/CMIP6_ssp2-45.emis_fg.x720_y360_t12.%y4.nc4 }
+
+  # note: 2014 file for SSP245 is actually a pointer to CEDS
+  GMI.CMIP6_CEDS_AirNO.emis.monthly.1950-2014:         { valid_range: "1950-01-15T12:00/2014-12-17T00:00", template: ExtData/CMIP6/L72/aircraft/CMIP6_CEDS.airNOemis.x720_y360_z72_t12.%y4.nc4 }
+  GMI.CMIP6_SSP245_AirNO.emis.monthly.2014-2100:       { valid_range: "2014-01-15T12:00/2100-12-17T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/L72/CMIP6_SSP245.airNOemis.x720_y360_z72_t12.%y4.nc4 }
+
+  # note: artificial dates for 2015-2023 dataset - it relaxes to the climatology
+  GMI.CMIP6_SAD.monthly.1850-2018:                     { valid_range: "1850-01-15T12:00/2018-12-17T00:00", template: ExtData/CMIP6/L72/SAD/sad_wt_CMIP6_288x181x72_%y4.nc }
+  GMI.CMIP6_SAD_shift_to_climo.monthly.2015-2023:      { valid_range: "2015-01-15T12:00/2023-12-17T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/GMIforcing/sad_wt_CMIP6_288x181x72_%y4.nc }
+  GMI.CMIP6_SAD.monthly_clim:                          { valid_range: "2000-01-15T12:00/2000-12-17T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/GMIforcing/sad_wt_CMIP6_288x181x72_clim.nc }  # 1850-2014 average
+
+  ## Monthly values needed for FLUX exports
+  ## (Previously these reverted to using 2020 as a climatology, after 2014)
+  ## (Now they continue with SSP2-4.5)
+
+  # note: 2014 file for SSP245 is actually a pointer to CEDS
+  GMI.CMIP6_CEDS_AirSO2.emis.monthly.1950-2014:        { valid_range: "1950-01-15T12:00/2014-12-17T00:00", template: ExtData/CMIP6/L72/CMIP6_CEDS.airSO2emis.x720_y360_z72_t12.%y4.nc4 }
+  GMI.CMIP6_SSP245_AirSO2.emis.monthly.2014-2100:      { valid_range: "2014-01-15T12:00/2100-12-17T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/L72/CMIP6_SSP245.airSO2emis.x720_y360_z72_t12.%y4.nc4 }
+
+  # note: 2014 file for SSP245 is actually a pointer to CEDS
+  GMI.CMIP_CEDS_SO2_ENERGY.emis.monthly.1950-2014:     { valid_range: "1950-01-15T00:00/2014-12-16T12:00", template: ExtData/CMIP6/sfc/SU/SO2-em-anthro_input4MIPs_emissions_CMIP_CEDS-2017-05-18_gn__energy_elevated.x720_y360_t12.%y4.nc }
+  GMI.CMIP6_SSP245_SO2_ENERGY.emis.monthly.2014-2100:  { valid_range: "2014-01-15T00:00/2100-12-17T12:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/SU/CMIP6ssp245.emis_SO2.energy.x720_y360_t12.%y4.nc4 }
+
+  # note: 2014 file for SSP245 is actually a pointer to CEDS
+  GMI.CMIP_CEDS_SO2_NONENERGY.emis.monthly.1950-2014:  { valid_range: "1950-01-15T00:00/2014-12-16T12:00", template: ExtData/CMIP6/sfc/SU/SO2-em-anthro_input4MIPs_emissions_CMIP_CEDS-2017-05-18_gn__nonenergy_surface.x720_y360_t12.%y4.nc }
+  GMI.CMIP6_SSP245_SO2_NONENERGY.emis.monthly.2014-2100: { valid_range: "2014-01-15T00:00/2100-12-17T12:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/SU/CMIP6ssp245.emis_SO2.sfcanthro.x720_y360_t12.%y4.nc4 }
+
+  # note: 2014 file for SSP245 is actually a pointer to CEDS
+  GMI.CMIP_CEDS_SO2_SHIPPING.emis.monthly.1950-2014:   { valid_range: "1950-01-15T00:00/2014-12-16T12:00", template: ExtData/CMIP6/sfc/SU/SO2-em-anthro_input4MIPs_emissions_CMIP_CEDS-2017-05-18_gn__shipping_surface.x720_y360_t12.%y4.nc }
+  GMI.CMIP6_SSP245_SO2_SHIPPING.emis.monthly.2014-2100: { valid_range: "2014-01-15T00:00/2100-12-17T12:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/SU/CMIP6ssp245.emis_SO2.ships.x720_y360_t12.%y4.nc4 }
+
+  # three datasets that each cover decades
+  GMI.CMIP_SO2_BB.monthly.1750-2015:                   { valid_range: "1750-01-15T00:00/2015-12-16T12:00", template: ExtData/CMIP6/sfc/SU/SO2-em-biomassburning_input4MIPs_emissions_CMIP_VUA-CMIP-BB4CMIP6-1-2_gn__surface.x1440_y720_t12.%y4.nc }
+  GMI.GFEDv4_SO2_BB.monthly.1977-2019:                 { valid_range: "1997-01-15T12:00/2019-12-15T12:00", template: /discover/nobackup/sstrode/emissions/CCMI/RefD1emis/gfedv4_1s.emis_so2.x1152_y721_t240.19970115_12z_20191215_12z.nc }
+  GMI.CMIP6_SSP245_SO2_BB.emis.monthly.2015-2100:      { valid_range: "2015-01-16T00:00/2100-12-17T12:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/SU/CMIP6ssp245.emis_SO2.biomassburning.x720_y360_t12.%y4.nc4 }
+
+  GMI.ODS.emis.monthly.1951-2100:                      { valid_range: "1951-01-15T12:00/2100-12-17T00:00", template: /discover/nobackup/ssteenro/qing/SC.ODS.Emission.x360_y181.%y4.V1.nc }
+
+  ## Climatologies
+
+  GMI.MEGAN_AEF_LAI.annual_clim:                       {                                                   template: ExtData/g5chem/sfc/MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc }  # just 1 time
+
+# GMI.DMS.monthly_clim:                                { valid_range: "1985-01-01T00:00/1985-12-01T00:00", template: /discover/nobackup/cakelle2/data/OCEAN/DMS_lana.geos.1x1.esmf.nc }                    # kg/m3  0z day 1  values
+  GMI.DMS.monthly_clim:                                { valid_range: "2011-01-14T12:00/2011-12-15T02:00", template: ExtData/chemistry/Lana/v2011/DMSclim_sfcconcentration.x360_y181_t12.Lana2011.nc4 }    # nmol/l mid-month values
+  GMI.OCS.monthly_clim:                                { valid_range: "2016-01-15T12:00/2016-12-16T00:00", template: ExtData/g5chem/L72/OCS_vmr.x360_y181_z72.t12.2016.nc4 }
+  GMI.ACET.monthly_clim:                               { valid_range: "2001-01-15T12:00/2001-12-17T00:00", template: ExtData/g5chem/L72/acetone_fixed_GMI.x288_y181_z72_t12.2001.nc }
+  GMI.FERTILIZER.monthly_clim:                         { valid_range: "2006-01-15T12:00/2006-12-17T00:00", template: ExtData/g5chem/sfc/fertilizer_GMI.x288_y181_t12.2006.nc }
+  GMI.LAI.monthly_clim:                                { valid_range: "2008-01-15T12:00/2008-12-16T00:00", template: ExtData/g5chem/sfc/LAI/lai_x720_y360_v72_t12_2008.nc }
+  GMI.VEG_FRAC.monthly_clim:                           { valid_range: "2008-01-15T12:00/2008-12-16T00:00", template: ExtData/g5chem/sfc/LAI/veg_fraction_x720_y360_t12_2008.nc }
+  GMI.PRECIP.monthly_clim:                             { valid_range: "2006-01-15T12:00/2006-12-17T00:00", template: ExtData/g5chem/sfc/precipitation_GMI.x288_y181_t12.2006.nc }
+  GMI.aero_MERRA2.monthly_clim:                        { valid_range: "2017-01-15T12:00/2017-12-15T12:00", template: ExtData/chemistry/GMI/aerosols/GEOSCCM_aerodust_MERRA2_tavg3D_monavg_2017_2022.nc4 }
 
 Samplings:
-  GMI_sample_0:
-    extrapolation: clim
-    update_frequency: PT24H
-    update_offset: PT12H
-    update_reference_time: '0'
-  GMI_sample_1:
-    update_frequency: PT24H
-    update_offset: PT12H
-    update_reference_time: '0'
-  GMI_sample_2:
-    extrapolation: clim
-    update_frequency: P1M
-    update_reference_time: '0'
-  GMI_sample_3:
-    extrapolation: clim
+  GMI.daily:             { time_interpolation: true , update_frequency: PT24H,  update_offset: PT12H,  update_reference_time: '0', extrapolation: none            } # Update every 0Z, interpolate the value for noon
+  GMI.daily_wrap:        { time_interpolation: true , update_frequency: PT24H,  update_offset: PT12H,  update_reference_time: '0', extrapolation: clim            } # Update every 0Z, interpolate the value for noon; wrap first or last year
+  GMI.tdt_wrap:          { time_interpolation: true ,                                                                              extrapolation: clim            } # Update every timestep; wrap first or last year
+  GMI.constant:          { time_interpolation: false,                                                                              extrapolation: persist_closest }
+  GMI.monthly_wrap:      { time_interpolation: false, update_frequency: P1M,                           update_reference_time: '0', extrapolation: clim            } # Update every month on day 1 and hold constant; wrap as clim
 
 Exports:
-  ACET_FIXED:
-    collection: GMI_acetone_fixed_GMI.x288_y181_z72_t12.2001.nc
-    sample: GMI_sample_0
-    variable: ACET
+  ACET_FIXED:                  { variable: ACET,                 collection: GMI.ACET.monthly_clim,                                                   sample: GMI.daily_wrap        }
+
   ALD2_biof:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: ALD2_ff
+    - { starting: "2000-01-01",  variable: ALD2_ff,              collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: ALD2_ff,              collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   ALD2_biom:
-    collection: GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: ALD2_bb
-  ALK4_biof:
-    collection: /dev/null
+    - { starting: "1950-01-01",  variable: ALD2_bb,              collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-12-01",  variable: ALD2_bb,              collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  ALK4_biof:                   {                                 collection: /dev/null                                                                                              }
+
   ALK4_biom:
-    collection: GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: ALK4_bb
+    - { starting: "1950-01-01",  variable: ALK4_bb,              collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-12-01",  variable: ALK4_bb,              collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   ALK4_fosf:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: ALK4_ff
-  BC1:
-    collection: /dev/null
-  BC2:
-    collection: /dev/null
-  C2H6_biof:
-    collection: /dev/null
+    - { starting: "2000-01-01",  variable: ALK4_ff,              collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: ALK4_ff,              collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  C2H6_biof:                   {                                 collection: /dev/null                                                                                              }
+
   C2H6_biom:
-    collection: GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: C2H6_bb
+    - { starting: "1950-01-01",  variable: C2H6_bb,              collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-12-01",  variable: C2H6_bb,              collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   C2H6_fosf:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: C2H6_ff
-  C3H8_biof:
-    collection: /dev/null
+    - { starting: "2000-01-01",  variable: C2H6_ff,              collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: C2H6_ff,              collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  C3H8_biof:                   {                                 collection: /dev/null                                                                                              }
+
   C3H8_biom:
-    collection: GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: C3H8_bb
+    - { starting: "1950-01-01",  variable: C3H8_bb,              collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-12-01",  variable: C3H8_bb,              collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   C3H8_fosf:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: C3H8_ff
-  CCL4_FLUX:
-    collection: /dev/null
-  CFC113_FLUX:
-    collection: /dev/null
-  CFC11_FLUX:
-    collection: /dev/null
-  CFC12_FLUX:
-    collection: /dev/null
-  CH2BR2_FLUX:
-    collection: GMI_SC.ODS.Emission.x360_y181.%y4.V1.nc
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: CH2BR2_emission
+    - { starting: "2000-01-01",  variable: C3H8_ff,              collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: C3H8_ff,              collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   CH2O_biof:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: CH2O_ff
+    - { starting: "2000-01-01",  variable: CH2O_ff,              collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: CH2O_ff,              collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   CH2O_biom:
-    collection: GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: CH2O_bb
-  CH3CCL3_FLUX:
-    collection: /dev/null
-  CH4_aggr:
-    collection: /dev/null
-  CH4_biom:
-    collection: /dev/null
-  CHBR3_FLUX:
-    collection: GMI_SC.ODS.Emission.x360_y181.%y4.V1.nc
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: CHBR3_emission
-  CO_biof:
-    collection: /dev/null
+    - { starting: "1950-01-01",  variable: CH2O_bb,              collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-12-01",  variable: CH2O_bb,              collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  CH4_aggr:                    {                                 collection: /dev/null                                                                                              }
+
+  CH4_biom:                    {                                 collection: /dev/null                                                                                              }
+
+  CO_biof:                     {                                 collection: /dev/null                                                                                              }
+
   CO_biom:
-    collection: GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: CO_bb
+    - { starting: "1950-01-01",  variable: CO_bb,                collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-12-01",  variable: CO_bb,                collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   CO_fosf:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: CO_ff
-  DMS_OCEAN:
-    collection: GMI_DMS_lana.geos.1x1.esmf.nc
-    regrid: CONSERVE
-    sample: GMI_sample_2
-    variable: DMS_OCEAN
-  HCFC22_FLUX:
-    collection: /dev/null
-  LAI_FRAC:
-    collection: GMI_lai_x720_y360_v72_t12_1985.nc
-    sample: GMI_sample_0
-    variable: LAI_FRAC
-  MDUST1:
-    collection: /dev/null
-  MDUST2:
-    collection: /dev/null
-  MDUST3:
-    collection: /dev/null
-  MDUST4:
-    collection: /dev/null
-  MDUST5:
-    collection: /dev/null
-  MDUST6:
-    collection: /dev/null
-  MDUST7:
-    collection: /dev/null
-  MEGAN_ISOP:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    regrid: CONSERVE
-    sample: GMI_sample_3
-    variable: BIOGSRCE_AEF_ISOP
-  MEGAN_LAI_001:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_001
-  MEGAN_LAI_002:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_002
-  MEGAN_LAI_003:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_003
-  MEGAN_LAI_004:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_004
-  MEGAN_LAI_005:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_005
-  MEGAN_LAI_006:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_006
-  MEGAN_LAI_007:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_007
-  MEGAN_LAI_008:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_008
-  MEGAN_LAI_009:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_009
-  MEGAN_LAI_010:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_010
-  MEGAN_LAI_011:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_011
-  MEGAN_LAI_012:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    sample: GMI_sample_3
-    variable: AVHRR_LAI_012
-  MEGAN_MBO:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    regrid: CONSERVE
-    sample: GMI_sample_3
-    variable: BIOGSRCE_AEF_MBO
-  MEGAN_MPE:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    regrid: CONSERVE
-    sample: GMI_sample_3
-    variable: BIOGSRCE_AEF_MPE
-  MEGAN_OVOC:
-    collection: GMI_MEGAN_AEF_LAI_Heracles.x288_y181_t12.2008.nc
-    regrid: CONSERVE
-    sample: GMI_sample_3
-    variable: BIOGSRCE_AEF_OVC
-  MEK_biof:
-    collection: /dev/null
+    - { starting: "2000-01-01",  variable: CO_ff,                collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: CO_ff,                collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  MEK_biof:                    {                                 collection: /dev/null                                                                                              }
+
   MEK_biom:
-    collection: GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: MEK_bb
+    - { starting: "1950-01-01",  variable: MEK_bb,               collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-12-01",  variable: MEK_bb,               collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   MEK_fosf:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: MEK_ff
-  N2O_ANTHRO-FLUX:
-    collection: /dev/null
-  N2O_LAND-FLUX:
-    collection: /dev/null
-  N2O_OCEAN-FLUX:
-    collection: /dev/null
+    - { starting: "2000-01-01",  variable: MEK_ff,               collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: MEK_ff,               collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   NO_air:
-    collection: GMI_CMIP6_SSP245.airNOemis.x720_y360_z72_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: NO_air
-  NO_biof:
-    collection: /dev/null
+    - { starting: "1950-01-01",  variable: NO_air,               collection: GMI.CMIP6_CEDS_AirNO.emis.monthly.1950-2014,          regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2014-12-01",  variable: NO_air,               collection: GMI.CMIP6_SSP245_AirNO.emis.monthly.2014-2100,        regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  NO_biof:                     {                                 collection: /dev/null                                                                                              }
+
   NO_biom:
-    collection: GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: NO_bb
+    - { starting: "1950-01-01",  variable: NO_bb,                collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-12-01",  variable: NO_bb,                collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   NO_fosf:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: NO_ff
-  NO_lgt:
-    collection: /dev/null
-  NO_pwrp:
-    collection: /dev/null
-  NO_ship:
-    collection: /dev/null
-  OC1:
-    collection: /dev/null
-  OC2:
-    collection: /dev/null
-  OCS_CLIMO:
-    collection: GMI_OCS_vmr.x360_y181_z72.t12.2016.nc4
-    sample: GMI_sample_0
-    variable: ocs
-  PRPE_biof:
-    collection: /dev/null
+    - { starting: "2000-01-01",  variable: NO_ff,                collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: NO_ff,                collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+
+  NO_pwrp:                     {                                 collection: /dev/null                                                                                              }
+  NO_lgt:                      {                                 collection: /dev/null                                                                                              }
+  NO_ship:                     {                                 collection: /dev/null                                                                                              }
+  PRPE_biof:                   {                                 collection: /dev/null                                                                                              }
+
   PRPE_biom:
-    collection: GMI_CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: PRPE_bb
+    - { starting: "1950-01-01",  variable: PRPE_bb,              collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-12-01",  variable: PRPE_bb,              collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
   PRPE_fosf:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: PRPE_ff
-  SAD:
-    collection: GMI_sad_wt_CMIP6_288x181x72_clim.nc
-    sample: GMI_sample_0
-    variable: lbssad
-  SHIP_NO:
-    collection: GMI_CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: NO_shp
+    - { starting: "2000-01-01",  variable: PRPE_ff,              collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: PRPE_ff,              collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  CCL4_FLUX:                   { variable:      CCL4_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  CFC113_FLUX:                 { variable:    CFC113_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  CFC11_FLUX:                  { variable:     CFC11_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  CFC12_FLUX:                  { variable:     CFC12_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  CH2BR2_FLUX:                 { variable:    CH2BR2_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  CH3CCL3_FLUX:                { variable:   CH3CCL3_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  CHBR3_FLUX:                  { variable:     CHBR3_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  HCFC22_FLUX:                 { variable:    HCFC22_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  N2O_ANTHRO-FLUX:             { variable: N2OANTHRO_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  N2O_LAND-FLUX:               { variable:   N2OLAND_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+  N2O_OCEAN-FLUX:              { variable:  N2OOCEAN_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+
   SO2_AIRCRAFT-FLUX:
-    collection: GMI_CMIP6_SSP245.airSO2emis.x720_y360_z72_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: SO2_aviation
+    - { starting: "1950-01-01",  variable: SO2_aviation,         collection: GMI.CMIP6_CEDS_AirSO2.emis.monthly.1950-2014,         regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2014-12-01",  variable: SO2_aviation,         collection: GMI.CMIP6_SSP245_AirSO2.emis.monthly.2014-2100,       regrid: CONSERVE,  sample: GMI.daily_wrap        }  # 2020
+
   SO2_ENERGY-FLUX:
-    collection: GMI_CMIP6ssp245.emis_SO2.energy.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: SO2_energy
-  SO2_FIRES-FLUX:
-    collection: GMI_CMIP6ssp245.emis_SO2.biomassburning.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: biomass
+    - { starting: "1950-01-01",  variable: SO2_energy,           collection: GMI.CMIP_CEDS_SO2_ENERGY.emis.monthly.1950-2014,      regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2014-12-01",  variable: SO2_energy,           collection: GMI.CMIP6_SSP245_SO2_ENERGY.emis.monthly.2014-2100,   regrid: CONSERVE,  sample: GMI.daily_wrap        }  # 2020
+
+  SO2_FIRES-FLUX:              { variable: SO2,                  collection: GMI.CMIP_SO2_BB.monthly.1750-2015,                    regrid: CONSERVE,  sample: GMI.daily_wrap        }  # last full year is 2015
+
   SO2_NONENERGY-FLUX:
-    collection: GMI_CMIP6ssp245.emis_SO2.sfcanthro.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: SO2_nonenergy
+    - { starting: "1950-01-01",  variable: SO2_nonenergy,        collection: GMI.CMIP_CEDS_SO2_NONENERGY.emis.monthly.1950-2014,   regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2014-12-01",  variable: SO2_nonenergy,        collection: GMI.CMIP6_SSP245_SO2_NONENERGY.emis.monthly.2014-2100, regrid: CONSERVE,  sample: GMI.daily_wrap        }  # 2020
+
   SO2_SHIPPING-FLUX:
-    collection: GMI_CMIP6ssp245.emis_SO2.ships.x720_y360_t12.%y4.nc4
-    regrid: CONSERVE
-    sample: GMI_sample_1
-    variable: SO2_shipping
-  SO4:
-    collection: /dev/null
-  SO4v:
-    collection: /dev/null
-  SOILFERT:
-    collection: GMI_fertilizer_GMI.x288_y181_t12.2006.nc
-    regrid: CONSERVE
-    sample: GMI_sample_0
-    variable: soilFert
-  SOILPRECIP:
-    collection: GMI_precipitation_GMI.x288_y181_t12.2006.nc
-    sample: GMI_sample_0
-    variable: soilPrecip
-  SS1:
-    collection: /dev/null
-  SS2:
-    collection: /dev/null
-  SS3:
-    collection: /dev/null
-  SS4:
-    collection: /dev/null
-  VEG_FRAC:
-    collection: GMI_veg_fraction_x720_y360_t12_1985.nc
-    sample: GMI_sample_0
-    variable: VEG_FRAC
+    - { starting: "1950-01-01",  variable: SO2_shipping,         collection: GMI.CMIP_CEDS_SO2_SHIPPING.emis.monthly.1950-2014,    regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2014-12-01",  variable: SO2_shipping,         collection: GMI.CMIP6_SSP245_SO2_SHIPPING.emis.monthly.2014-2100, regrid: CONSERVE,  sample: GMI.daily_wrap        }
 
-  BCphobic:                    { variable: BCPHOBIC,             collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  BCphilic:                    { variable: BCPHILIC,             collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  OCphobic:                    { variable: OCPHOBIC,             collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  OCphilic:                    { variable: OCPHILIC,             collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  ss001:                       { variable: SS001,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  ss002:                       { variable: SS002,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  ss003:                       { variable: SS003,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  ss004:                       { variable: SS004,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  ss005:                       { variable: SS005,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  SO4:                         { variable: SO4,                  collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
+# DMS_OCEAN:                   { variable: DMS_OCEAN,            collection: GMI.DMS.monthly_clim,                                 regrid: CONSERVE,  sample: GMI.monthly_wrap      }
+  DMS_OCEAN:                   { variable: conc,                 collection: GMI.DMS.monthly_clim,                                 regrid: CONSERVE,  sample: GMI.daily_wrap,       linear_transformation: [ 0.0, 62.13e-9 ] }
+
+  OCS_CLIMO:                   { variable: ocs,                  collection: GMI.OCS.monthly_clim,                                                    sample: GMI.daily_wrap        }
+
+
+  SAD:
+    - { starting: "1850-01-01",  variable: lbssad,               collection: GMI.CMIP6_SAD.monthly.1850-2018,                                         sample: GMI.daily_wrap        }
+    - { starting: "2015-02-01",  variable: lbssad,               collection: GMI.CMIP6_SAD_shift_to_climo.monthly.2015-2023,                          sample: GMI.daily             }
+    - { starting: "2023-12-01",  variable: lbssad,               collection: GMI.CMIP6_SAD.monthly_clim,                                              sample: GMI.daily_wrap        }
+
+  SHIP_NO:
+    - { starting: "2000-01-01",  variable: NO_shp,               collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
+    - { starting: "2015-01-01",  variable: NO_shp,               collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  SOILFERT:                    { variable: soilFert,             collection: GMI.FERTILIZER.monthly_clim,                          regrid: CONSERVE,  sample: GMI.daily_wrap        }
+  SOILPRECIP:                  { variable: soilPrecip,           collection: GMI.PRECIP.monthly_clim,                                                 sample: GMI.daily_wrap        }
+  LAI_FRAC:                    { variable: LAI_FRAC,             collection: GMI.LAI.monthly_clim,                                                    sample: GMI.daily_wrap        }
+  VEG_FRAC:                    { variable: VEG_FRAC,             collection: GMI.VEG_FRAC.monthly_clim,                                               sample: GMI.daily_wrap        }
+
+  MEGAN_ISOP:                  { variable: BIOGSRCE_AEF_ISOP,    collection: GMI.MEGAN_AEF_LAI.annual_clim,                        regrid: CONSERVE,  sample: GMI.constant          }
+  MEGAN_MBO:                   { variable: BIOGSRCE_AEF_MBO,     collection: GMI.MEGAN_AEF_LAI.annual_clim,                        regrid: CONSERVE,  sample: GMI.constant          }
+  MEGAN_MPE:                   { variable: BIOGSRCE_AEF_MPE,     collection: GMI.MEGAN_AEF_LAI.annual_clim,                        regrid: CONSERVE,  sample: GMI.constant          }
+  MEGAN_OVOC:                  { variable: BIOGSRCE_AEF_OVC,     collection: GMI.MEGAN_AEF_LAI.annual_clim,                        regrid: CONSERVE,  sample: GMI.constant          }
+  MEGAN_LAI_001:               { variable: AVHRR_LAI_001,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_002:               { variable: AVHRR_LAI_002,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_003:               { variable: AVHRR_LAI_003,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_004:               { variable: AVHRR_LAI_004,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_005:               { variable: AVHRR_LAI_005,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_006:               { variable: AVHRR_LAI_006,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_007:               { variable: AVHRR_LAI_007,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_008:               { variable: AVHRR_LAI_008,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_009:               { variable: AVHRR_LAI_009,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_010:               { variable: AVHRR_LAI_010,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_011:               { variable: AVHRR_LAI_011,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+  MEGAN_LAI_012:               { variable: AVHRR_LAI_012,        collection: GMI.MEGAN_AEF_LAI.annual_clim,                                           sample: GMI.constant          }
+
+  BCphobic:                    {                                 collection: /dev/null                                                                                              }
+  BCphilic:                    {                                 collection: /dev/null                                                                                              }
+  OCphobic:                    {                                 collection: /dev/null                                                                                              }
+  OCphilic:                    {                                 collection: /dev/null                                                                                              }
+  ss001:                       {                                 collection: /dev/null                                                                                              }
+  ss002:                       {                                 collection: /dev/null                                                                                              }
+  ss003:                       {                                 collection: /dev/null                                                                                              }
+  ss004:                       {                                 collection: /dev/null                                                                                              }
+  ss005:                       {                                 collection: /dev/null                                                                                              }
+  SO4:                         {                                 collection: /dev/null                                                                                              }
   SO4v:                        {                                 collection: /dev/null                                                                                              }
-  du001:                       { variable: DU001,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  du002:                       { variable: DU002,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  du003:                       { variable: DU003,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  du004:                       { variable: DU004,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
-  du005:                       { variable: DU005,                collection: /dev/null,                         regrid: CONSERVE,  sample: GMI.daily_wrap        }
+  du001:                       {                                 collection: /dev/null                                                                                              }
+  du002:                       {                                 collection: /dev/null                                                                                              }
+  du003:                       {                                 collection: /dev/null                                                                                              }
+  du004:                       {                                 collection: /dev/null                                                                                              }
+  du005:                       {                                 collection: /dev/null                                                                                              }
 
-  CH4_BC:                      { variable: CH4,       collection: GMI.CH4_surf_values.clim,                              regrid: CONSERVE,  sample: GMI.constant             }

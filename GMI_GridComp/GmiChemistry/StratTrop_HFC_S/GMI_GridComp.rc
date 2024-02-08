@@ -4,6 +4,10 @@
 # Mechanism: StratTrop_HFC_S
 #==================================
 
+###
+###  MEM - Added CH3BR2 and CHBR3 to emission flux  (missing from GOLF)
+###
+
         #############################
         # Where is the GMI mechanism?
         #############################
@@ -161,6 +165,8 @@ SO2_NONENERGY-FLUX
 SO2_ENERGY-FLUX
 SO2_SHIPPING-FLUX
 SO2_AIRCRAFT-FLUX
+CH2BR2_FLUX
+CHBR3_FLUX
 ::
 
 emissionSpeciesLayers::
@@ -195,6 +201,8 @@ emissionSpeciesLayers::
 1
 1
 72
+1
+1
 ::
 
 emissionPointFilenames::
