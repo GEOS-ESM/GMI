@@ -1176,7 +1176,7 @@ CONTAINS
    type(ESMF_Field)   :: oc_philic_3d_field
    type(ESMF_Field)   :: br_phobic_3d_field
    type(ESMF_Field)   :: br_philic_3d_field
-   type(ESMF_Field)   ::       so4_3d_field, so4v_3d_field
+   type(ESMF_Field)   ::       so4_3d_field, so4v_3d_field, so4vsarea_3d_field
    type(ESMF_Field)   ::        du_4d_field
    type(ESMF_Field)   ::        ss_4d_field
 
@@ -1186,7 +1186,7 @@ CONTAINS
    real, pointer, dimension(:,:,:)   :: oc_philic_3d_array
    real, pointer, dimension(:,:,:)   :: br_phobic_3d_array
    real, pointer, dimension(:,:,:)   :: br_philic_3d_array
-   real, pointer, dimension(:,:,:)   ::       so4_3d_array, so4v_3d_array
+   real, pointer, dimension(:,:,:)   ::       so4_3d_array, so4v_3d_array, so4vsarea_3d_array
    real, pointer, dimension(:,:,:,:) ::        du_4d_array
    real, pointer, dimension(:,:,:,:) ::        ss_4d_array
 
@@ -1210,6 +1210,9 @@ CONTAINS
 
 !  Export for Ship Emissions
    REAL, POINTER, DIMENSION(:,:) :: arr2D
+
+!  Volcanic sulfate effective radius
+   REAL    :: suvreff
 
 !  Local
 !  -----
@@ -2126,8 +2129,14 @@ CONTAINS
     if(rcvolc .eq. ESMF_SUCCESS) then
      call ESMF_StateGet(suv_state,    'SO4',           so4v_3d_field, __RC__)
      call ESMF_FieldGet(field=so4v_3d_field, farrayPtr=so4v_3d_array, __RC__)
+     call ESMF_StateGet(suv_state, 'SO4SAREA',         so4vsarea_3d_field, __RC__)
+     call ESMF_FieldGet(field=so4vsarea_3d_field, farrayPtr=so4vsarea_3d_array, __RC__)
+     CALL MAPL_MaxMin('GMI: SO4:      ', so4v_3d_array)
+     CALL MAPL_MaxMin('GMI: SO4VSAREA:', so4vsarea_3d_array)
      self%wAersl(:,:,km:1:-1,1) = &
      self%wAersl(:,:,km:1:-1,1)+so4v_3d_array(:,:,1:km)*airdens(:,:,1:km)
+     call ESMF_AttributeGet(suv_state, NAME='effective_radius_in_microns', VALUE=suvreff, __RC__)
+     if(MAPL_AM_I_ROOT()) print *, 'GMI:SUVREFF: ', suvreff
     endif
 
 
