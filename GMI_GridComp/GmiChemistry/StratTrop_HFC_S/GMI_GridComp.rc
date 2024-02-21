@@ -287,7 +287,7 @@ AerDust_Effect_opt: 0
         ###########################################################
 
 forc_bc_opt: 2
-forc_bc_years: 69
+forc_bc_years: 151
 forc_bc_start_num: 1950
 forc_bc_kmin: 1
 forc_bc_kmax: 2
@@ -301,11 +301,12 @@ forc_bc_kmax: 2
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/RCP6.0_5BrWMO2018_ch4latvar_1950_2100.asc
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/ccmiRefD1_GMIbc_1950_2018.asc
 #forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/bench_10-26-0_gmi_free_c360_72lev/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_1950_2018.asc
-forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_no5Br_1950_2018.asc
+forc_bc_infile_name:  /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/ccmiRefD2_GMIbc_1950_2100_24species_no5Br_wHFCs.asc
+
 
 #alternative /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/RCP6.0_WMO2018_QingHFCs_ch4latvarGMDscl_1950_2022Hindcast.asc
 
-forcedBcSpeciesNames:: 
+forcedBcSpeciesNames::
 CFC11
 CFC12
 CFC113
@@ -316,9 +317,9 @@ CH3CCl3
 HCFC22
 HCFC141b
 HCFC142b
-CF2ClBr
-CF2Br2
-CF3Br
+H1211
+H1202
+H1301
 H2402
 CH3Br
 CH3Cl
@@ -327,11 +328,9 @@ N2O
 HFC23
 HFC32
 HFC125
-HFC134A
-HFC143A
-HFC152A
-xxx
-xxx
+HFC134a
+HFC143a
+HFC152a
 ::
 
 # The xxx entries above are for SF6 and CO2
