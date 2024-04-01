@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Capability to use 2D ExtData files as Boundary Conditions
+- Added surface flux for CH2BR2 and CHBR3
 
 ### Changed
 

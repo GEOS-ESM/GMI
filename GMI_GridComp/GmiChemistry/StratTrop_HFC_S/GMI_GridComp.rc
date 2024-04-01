@@ -161,6 +161,8 @@ SO2_NONENERGY-FLUX
 SO2_ENERGY-FLUX
 SO2_SHIPPING-FLUX
 SO2_AIRCRAFT-FLUX
+CH2BR2_FLUX
+CHBR3_FLUX
 ::
 
 emissionSpeciesLayers::
@@ -195,6 +197,8 @@ emissionSpeciesLayers::
 1
 1
 72
+1
+1
 ::
 
 emissionPointFilenames::
