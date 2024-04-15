@@ -332,9 +332,10 @@ sad_opt: 2
 #     ----------------------------------------------
 #     lbssad_opt
 #       1:  set all lbssad values to lbssad_init_val
-#       2:  OBSOLETE - read in lbssad 3d fields
-#       3:  OBSOLETE - read in lbssad zonal average fields
-#       4:  lbssad provided by AGCM, current month only.
+#       2: (OBSOLETE)  read in lbssad 3d fields
+#       3: (OBSOLETE)  read in lbssad zonal average fields
+#       4:  lbssad provided by AGCM (ExtData)
+#       5:  lbssad provided by CARMA SO4SAREA
 #     ----------------------------------------------
 #     (as listed in GmiSAD_GridCompClassMod.F90)
 

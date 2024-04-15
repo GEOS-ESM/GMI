@@ -21,6 +21,7 @@ module GmiSwapSpeciesBundlesMod
       public  :: SwapSpeciesBundles
       public  :: speciesReg_for_CCM
 
+#include "setkin_par.h"
 #include "GmiParameters.h"
 #include "gmi_phys_constants.h"
 !

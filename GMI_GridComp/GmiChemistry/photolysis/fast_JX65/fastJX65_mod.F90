@@ -74,7 +74,6 @@
       real*8, intent(in)  :: ODMDUST_ij(k1:k2,NSADdust)    ! optical depth for mineral dust
       real*8, intent(in)    :: fjx_solar_cycle_param(W_)    ! solar cycle scalings
 !
-!      real*8, optional, intent(in) :: ozone_ij(k1:k2)      ! mixing ratio for ozone
       real*8, intent(in), optional :: ozone_ij(k1:k2)      ! mixing ratio for ozone
 !
 ! !OUTPUT PARAMETERS:

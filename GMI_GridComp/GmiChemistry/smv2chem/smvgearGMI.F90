@@ -744,10 +744,10 @@
           Write (lunsmv,950) delt, timremain, yfac, savedVars%errmax(ncs)
         end if
 
- 950    format ('Smvgear:  delt      = ', 1pe9.3, /,  &
-     &          '          timremain = ', 1pe9.3, /,  &
-     &          '          yfac      = ', 1pe9.3, /,  &
-     &          '          errmax    = ', 1pe9.3)
+ 950    format ('Smvgear:  delt      = ', 1pe10.3, /,  &
+     &          '          timremain = ', 1pe10.3, /,  &
+     &          '          yfac      = ', 1pe10.3, /,  &
+     &          '          errmax    = ', 1pe10.3)
 
         nylowdec = nylowdec + 1
         yfac     = yfac * 0.01d0

@@ -67,22 +67,24 @@
 ! !INTERFACE:
 !
 
-      subroutine calcPhotolysisRateConstants( JXbundle, tropp,     &
-     &               pr_qj_o3_o1d,  pr_qj_opt_depth,                           &
-     &               pctm2, mass3, pres3e, pres3c, temp3, concentration,       &
-     &               solarZenithAngle, mcor, surf_alb_uv,                      &
-     &               fracCloudCover, tau_cloud, tau_clw, tau_cli,              &
-     &               totalCloudFraction, qi, ql, ri, rl,                       &
-!    &               cnv_frc, frland,                                          &
-     &               overheadO3col, qjgmi, gridBoxHeight, OptDepth,            &
-     &               Eradius, Tarea, Odaer, relativeHumidity, Odmdust, Dust,   &
-     &               Waersl, Daersl, humidity, num_AerDust, phot_opt,          &
-     &               fastj_opt, fastj_offset_sec, do_clear_sky,                &
-     &               do_AerDust_Calc, do_ozone_inFastJX, do_synoz, qj_timpyr,  &
-     &               io3_num, ih2o_num, isynoz_num, chem_mask_khi, nymd, nhms, &
-     &               pr_diag, loc_proc, synoz_threshold, AerDust_Effect_opt,   &
-     &               num_species, num_qjs, num_qjo, ilo, ihi, julo, jhi, &
-     &               i1, i2, ju1, j2, k1, k2, jNOindex, jNOamp, cldflag)
+      subroutine calcPhotolysisRateConstants( JXbundle, tropp,              &
+                  pr_qj_o3_o1d,  pr_qj_opt_depth,                           &
+                  pctm2, mass3, pres3e, pres3c, temp3, concentration,       &
+                  solarZenithAngle, mcor, surf_alb_uv,                      &
+                  fracCloudCover, tau_cloud, tau_clw, tau_cli,              &
+                  totalCloudFraction, qi, ql, ri, rl,                       &
+!                 cnv_frc, frland,                                          &
+                  overheadO3col, qjgmi, gridBoxHeight, OptDepth,            &
+                  Eradius, Tarea, Odaer, relativeHumidity, Odmdust, Dust,   &
+                  Waersl, Daersl, humidity, num_AerDust, phot_opt,          &
+                  fastj_opt, fastj_offset_sec, do_clear_sky,                &
+                  do_AerDust_Calc, do_ozone_inFastJX, do_synoz, qj_timpyr,  &
+                  io3_num, ih2o_num, isynoz_num, chem_mask_khi, nymd, nhms, &
+                  pr_diag, loc_proc, synoz_threshold, AerDust_Effect_opt, num_species, &
+                  so4v_nden, so4v_sa, so4v_sareff, so4v_saexist,            &
+                  num_qjs, num_qjo, ilo, ihi, julo, jhi,                    &
+                  i1, i2, ju1, j2, k1, k2, jNOindex, jNOamp, cldflag)
+
 !
       implicit none
 !
@@ -140,6 +142,12 @@
       real*8 , intent(in) :: ql                 (i1:i2, ju1:j2, k1:k2) ! in-cloud liquid content
       real*8 , intent(in) :: ri                 (i1:i2, ju1:j2, k1:k2) ! effective radius for ice
       real*8 , intent(in) :: rl                 (i1:i2, ju1:j2, k1:k2) ! effective radius for liquid
+!... SO4 Volc
+      real*8 , intent(in) :: so4v_nden          (i1:i2, ju1:j2, k1:k2) ! SO4 Volc part dens calc'd in G2G
+      real*8 , intent(in) :: so4v_sa            (i1:i2, ju1:j2, k1:k2) ! SO4 Volc Surf Area calc'd in G2G
+      real*8 , intent(in) :: so4v_sareff        ! SO4 Volc Surf Area Reff calc'd in G2G
+      logical, intent(in) :: so4v_saexist       ! SO4 Volc Surf Area flag
+!
 ! !INPUT/OUTPUT PARAMETERS:
       real*8 , intent(inOut) :: OptDepth(i1:i2, ju1:j2, k1:k2, num_AerDust)
       real*8 , intent(inOut) :: ERADIUS (i1:i2, ju1:j2, k1:k2, NSADdust+NSADaer)
@@ -218,18 +226,19 @@
 
         ! For aerosol/dust optical depth/surface area calculations
         if (do_AerDust_Calc .and. fastj_opt /= 5) then
-           call Aero_OptDep_SurfArea(gridBoxHeight, concentration, tropp,   &
-     &              pres3c, OptDepth, Eradius, Tarea, Odaer,                &
-     &              relativeHumidity, Daersl, Waersl, RAA_b, QAA_b,         &
-     &              do_synoz, isynoz_num, synoz_threshold,                  &
-     &              AerDust_Effect_opt, i1, i2, ju1, j2, k1, k2, ilo, ihi,  &
-     &              julo, jhi, num_species, num_AerDust)
+           call Aero_OptDep_SurfArea(gridBoxHeight, concentration, tropp   &
+                  , pres3c, OptDepth, Eradius, Tarea, Odaer                &
+                  , relativeHumidity, Daersl, Waersl, RAA_b, QAA_b         &
+                  , do_synoz, isynoz_num, synoz_threshold                  &
+                  , AerDust_Effect_opt, i1, i2, ju1, j2, k1, k2, ilo, ihi  &
+                  , julo, jhi, num_species, num_AerDust                    &
+                  , so4v_nden, so4v_sa, so4v_sareff, so4v_saexist)
 
            call Dust_OptDep_SurfArea(gridBoxHeight, concentration, tropp,   &
-     &              pres3c, OptDepth, Eradius, Tarea, Odmdust, Dust, RAA_b, &
-     &              QAA_b, do_synoz, isynoz_num, synoz_threshold,           &
-     &              AerDust_Effect_opt, i1, i2, ju1, j2, k1, k2,            &
-     &              num_species, num_AerDust)
+                   pres3c, OptDepth, Eradius, Tarea, Odmdust, Dust, RAA_b, &
+                   QAA_b, do_synoz, isynoz_num, synoz_threshold,           &
+                   AerDust_Effect_opt, i1, i2, ju1, j2, k1, k2,            &
+                   num_species, num_AerDust)
         end if
 !
         if (pr_qj_opt_depth) qjgmi(num_qjo)%pArray3D(:,:,:) = tau_cloud(:,:,:)
@@ -249,11 +258,12 @@
             sza_ij    = solarZenithAngle(il,ij)
             kel_ij(:) = temp3(il,ij,:)
             gridBoxHeight_ij(:) = gridBoxHeight(il,ij,:)
-!... NEED TO SET PROPERLY
+!... NEED TO SET PROPERLY FOR CLOUDJ
             lat_ij    = 0.
 !
-!... for CloudJ aerosol OD calc input
+!... if we are doing aerosol effects on photolysis
             if (do_AerDust_calc) then
+!... for CloudJ aerosol OD calc input
                if (fastj_opt .eq. 5) then 
 !... preprocess for CloudJ AOD calc
 !... hydrophobic BC aerosols
@@ -273,6 +283,7 @@
                  ODAER_ij  (:,:) = ODAER  (il,ij,:,:)
                  ODMDUST_ij(:,:) = ODMDUST(il,ij,:,:)
                endif
+!... if we are NOT doing aerosol effects on photolysis zero out aerosols
             else
               ODAER_ij  (:,:) = 0.0d0
               ODMDUST_ij(:,:) = 0.0d0
@@ -352,7 +363,7 @@
                enddo
 !... wAersl and dAersl aerosol diagnostics
                do N = 1, NSADaer
-!... hydrophilic hygroscopic growth diagnostic  - optDepth(7,10,13,16,19)
+!... hydrophilic hygroscopic growth diagnostic  - optDepth(7,10,13,16,19,22)
                  optDepth(il,ij,:,4+3*N) = optDepth(il,ij,:,4+3*N) + HYGRO_ij(:,N)
                enddo
 !... hydrophilic surface areas diagnostic - optDepth(8,11,14,17,20)

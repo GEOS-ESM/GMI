@@ -643,7 +643,7 @@
 !     Begin execution.
 !     ----------------
 
-      if (DOWRT_SBDIAG) then
+!      if (DOWRT_SBDIAG) then
 !       ====================================================================
 !#if (MSG_OPTION == MSG_MPI)
 !        call Mpi_Comm_Rank (commu_slaves, proc_num, ierr)
@@ -658,7 +658,7 @@
 !$      Write (6,900) proc_num, max_thrds, num_thrds, nblockuse
 !$ 900   format ('Proc #, Max Thrds, # Thrds, nblockuse:  ', i6, i4, i4, i8)
 !       ====================================================================
-      end if
+!      end if
 
 !c    call f_hpmstart (1, "chem block loop")
 

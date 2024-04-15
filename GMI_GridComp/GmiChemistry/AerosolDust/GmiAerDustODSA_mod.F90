@@ -15,13 +15,15 @@
 !
 ! !INTERFACE:
 !
-      subroutine Aero_OptDep_SurfArea(gridBoxHeight, concentration, tropp, pres3c, &
-     &    optDepth, eRadius, tArea, Odaer, relativeHumidity, dAersl, wAersl, &
-     &    raa_b, qaa_b, do_synoz, isynoz_num, synoz_threshold, AerDust_Effect_opt, &
-     &    i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi, num_species, num_AerDust)
+      subroutine Aero_OptDep_SurfArea(gridBoxHeight, concentration, tropp, pres3c &
+        , optDepth, eRadius, tArea, Odaer, relativeHumidity, dAersl, wAersl        &
+        , raa_b, qaa_b, do_synoz, isynoz_num, synoz_threshold, AerDust_Effect_opt  &
+        , i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi, num_species, num_AerDust   &
+        , so4v_nden, so4v_sa, so4v_sareff, so4v_saexist)
 !
 ! !USES:
       use GmiArrayBundlePointer_mod, only : t_GmiArrayBundle
+      use MAPL
 !
       implicit none
 
@@ -48,6 +50,11 @@
   REAL*8, INTENT(IN) :: pres3c(i1:i2, ju1:j2, k1:k2) !Layer mean pressure (hPa)
   REAL*8, intent(in) :: dAersl  (i1:i2, ju1:j2, k1:k2, 2)
   REAL*8, intent(in) :: wAersl  (i1:i2, ju1:j2, k1:k2, NSADaer )
+!... SO4 Volc
+  REAL*8, intent(in) :: so4v_nden (i1:i2, ju1:j2, k1:k2 )
+  REAL*8, intent(in) :: so4v_sa   (i1:i2, ju1:j2, k1:k2 )
+  REAL*8, intent(in) :: so4v_sareff
+  logical,intent(in) :: so4v_saexist
 !... OUTPUT PARAMETERS:
   REAL*8, intent(InOut) :: optDepth(i1:i2, ju1:j2, k1:k2, num_AerDust)
   REAL*8, intent(out) :: eRadius (i1:i2, ju1:j2, k1:k2, NSADdust+NSADaer)
@@ -95,10 +102,15 @@
 
 !   Index to aerosol types in jv_spec.dat
 !   The following are ordered according to the mass densities below
-      INTEGER, SAVE  :: IND(NSADaer) = (/22, 29, 36, 43, 50/)
+      INTEGER, SAVE  :: IND(NSADaer) = (/22, 29, 36, 43, 50, 22/)
 
       INTEGER        :: I, J, R, L, N, IRH, IRHN, IU_cross
       LOGICAL        :: do_calc
+!
+!... Reff growth factor and Qext wrt RH (from FastJX table for Trop sulfate)
+!...  table had: [ 0.159, 0.217, 0.241, 0.260, 0.297, 0.347, 0.498 ]
+      REAL*8,SAVE  :: rhGrthFac(NRH_b)=(/1.0,1.3647798,1.5157233,1.6352202,1.8679246,2.1823900,3.1320755/)
+      REAL*8,SAVE  :: estQdelta(NRH_b)=(/1.0,1.4311564,1.6511167,1.8379983,2.2247667,2.7390444,4.2143059/)
 !
 ! !REVISION HISTORY:
 !   February2005, Jules Kouatchou (Jules.Kouatchou.1@gsfc.nasa.gov)
@@ -115,8 +127,9 @@
       MSDENS(3) = 1800.0    !OC
       MSDENS(4) = 2200.0    !SS (accum)
       MSDENS(5) = 2200.0    !SS (coarse)
+      MSDENS(6) = 1700.0    !SO4 volc
 
-      ! Loop over types of aerosol
+!... Loop over types of hydrophilic aerosols - except Volc SO4
       DO N = 1, NSADaer
 
          ! Zero array
@@ -152,13 +165,21 @@
          DO R = 1, NRH_b
 
             ! Wet radius in "jv_spec.dat"
-            RW(R) = raa_b(4,IND(N)+R-1)
+            if(N.eq.NSADaer) then
+              RW(R) = so4v_sareff * rhGrthFac(R)
+             else
+              RW(R) = raa_b(4,IND(N)+R-1)
+             endif
 
             ! Wet frac of aerosol
             FWET  = (RW(R)**3 - RW(1)**3) / RW(R)**3
 
             ! Extinction efficiency Q for each RH bin
-            QW(R) = qaa_b(4,IND(N)+R-1)*FWET + qaa_b(4,IND(N))*(1.d0-FWET)
+            if(N.eq.NSADaer) then
+              QW(R) = 1.5319 * (estQdelta(R)*FWET + (1.d0-FWET))
+             else
+              QW(R) = qaa_b(4,IND(N)+R-1)*FWET + qaa_b(4,IND(N))*(1.d0-FWET)
+             endif
          ENDDO
 
          ! Loop over SMVGEAR grid boxes
@@ -215,16 +236,18 @@
                   ! #13 Hygroscopic growth of Organic Carbon     [unitless]
                   ! #16 Hygroscopic growth of Sea Salt (accum)   [unitless]
                   ! #19 Hygroscopic growth of Sea Salt (coarse)  [unitless]
+                  ! #22 Hygroscopic growth of Volc SO4           [unitless]
                   !==============================================================
-		  do_calc = .FALSE.
-
-                  IF(do_synoz) THEN
-		   IF(concentration(isynoz_num)%pArray3D(I,J,L) < synoz_threshold) do_calc = .TRUE.
-		  ELSE
-		   IF(pres3c(I,J,L) >= tropp(I,J)) do_calc = .TRUE.
-                  END IF
-
-		  IF(do_calc) optDepth(I,J,L,4+3*N) = optDepth(I,J,L,4+3*N) + SCALEOD(I,J,L,IRH)
+!		  do_calc = .FALSE.
+!
+!                  IF(do_synoz) THEN
+!		   IF(concentration(isynoz_num)%pArray3D(I,J,L) < synoz_threshold) do_calc = .TRUE.
+!		  ELSE
+!		   IF(pres3c(I,J,L) >= tropp(I,J)) do_calc = .TRUE.
+!                  END IF
+!
+!		  IF(do_calc) optDepth(I,J,L,4+3*N) = optDepth(I,J,L,4+3*N) + SCALEOD(I,J,L,IRH)
+		  optDepth(I,J,L,4+3*N) = optDepth(I,J,L,4+3*N) + SCALEOD(I,J,L,IRH)
 
                ENDDO
             ENDDO
@@ -258,25 +281,47 @@
          !       regions (bmy, 2/28/02)
          !==============================================================
 
-         DO R = 1, NRH_b
+         if(N.eq.NSADaer) then
+           DO R = 1, NRH_b
+!... Bin for aerosol type and relative humidity
+              IRHN = ( (N-1) * NRH_b ) + R
 
-            ! Bin for aerosol type and relative humidity
-            IRHN = ( (N-1) * NRH_b ) + R
+              ! Save aerosol optical depth for each combination
+              ! of aerosol type and relative humidity into odAer,
+              ! which will get passed to the FAST-J routines
+              DO L = k1, k2
+                 DO J = ju1, j2
+                    DO I = i1, i2
+                       odAer(I,J,L,IRHN) = SCALEOD(I,J,L,R)  &
+                                  * 0.75d0 * gridBoxHeight(I,J,L)  &
+                                  * so4v_nden(I,J,L) * 0.3537 /  &
+                                  ( MSDENS(N) * so4v_sareff * 1.0D-6 )
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDDO
 
-            ! Save aerosol optical depth for each combination
-            ! of aerosol type and relative humidity into odAer,
-            ! which will get passed to the FAST-J routines
-            DO L = k1, k2
-               DO J = ju1, j2
-                  DO I = i1, i2
-                     odAer(I,J,L,IRHN) = SCALEOD(I,J,L,R)  &
-     &                           * 0.75d0 * gridBoxHeight(I,J,L)  &
-     &                           * wAersl(I,J,L,N) * qaa_b(4,IND(N)) /  &
-     &                           ( MSDENS(N) * raa_b(4,IND(N)) * 1.0D-6 )
-                  ENDDO
-               ENDDO
-            ENDDO
-         ENDDO
+         else
+           DO R = 1, NRH_b
+
+              ! Bin for aerosol type and relative humidity
+              IRHN = ( (N-1) * NRH_b ) + R
+
+              ! Save aerosol optical depth for each combination
+              ! of aerosol type and relative humidity into odAer,
+              ! which will get passed to the FAST-J routines
+              DO L = k1, k2
+                 DO J = ju1, j2
+                    DO I = i1, i2
+                       odAer(I,J,L,IRHN) = SCALEOD(I,J,L,R)  &
+                                  * 0.75d0 * gridBoxHeight(I,J,L)  &
+                                  * wAersl(I,J,L,N) * qaa_b(4,IND(N)) /  &
+                                  ( MSDENS(N) * raa_b(4,IND(N)) * 1.0D-6 )
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDDO
+         endif
 
          
          !==============================================================
@@ -300,21 +345,31 @@
 
          ! Store aerosol surface areas in tArea, and be sure
          ! to list them following the dust surface areas
-         DO L = k1, k2
-            DO J = ju1, j2
-               DO I = i1, i2
-                  tArea(I,J,L,N+NSADdust) = 3.D0*wAersl(I,J,L,N) *  &
-     &                 SCALEVOL(I,J,L) /  &
-     &                    ( eradius (I,J,L,NSADdust+N) * MSDENS(N) )
-               ENDDO
-            ENDDO
-         ENDDO
+!... do SO4volc
+         if(N.eq.NSADaer) then
+           DO L = k1, k2
+              DO J = ju1, j2
+                 DO I = i1, i2
+                    tArea(I,J,L,N+NSADdust) = so4v_sa(I,J,L)
+                 ENDDO
+              ENDDO
+           ENDDO
+!... the rest of wAersl
+         else
+           DO L = k1, k2
+              DO J = ju1, j2
+                 DO I = i1, i2
+                    tArea(I,J,L,N+NSADdust) = 3.D0*wAersl(I,J,L,N) *  &
+                        SCALEVOL(I,J,L) / ( eradius (I,J,L,NSADdust+N) * MSDENS(N) )
+                 ENDDO
+              ENDDO
+           ENDDO
+         endif
 
-      ENDDO  !Loop over NSADaer
-
+      ENDDO  !Loop over NSADaer - all waersl and Volc SO4
 
       !==============================================================
-      ! Account for hydrophobic aerosols (BC and OC), N=2 and N=3
+      ! Account for hydrophobic aerosols (daersl: BC and OC), N=2 and N=3
       !==============================================================
       DO N = 2, 3
 
@@ -326,9 +381,9 @@
             DO J = ju1, j2
                DO I = i1, i2
                   odAer(I,J,L,IRHN) = odAer(I,J,L,IRHN) +  &
-     &                0.75d0 * gridBoxHeight(I,J,L) *  &
-     &                dAersl(I,J,L,N-1) * qaa_b(4,IND(N))   /  &
-     &                ( MSDENS(N) * raa_b(4,IND(N)) * 1.0D-6 )
+                     0.75d0 * gridBoxHeight(I,J,L) *  &
+                     dAersl(I,J,L,N-1) * qaa_b(4,IND(N))   /  &
+                     ( MSDENS(N) * raa_b(4,IND(N)) * 1.0D-6 )
                ENDDO
             ENDDO
          ENDDO
@@ -360,9 +415,9 @@
                         ! Define a new effective radius that accounts
                         ! for the hydrophobic aerosol
                         eradius(I,J,L,NSADdust+N) = ( eradius(I,J,L,NSADdust+N) *  &
-     &                                   tArea  (I,J,L,NSADdust+N) +  &
-     &                                   REFF * dryArea)          /  &
-     &                                 ( tArea  (I,J,L,NSADdust+N) + dryArea )
+                                        tArea  (I,J,L,NSADdust+N) +  &
+                                        REFF * dryArea)          /  &
+                                      ( tArea  (I,J,L,NSADdust+N) + dryArea )
                      END IF
 
                   END IF
@@ -391,6 +446,7 @@
             odAer(:,:,:,R+2*NRH_b) = 0.d0  !OC
             odAer(:,:,:,R+3*NRH_b) = 0.d0  !SS(accum)
             odAer(:,:,:,R+4*NRH_b) = 0.d0  !SS(coarse)
+            odAer(:,:,:,R+5*NRH_b) = 0.d0  ! volcanic sulfate
          ENDDO
       END IF
 
@@ -401,6 +457,7 @@
          tArea(:,:,:,NSADdust+3) = 0.d0  !OC
          tArea(:,:,:,NSADdust+4) = 0.d0  !SS (accum)
          tArea(:,:,:,NSADdust+5) = 0.d0  !SS (coarse)
+         tArea(:,:,:,NSADdust+6) = 0.d0  ! volcanic sulfate
       END IF
 
       !==============================================================
@@ -424,6 +481,7 @@
       ! #13 Hygroscopic growth of Organic Carbon     [unitless]
       ! #16 Hygroscopic growth of Sea Salt (accum)   [unitless]
       ! #19 Hygroscopic growth of Sea Salt (coarse)  [unitless]
+      ! #22 Hygroscopic growth of Volc SO4           [unitless]
       !
       ! Computed here:
       ! ---------------------------------
@@ -437,6 +495,8 @@
       ! #17 Sea Salt (accum) Surface Area            [cm2/cm3 ]
       ! #18 Sea Salt (coarse) Opt Depth(400 nm)      [unitless]
       ! #20 Sea Salt (coarse) Surface Area           [cm2/cm3 ]
+      ! #21 Volc Sulfate Optical Depth (400 nm)      [unitless]
+      ! #23 Volc Sulfate Surface Area                [cm2/cm3 ]
       !
       ! NOTE: The cloud optical depths are actually recorded at
       !       1000 nm, but vary little with wavelength.
@@ -457,15 +517,15 @@
 !	   IF(do_synoz) THEN
 !            WHERE (concentration(isynoz_num)%pArray3D(:,:,:) < synoz_threshold)
 !               optDepth(:,:,:,3+3*N) = optDepth(:,:,:,3+3*N) +  &
-!     &                                    odAer(:,:,:,IRHN ) *  &
-!     &                                  qaa_b(2,IND(N)) /qaa_b(4,IND(N))
+!                                         odAer(:,:,:,IRHN ) *  &
+!                                       qaa_b(2,IND(N)) /qaa_b(4,IND(N))
 !            END WHERE
 !	   ELSE
 !            DO L = k1, k2
 !             WHERE(pres3c(:,:,L) >= topp(:,:))
 !              optDepth(:,:,L,3+3*N) = optDepth(:,:,L,3+3*N) +  &
-!     &                                    odAer(:,:,L,IRHN ) *  &
-!     &                                  qaa_b(2,IND(N)) /qaa_b(4,IND(N))
+!                                         odAer(:,:,L,IRHN ) *  &
+!                                       qaa_b(2,IND(N)) /qaa_b(4,IND(N))
 !             END WHERE
 !            END DO
 !	   END IF
@@ -477,13 +537,13 @@
 !	 IF(do_synoz) THEN
 !          WHERE (concentration(isynoz_num)%pArray3D(:,:,:) < synoz_threshold)
 !             optDepth(:,:,:,5+3*N) = optDepth(:,:,:,5+3*N) +  &
-!     &                               tArea(:,:,:,N+NSADdust)
+!                                    tArea(:,:,:,N+NSADdust)
 !          END WHERE
 !         ELSE
 !          DO L = k1, k2
 !           WHERE(pres3c(:,:,L) >= tropp(:,:))
 !             optDepth(:,:,L,5+3*N) = optDepth(:,:,L,5+3*N) +  &
-!     &                               tArea(:,:,L,N+NSADdust)
+!                                    tArea(:,:,L,N+NSADdust)
 !           END WHERE
 !          END DO
 !         END IF
@@ -492,11 +552,11 @@
             ! Index for type of aerosol and RH value
             IRHN = ( (N-1) * NRH_b ) + R
             optDepth(:,:,:,3+3*N) = optDepth(:,:,:,3+3*N) +  &
-     &                                    odAer(:,:,:,IRHN ) *  &
-     &                                  qaa_b(2,IND(N)) /qaa_b(4,IND(N))
+                                         odAer(:,:,:,IRHN ) *  &
+                                       qaa_b(2,IND(N)) /qaa_b(4,IND(N))
          enddo
          optDepth(:,:,:,5+3*N) = optDepth(:,:,:,5+3*N) +  &
-     &                               tArea(:,:,:,N+NSADdust)
+                                    tArea(:,:,:,N+NSADdust)
 
       ENDDO
 
@@ -513,9 +573,9 @@
 ! !INTERFACE:
 !
       subroutine Dust_OptDep_SurfArea(gridBoxHeight, concentration, &
-     &    tropp, pres3c, optDepth, eradius, tArea, Odmdust, Dust, &
-     &    raa_b, qaa_b, do_synoz, isynoz_num, synoz_threshold, AerDust_Effect_opt, &
-     &    i1, i2, ju1, j2, k1, k2, num_species, num_AerDust)
+         tropp, pres3c, optDepth, eradius, tArea, Odmdust, Dust, &
+         raa_b, qaa_b, do_synoz, isynoz_num, synoz_threshold, AerDust_Effect_opt, &
+         i1, i2, ju1, j2, k1, k2, num_species, num_AerDust)
 !
 ! !USES:
       use GmiArrayBundlePointer_mod, only : t_GmiArrayBundle
@@ -602,8 +662,8 @@
             DO J = ju1, j2
                DO I = i1, i2
                   odmDust(I,J,L,N) = 0.75d0 * gridBoxHeight(I,J,L) *  &
-     &                      dust(I,J,L,N) * qaa_b(4,14+N)     /  &
-     &                     ( MSDENS(N) * raa_b(4,14+N) * 1.0D-6 )
+                           dust(I,J,L,N) * qaa_b(4,14+N)     /  &
+                          ( MSDENS(N) * raa_b(4,14+N) * 1.0D-6 )
                ENDDO
             ENDDO
          ENDDO
@@ -632,13 +692,10 @@
                   eradius(I,J,L,N) = raa_b(4,14+N) * 1.0D-4
 
                   tArea(I,J,L,N)   = 3.D0 / eradius(I,J,L,N) *  &
-     &                      dust(I,J,L,N) / MSDENS(N)
+                           dust(I,J,L,N) / MSDENS(N)
                ENDDO
             ENDDO
          ENDDO
-!
-!         print '(''sdsFJ: '',4e12.4)', MSDENS(N), raa_b(4,14+N)*1.0D-4, maxval(DUST(:,:,:,N)), maxval(TAREA(:,:,:,N))
-!
       ENDDO
 
       !=================================================================
@@ -682,7 +739,7 @@
 ! optDepth tracer #4: Dust optical depths
 !--------------------------------------
              optDepth(:,:,:,4) = optDepth(:,:,:,4) +  &
-     &             (odmDust(:,:,:,N) * qaa_b(2,14+N) / qaa_b(4,14+N))
+                  (odmDust(:,:,:,N) * qaa_b(2,14+N) / qaa_b(4,14+N))
 !--------------------------------------
 ! optDepth tracer #5: Dust surface areas
 !--------------------------------------

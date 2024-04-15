@@ -271,7 +271,7 @@ CONTAINS
        Doing_SO4: DO n = state%chemReg%i_SU, state%chemReg%j_SU
 
         IF( (TRIM(state%chemReg%vname(n)) == "SO4" ) .OR.  &
-            (TRIM(state%chemReg%vname(n)) == "SO4v")       )  THEN
+            (TRIM(state%chemReg%vname(n)) == "SO4v") )  THEN
          CALL MAPL_AddImportSpec(GC,                                  &
      	      SHORT_NAME  = "GOCART::"//TRIM(state%chemReg%vname(n)), &
      	      LONG_NAME   = state%chemReg%vtitle(n),                  &
@@ -317,10 +317,68 @@ CONTAINS
 
       STATUS = 0
 
+!!... This is for CARMA SO4 surface area
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4SAREA',  &
+!              LONG_NAME          = 'SO4 aerosol surface area (non-Volcanic)',  &
+!              UNITS              = 'm2 m-3', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+!!...
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4Reff',  &
+!              LONG_NAME          = 'SO4 aerosol effective radius (non-Volcanic)',  &
+!              UNITS              = 'm', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+!...
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4SAREAvolc',  &
+!              LONG_NAME          = 'SO4 aerosol surface area (Volcanic)',  &
+!              UNITS              = 'm2 m-3', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+!
+!       IF(MAPL_AM_I_ROOT()) PRINT *,"  using CARMA SO4SAREA and SO4Reff"
+!
 
      CASE("CARMA")
 
-      STATUS = 0
+!   This is for CARMA SO4 surface area
+       CALL MAPL_AddImportSpec(GC,  &
+              SHORT_NAME         = 'SO4SAREA',  &
+              LONG_NAME          = 'SO4 aerosol surface area (non-Volcanic)',  &
+              UNITS              = 'm2 m-3', &
+              DIMS               = MAPL_DimsHorzVert,    &
+              VLOCATION          = MAPL_VLocationCenter,    &
+                                                        RC=STATUS  )
+       VERIFY_(STATUS)
+
+       CALL MAPL_AddImportSpec(GC,  &
+              SHORT_NAME         = 'SO4Reff',  &
+              LONG_NAME          = 'SO4 aerosol effective radius (non-Volcanic)',  &
+              UNITS              = 'm', &
+              DIMS               = MAPL_DimsHorzVert,    &
+              VLOCATION          = MAPL_VLocationCenter,    &
+                                                        RC=STATUS  )
+       VERIFY_(STATUS)
+
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4SAREAvolc',  &
+!              LONG_NAME          = 'SO4 aerosol surface area (Volcanic)',  &
+!              UNITS              = 'm2 m-3', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+
+       IF(MAPL_AM_I_ROOT()) PRINT *,"  using CARMA SO4SAREA and SO4Reff"
 
 
      CASE("none")
@@ -349,7 +407,7 @@ CONTAINS
                                             Label="do_ShipEmission:", __RC__)
 
     IF ( do_ShipEmission ) THEN
-       call MAPL_AddImportSpec(GC,                         & 
+       call MAPL_AddImportSpec(GC,                         &
           SHORT_NAME = 'SHIP_NO',                          &
           LONG_NAME  = 'NO from Ships',                    &
           UNITS      = 'kg NO m^(-2) s^(-1)',              &
@@ -383,14 +441,14 @@ CONTAINS
 
 ! Future option - import OCS from ACHEM -  if (state%chemReg%doing_OCS) then import ACHEM::OCS
 
-     call MAPL_AddImportSpec(GC,                           & 
+     call MAPL_AddImportSpec(GC,                           &
         SHORT_NAME = 'OCS_CLIMO',                          &
         LONG_NAME  = 'Carbonyl Sulfide (OCS gas)',         &
         UNITS      = 'mol mol-1',                          &
         DIMS       = MAPL_DimsHorzVert,                    &
         VLOCATION  = MAPL_VLocationCenter,   __RC__) 
 
-     call MAPL_AddImportSpec(GC,                           & 
+     call MAPL_AddImportSpec(GC,                           &
         SHORT_NAME = 'CNV_FRC',                            &
         LONG_NAME  = 'convective_fraction',                &
         UNITS      = '',                                   &
@@ -1185,7 +1243,8 @@ CONTAINS
    If (ESMF_UtilStringLowerCase(trim(ProviderName)).eq.'none') ProviderName = 'none'
 
    gcGMI%gcPhot%aeroProviderName = TRIM(ProviderName)
-   IF(TRIM(providerName) == "GMICHEM" .or. TRIM(providerName) == "CARMA") THEN
+   IF(TRIM(providerName) == "GMICHEM") THEN
+!.sds   IF(TRIM(providerName) == "GMICHEM" .or. TRIM(providerName) == "CARMA") THEN
     gcGMI%gcPhot%AM_I_AERO_PROVIDER = .TRUE.
    ELSE
     gcGMI%gcPhot%AM_I_AERO_PROVIDER = .FALSE.
@@ -1276,7 +1335,7 @@ CONTAINS
                              RC=STATUS )
       VERIFY_(STATUS)
 
-!     IF(MAPL_AM_I_ROOT()) print*,'GMI species SHORT NAME '//TRIM(short_name)
+     IF(MAPL_AM_I_ROOT()) print*,'GMI bgg species SHORT NAME '//TRIM(short_name), l
 
       ! get the GMI REG pointers
       CALL MAPL_GetPointer ( internal, NAME=short_name, ptr=bgg%qa(L)%data3d, &
@@ -1302,7 +1361,7 @@ CONTAINS
                              RC=STATUS )
       VERIFY_(STATUS)
 
-!     IF(MAPL_AM_I_ROOT()) print*,'GMI species SHORT NAME '//TRIM(short_name)
+     IF(MAPL_AM_I_ROOT()) print*,'GMI bxx species SHORT NAME '//TRIM(short_name), l
 
       ! get the XX REG pointers
       CALL MAPL_GetPointer ( internal, NAME=short_name, ptr=bxx%qa(L)%data3d, &
@@ -1497,7 +1556,8 @@ CONTAINS
     CALL ESMF_AttributeSet(aero, NAME='implements_aerosol_optics_method', VALUE=.TRUE., __RC__)
     aeroBundle = ESMF_FieldBundleCreate(NAME='AEROSOLS', __RC__)
     CALL MAPL_StateAdd(aero, aeroBundle, __RC__)
-
+!.sds.. added for v11.0.0
+    CALL ESMF_AttributeSet(aero, NAME='number_of_aerosol_modes', VALUE=numAeroes, __RC__)
     DO n = 1,numAeroes
      CALL MAPL_GetPointer(expChem, PTR3D, TRIM(aeroName(n)), ALLOC=.TRUE., RC=STATUS)
      CALL ESMF_StateGet(expChem, TRIM(aeroName(n)), field, __RC__)
@@ -1759,8 +1819,8 @@ CONTAINS
    type(Species_Bundle), pointer   :: bxx         ! GMI Species - not transported
    integer                         :: nymd, nhms  ! time
    real                            :: gmiDt       ! chemistry timestep (secs)
-   real                            :: runDt       ! heartbeat (secs)
-   integer                         :: i, i2, iOX, iT2M, iOCS, j2, k, km, m, n, iH2SO4
+   real                            :: runDt, r       ! heartbeat (secs)
+   integer                         :: i, i2, iOX, iT2M, iOCS, j2, k, km, m, n, iH2SO4 !, j, iHCL
    LOGICAL                         :: RunGMINow
 
    type(ESMF_Config)               :: CF
@@ -2014,10 +2074,12 @@ CONTAINS
        END DO
      ENDIF
 
-     IF(iOCS < 1) THEN
-       PRINT *,TRIM(Iam)//": Cannot find species OCSg in GMI"
-       STATUS = 1
-       VERIFY_(STATUS)
+     IF(MAPL_AM_I_ROOT()) then 
+       IF(iOCS < 1) THEN
+         PRINT *,TRIM(Iam)//": Cannot find species OCSg in GMI, hope we do not need it..."
+!.sds         STATUS = 1
+!.sds         VERIFY_(STATUS)
+       END IF
      END IF
 
    END IF OCS
@@ -2043,6 +2105,49 @@ CONTAINS
    gcGMI%gcEmiss%doingPredictorNow = doingPredictorNow
 
 
+!... if H2SO4 exists in GMI then ZERO OUT H2SO4 unless coupled into SO4 altering aerosol component
+   H2SO4LOSS: IF ( phase == 2 .OR. phase == 99 ) THEN
+     m = 1
+     n = ggReg%nq
+     iH2SO4 = -1
+!     iHCL = -1
+     DO i = m,n
+!       IF (TRIM(ggReg%vname(i)) == "H2SO4") iH2SO4 = i
+!       IF (TRIM(ggReg%vname(i)) == "HCl") iHCl = i
+       IF (TRIM(ggReg%vname(i)) == "H2SO4") THEN
+         iH2SO4 = i
+         EXIT
+       ENDIF
+     ENDDO
+!... 
+     IF(iH2SO4 >= 1) THEN
+       call ESMF_ConfigGetAttribute(CF, H2SO4_Source, LABEL="SULFURIC_ACID_SOURCE:", DEFAULT='GMIvalue', __RC__)
+        if(MAPL_AM_I_ROOT()) print '(''SULFURIC_ACID_SOURCE: '', a75)', trim(H2SO4_Source)
+        if (H2SO4_Source(1:10).ne."full_field") then
+          if(MAPL_AM_I_ROOT()) print '(''Setting H2SO4=1e-30 before GMICHEM: '', a75)', trim(H2SO4_Source)
+          bgg%qa(iH2SO4)%data3d(:,:,:) = 1e-30
+       endif
+     ENDIF
+   ENDIF H2SO4LOSS
+
+!!... check HCl
+!    r = MAXVAL( bgg%qa(ihcl)%data3d(:,:,:))
+!    IF(r > 4.00E-09) THEN
+!      PRINT *,TRIM(Iam)//": Found ",TRIM(ggReg%vname(iHCl))," above limit: " &
+!        ,r*1.00E+09," ppbv ", iHCl
+!      DO i = 1,i2
+!        DO j = 1,j2
+!          DO k = 1,km
+!            IF (  bgg%qa(ihcl)%data3d(i,j,k) > 4.00E-09 ) THEN
+!              PRINT '(''b4 Phase1'',f9.3,'' ppb- '',3i5)' &
+!                , bgg%qa(ihcl)%data3d(i,j,k)*1.00E+09,i,j,k
+!            END IF
+!          END DO
+!        END DO
+!      END DO
+!    END IF
+
+
 
 ! At the Heartbeat do Run 1
 ! -------------------------
@@ -2065,6 +2170,21 @@ CONTAINS
     ! Also compute AOA (age of air) - see below
 
    END IF Phase1
+
+!... check HCl
+!    r = MAXVAL( bgg%qa(ihcl)%data3d(:,:,:))
+!    IF(r > 4.00E-09) THEN
+!      PRINT *,TRIM(Iam)//": Found ",TRIM(ggReg%vname(iHCl))," above limit: ",r*1.00E+09," ppbv", iHCl
+!      DO i = 1,i2
+!        DO j = 1,j2
+!          DO k = 1,km
+!            IF (  bgg%qa(ihcl)%data3d(i,j,k) > 4.00E-09 ) THEN
+!              PRINT '(''b4 Phase2'',f9.3,'' ppb- '',3i5)', bgg%qa(ihcl)%data3d(i,j,k)*1.00E+09,i,j,k
+!            END IF
+!          END DO
+!        END DO
+!      END DO
+!    END IF
 
 ! At the Heartbeat do Deposition, and at GMI timestep do the rest of chemistry
 ! ----------------------------------------------------------------------------
@@ -2094,6 +2214,21 @@ CONTAINS
      ! Also compute OVP fields - see below
 
    END IF Phase2
+
+!... check HCl
+!    r = MAXVAL( bgg%qa(ihcl)%data3d(:,:,:))
+!    IF(r > 4.00E-09) THEN
+!      PRINT *,TRIM(Iam)//": Found ",TRIM(ggReg%vname(iHCl))," above limit: ",r*1.00E+09," ppbv", iHCl
+!      DO i = 1,i2
+!        DO j = 1,j2
+!          DO k = 1,km
+!            IF (  bgg%qa(ihcl)%data3d(i,j,k) > 4.00E-09 ) THEN
+!              PRINT '(''After Phase2'',f9.3,'' ppb- '',3i5)', bgg%qa(ihcl)%data3d(i,j,k)*1.00E+09,i,j,k
+!            END IF
+!          END DO
+!        END DO
+!      END DO
+!    END IF
 
 ! At GMI timestep do emissions and chemistry (old approach)
 ! ---------------------------------------------------------
@@ -2125,25 +2260,6 @@ CONTAINS
 
    END IF Phase99
 
-!... if H2SO4 exists in GMI then ZERO OUT H2SO4 unless coupled into SO4 altering aerosol component
-   H2SO4LOSS: IF ( phase == 2 .OR. phase == 99 ) THEN
-     m = 1
-     n = ggReg%nq
-     iH2SO4 = -1
-     DO i = m,n
-       IF (TRIM(ggReg%vname(i)) == "H2SO4") THEN
-         iH2SO4 = i
-         EXIT
-       ENDIF
-     ENDDO
-!... 
-     IF(iH2SO4 >= 1) THEN
-       call ESMF_ConfigGetAttribute(CF, H2SO4_Source, LABEL="SULFURIC_ACID_SOURCE:", DEFAULT='tendency', __RC__)
-       if (trim(H2SO4_Source).ne."full_field") bgg%qa(iH2SO4)%data3d(:,:,:) = 1e-30
-     ENDIF
-   ENDIF H2SO4LOSS
-
-
 !  Update age-of-air.
 !  This transported species is at bgg%qa(1)%data3d.
 !  This process is done at the Heartbeat (runDt)
@@ -2153,6 +2269,23 @@ CONTAINS
      bgg%qa(n)%data3d(:,:,:) = bgg%qa(n)%data3d(:,:,:)+runDt/86400.00
      bgg%qa(n)%data3d(:,:,km) = 0.00
    END IF
+
+!... check HCl
+!    r = MAXVAL( bgg%qa(ihcl)%data3d(:,:,:))
+!    IF(r > 4.00E-09) THEN
+!      PRINT *,TRIM(Iam)//": Found ",TRIM(ggReg%vname(iHCl))," above limit: ",r*1.00E+09," ppbv", iHCl
+!      DO i = 1,i2
+!        DO j = 1,j2
+!          DO k = 1,km
+!            IF (  bgg%qa(ihcl)%data3d(i,j,k) > 4.00E-09 ) THEN
+!              PRINT '(''Before diags'',f9.3,'' ppb- '',3i5)', bgg%qa(ihcl)%data3d(i,j,k)*1.00E+09,i,j,k
+!            END IF
+!          END DO
+!        END DO
+!      END DO
+!      STATUS = 99
+!      VERIFY_(STATUS)
+!    END IF
 
 !  Gas-phase water in mole fraction.  Purpose: Allow plotting of mole 
 !  fraction when using quickplot.  This avoids potential conflicts 

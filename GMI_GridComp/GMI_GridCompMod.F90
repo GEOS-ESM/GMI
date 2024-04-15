@@ -296,14 +296,14 @@
       CALL GmiDepos_GridCompRun       (gcGMI%gcDepos,     bgg, bxx, impChem, expChem, nymd, nhms, tdt, __RC__)  ! tdt
 
       IF ( doChem ) THEN
+  
+          CALL GmiSAD_GridCompRun       (gcGMI%gcSAD,       bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
 
-        CALL GmiSAD_GridCompRun       (gcGMI%gcSAD,       bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
+          CALL GmiPhotolysis_GridCompRun(gcGMI%gcPhot,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
 
-        CALL GmiPhotolysis_GridCompRun(gcGMI%gcPhot,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
-
-        CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
-
-        CALL GmiChemistry_GridCompRun (gcGMI%gcChem,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
+          CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, gcGMI%gcSAD,  __RC__)
+  
+          CALL GmiChemistry_GridCompRun (gcGMI%gcChem,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
 
       ENDIF
 
@@ -387,7 +387,7 @@
 
       CALL GmiForcingBC_GridCompRun (gcGMI%gcFBC,       bgg, bxx, impChem, expChem, nymd, nhms, cdt,                    __RC__)
 
-      CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt,                    __RC__)
+      CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, gcGMI%gcSAD,       __RC__)
 
       CALL GmiChemistry_GridCompRun (gcGMI%gcChem,      bgg, bxx, impChem, expChem, nymd, nhms, cdt,                    __RC__)
 

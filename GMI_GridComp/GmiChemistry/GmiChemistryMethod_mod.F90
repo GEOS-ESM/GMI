@@ -45,12 +45,12 @@
 
       public  :: t_Chemistry
 
-# include "GmiParameters.h"
-# include "gmi_AerDust_const.h"
 # include "setkin_par.h"
 # include "setkin_lchem.h"
 # include "setkin_mw.h"
 # include "setkin_surf_bc.h"
+# include "GmiParameters.h"
+# include "gmi_AerDust_const.h"
 
  
   type t_Chemistry
@@ -58,8 +58,8 @@
      type(t_ChemistrySaved) :: savedVars
 
     real*8              :: dehydmin ! minimum dehyd value (mixing ratio)
-    integer             :: ibrono2_num, ich4_num, in2o_num, idehyd_num, ih2_num
-    integer             :: ih2o_num, ih2o2_num, ihcl_num, ico_num
+    integer             :: ibrono2_num, ich4_num, in2o_num, idehyd_num, ih2_num, icl_num
+    integer             :: ih2o_num, ih2o2_num, ihcl_num, iclo_num, icl2o2_num, iclono2_num, ico_num
     integer             :: ihno3_num, imgas_num, initrogen_num, ioxygen_num
     integer             :: ihno3cond_num, io3_num, isynoz_num
     integer             :: ino_num, iacetone_num, iisoprene_num, ipropene_num
@@ -67,6 +67,10 @@
     integer             :: num_noy ! number of Nodoz NOy species
     integer             :: nox_map(MAX_NUM_SMARRAY) ! mapping of NOx spec. # to const spc. #
     integer             :: noy_map(MAX_NUM_SMARRAY) ! mapping of NOy spec. # to const spc. #
+!.sds
+    integer             :: br_map(NSP/2) ! mapping of all Br species
+    integer             :: num_br_map
+!.sds
     logical             :: do_synoz  ! do Synoz?
     logical             :: do_nodoz  ! do Nodoz?
     integer             :: cloudDroplet_opt
@@ -85,6 +89,7 @@
     integer             :: chem_mask_klo
     integer             :: chem_mask_khi
     real*8              :: synoz_threshold
+    real*8              :: hcl_limit
     real*8              :: t_cloud_ice
 !
     integer             :: oz_eq_synoz_opt
@@ -194,7 +199,15 @@
      &                label   = "chem_opt:", &
      &                default = 2, rc=STATUS )
       VERIFY_(STATUS)
-
+!
+!--------------------------------------------------
+! Enforce a maximum allowable HCl (ppbv)
+!--------------------------------------------------
+      call ESMF_ConfigGetAttribute(config, self%hcl_limit, &
+     &                label   = "HCl_limit:", &
+     &                default = 5.0d0, rc=status )
+      VERIFY_(STATUS)
+!
 !     -------------------------------------------------------------
 !     chem_cycle:  number of time steps to cycle chemistry calls on
 !       < 1.0:  chemistry will subcycle
@@ -349,8 +362,9 @@
          if ((self%mw(1) == 0.0d0) .and. (numSpecies == NSP)) then
             self%mw(1:numSpecies) = mw_data(1:numSpecies)
          end if            
-      end if               
-      
+      end if
+!
+      self%icl_num  = 0
       if (self%do_full_chem) then
          self%num_active    = NACT
          self%num_chem      = NCHEM
@@ -367,6 +381,9 @@
          self%ih2o_num      = IH2O
          self%ih2o2_num     = IH2O2
          self%ihcl_num      = IHCL
+         self%iclo_num      = ICLO
+         self%icl2o2_num    = ICL2O2
+         self%iclono2_num   = ICLONO2
          self%ihno3_num     = IHNO3
          self%imgas_num     = IMGAS
          self%initrogen_num = INITROGEN
@@ -403,6 +420,10 @@
         !if (self%do_chem_grp) then
         !   call setupChemicalGroup (i1, i2, ju1, j2, k1, k2)
         !end if
+!... find Cl index number
+          do ic=1,numSpecies
+            if(self%const_labels(ic) .eq. 'Cl') self%icl_num  = ic
+          enddo
 
 !     ====
       else
@@ -429,6 +450,8 @@
          self%initrogen_num = 0
          self%ioxygen_num   = 0
          self%ihcl_num      = 0
+         self%iclo_num      = 0
+         self%icl2o2_num    = 0
          self%ibrono2_num   = 0
          self%in2o_num      = 0
 
@@ -547,7 +570,9 @@
                   call Allocate_yda  (self, i1,i2, ju1,j2, k1, k2)
                end if
             end if
-
+!.sds
+            call Find_All_Atom ( 'Br', self%num_br_map, self%br_map)
+!
          end if
       end if
 
@@ -620,6 +645,7 @@
                     HNO3GASsad, gmiQK, gmiQQK, gmiQJ, gmiQQJ, surfEmissForChem, &
                     pr_diag, do_ftiming, do_qqjk_inchem, pr_qqjk,               &
                     do_semiss_inchem, pr_smv2, pr_nc_period,                    &
+                    i1, i2, ju1, j2, k1, k2,                                    &
                     rootProc, metdata_name_org, metdata_name_model, tdt4)
 
 ! !USES:
@@ -630,8 +656,6 @@
       use GmiTimeControl_mod   , only : t_GmiClock      , Get_begGmiDate
       use GmiTimeControl_mod   , only : Get_curGmiDate  , Get_curGmiTime
       use GmiTimeControl_mod   , only : Get_gmiSeconds  , Get_numTimeSteps
-!
-#     include "gmi_sad_constants.h"
 !
 ! !INPUT PARAMETERS:
       real*8 ,          intent(in) :: pr_nc_period
@@ -655,6 +679,7 @@
       character (len=MAX_LENGTH_MET_NAME), intent(in) :: metdata_name_org
       character (len=MAX_LENGTH_MET_NAME), intent(in) :: metdata_name_model
       real,             intent(in) :: tdt4
+      integer, intent(in) :: i1, i2, ju1, j2, k1, k2
 !
 ! !INPUT/OUTPUT PARAMETERS:
       logical,                      intent(inOut) :: do_qqjk_reset
@@ -673,24 +698,29 @@
       real*8        :: tdt8, gmi_sec
       integer       :: ilo, ihi, julo, jhi
       integer       :: ilong, ilat, ivert, itloop
-      integer       :: i1, i2, ju1, j2, k1, k2
+!      integer       :: i1, i2, ju1, j2, k1, k2
       type (t_GmiArrayBundle), pointer :: concentration(:)
 
-      LOGICAL, PARAMETER :: doThis=.FALSE.
+!
+      character(len=ESMF_MAXSTR) :: IAm, err_msg
+!
+      LOGICAL, PARAMETER  :: doThis=.FALSE.
 !EOP
 !-------------------------------------------------------------------------
 !EOC
+      IAm = "GMI RunChemistry"
+
       tdt8 = tdt4
 
       self%dehydmin = 0.00
 
       ! Get the GMI grid information
-      call Get_i1    (gmiGrid, i1   )
-      call Get_i2    (gmiGrid, i2   )
-      call Get_ju1   (gmiGrid, ju1  )
-      call Get_j2    (gmiGrid, j2   )
-      call Get_k1    (gmiGrid, k1   )
-      call Get_k2    (gmiGrid, k2   )
+!      call Get_i1    (gmiGrid, i1   )
+!      call Get_i2    (gmiGrid, i2   )
+!      call Get_ju1   (gmiGrid, ju1  )
+!      call Get_j2    (gmiGrid, j2   )
+!      call Get_k1    (gmiGrid, k1   )
+!      call Get_k2    (gmiGrid, k2   )
       call Get_ilo   (gmiGrid, ilo  )
       call Get_ihi   (gmiGrid, ihi  )
       call Get_julo  (gmiGrid, julo )
@@ -708,7 +738,7 @@
       call Get_numTimeSteps(gmiClock, num_time_steps)
       call Get_gmiSeconds  (gmiClock, gmi_sec	    )
 
-       call Get_concentration(SpeciesConcentration, concentration)
+      call Get_concentration(SpeciesConcentration, concentration)
 
       !-------------------------------------------------------
       ! Just hno3gas (i.e., no hno3cond) is used by chemistry.
@@ -919,7 +949,7 @@
 !-----------------------------------------------------------------------------
 
       subroutine rcCheckChemistrySetting(self, pr_sad, pr_qj, pr_qk, pr_qqjk, &
-     &       do_qqjk_inchem, do_mean, do_semiss_inchem, numSpecies,&
+     &       do_qqjk_inchem, do_mean, do_semiss_inchem, numSpecies, &
      &        met_opt)
 !
 #     include "smv2chem_par.h"
@@ -1171,6 +1201,39 @@
 
       end subroutine rcCheckChemistrySetting
 !-----------------------------------------------------------------------------
+    subroutine Find_All_Atom (str, num, atom_map)
+!
+    character*2, intent(in) :: str
+    integer, intent(out)    :: num
+    integer, intent(out)    :: atom_map(NSP/2)
+!
+    character*1 strnumatom
+    integer :: i, ii, idx, numatom, inlen, itmp
+    character*16 :: tmpstr
+!
+    idx = 0
+    inlen = len(str)
+! 
+    do i=1,NSP
+      tmpstr = lchemvar(i)
+      itmp = index(tmpstr,str)
+      strnumatom = tmpstr(itmp+inlen:itmp+inlen)
+!... is next char a number?
+      if(lge(strnumatom,'1').and.lle(strnumatom,'9')) then 
+        read(strnumatom,'(i1)') numatom
+       else
+        numatom = 1
+       endif
+      if(itmp.gt.0) then
+        do ii=1,numatom
+          idx = idx+1
+          atom_map(idx) = i
+        enddo
+      endif
+    enddo
+    num = idx
+    return
+   end subroutine Find_All_Atom
 !-------------------------------------------------------------------------
   subroutine Allocate_qqjda (self, i1, i2, ju1, j2, k1, k2)
     integer           , intent(in   )  :: i1, i2, ju1, j2, k1, k2

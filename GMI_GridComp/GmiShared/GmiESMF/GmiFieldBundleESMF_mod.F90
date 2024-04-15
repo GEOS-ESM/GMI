@@ -51,6 +51,7 @@
          module procedure obtainTracerFromBundle_ByName2D_r8
       end interface
 
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 
 ! !DESCRIPTION:
@@ -90,6 +91,20 @@
       field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, &
               name = fieldName, RC=STATUS )
       VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="DIMS",value=MAPL_DimsHorzVert,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="VLOCATION",value=MAPL_VLocationCenter,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="UNITS",value="NA",rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="LONG_NAME",value="NA",rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="FIELD_TYPE",value=1,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="REFRESH_INTERVAL",value=0,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="AVERAGING_INTERVAL",value=0,rc=status)
+      VERIFY_(STATUS)
 
       call MAPL_FieldBundleAdd ( bundle, field, rc=STATUS )
       VERIFY_(STATUS)
@@ -128,6 +143,20 @@
               name = fieldName, RC=STATUS )
       VERIFY_(STATUS)
 
+      call ESMF_AttributeSet(field,name="DIMS",value=MAPL_DimsHorzVert,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="VLOCATION",value=MAPL_VLocationCenter,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="UNITS",value="NA",rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="LONG_NAME",value="NA",rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="FIELD_TYPE",value=1,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="REFRESH_INTERVAL",value=0,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="AVERAGING_INTERVAL",value=0,rc=status)
+      VERIFY_(STATUS)
       call MAPL_FieldBundleAdd ( bundle, field, rc=STATUS )
       VERIFY_(STATUS)
 
@@ -497,6 +526,20 @@
               name = fieldName, RC=STATUS )
       VERIFY_(STATUS)
 
+      call ESMF_AttributeSet(field,name="DIMS",value=MAPL_DimsHorzOnly,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="VLOCATION",value=MAPL_VLocationNone,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="UNITS",value="NA",rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="LONG_NAME",value="NA",rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="FIELD_TYPE",value=1,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="REFRESH_INTERVAL",value=0,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="AVERAGING_INTERVAL",value=0,rc=status)
+      VERIFY_(STATUS)
       call MAPL_FieldBundleAdd ( bundle, field, rc=STATUS )
       VERIFY_(STATUS)
 
@@ -532,6 +575,22 @@
 !BOC
       field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, &
               name = fieldName, RC=STATUS )
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="DIMS",value=MAPL_DimsHorzOnly,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="VLOCATION",value=MAPL_VLocationNone,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="UNITS",value="NA",rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="LONG_NAME",value="NA",rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="FIELD_TYPE",value=1,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="REFRESH_INTERVAL",value=0,rc=status)
+      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="AVERAGING_INTERVAL",value=0,rc=status)
+      VERIFY_(STATUS)
+      call MAPL_FieldBundleAdd ( bundle, field, rc=STATUS )
       VERIFY_(STATUS)
 
       call MAPL_FieldBundleAdd ( bundle, field, rc=STATUS )

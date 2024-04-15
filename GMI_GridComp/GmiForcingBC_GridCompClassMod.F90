@@ -226,26 +226,32 @@ CONTAINS
 
    integer           :: ib
    character (len=4) :: binName
-
-   self%name = 'GMI Forcing Boundary Conditions'
+!... get VSLBr totals right
+   integer        :: ich3br, ichbr3, ich2br2
+!.   integer        :: ichbr2cl, ichbrcl2, ich2brcl
+   real(kind=DBL) :: add_ch3br, add_ch2br2
+!
+!
+!
+      self%name = 'GMI Forcing Boundary Conditions'
 
 !  Initialize local variables
 !  --------------------------
-   rc = 0
-   i1 = self%i1
-   i2 = self%i2
-   im = self%im
+      rc = 0
+      i1 = self%i1
+      i2 = self%i2
+      im = self%im
 
-   j1 = self%j1
-   j2 = self%j2
-   jm = self%jm
+      j1 = self%j1
+      j2 = self%j2
+      jm = self%jm
    
-   km = self%km
+      km = self%km
 
-   rootProc=.FALSE.
-   IF( MAPL_AM_I_ROOT() ) THEN
-    rootProc=.TRUE.
-   END IF 
+      rootProc=.FALSE.
+      IF( MAPL_AM_I_ROOT() ) THEN
+       rootProc=.TRUE.
+      END IF 
 
      !-------------------
      ! Load resource file
@@ -264,8 +270,8 @@ CONTAINS
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, importRestartFile, &
-     &                label   = "importRestartFile:", &
-     &                default = ' ', rc=STATUS )
+                      label   = "importRestartFile:", &
+                      default = ' ', rc=STATUS )
       VERIFY_(STATUS)
 
       !------------------------------
@@ -273,15 +279,15 @@ CONTAINS
       !------------------------------
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%pr_diag, &
-     &           label="pr_diag:", default=.false., rc=STATUS)
+                 label="pr_diag:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%verbose, &
-     &           label="verbose:", default=.false., rc=STATUS)
+                 label="verbose:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_synoz, &
-     &           label="do_synoz:", default=.false., rc=STATUS)
+                 label="do_synoz:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
 
 !     ---------------------------
@@ -297,65 +303,75 @@ CONTAINS
 !     --------------------------------------------------
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_opt, &
-     &                label   = "forc_bc_opt:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_opt:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%fbc_j1, &
-     &                label   = "fbc_j1:", &
-     &                default = ju1_gl, rc=STATUS )
+                      label   = "fbc_j1:", &
+                      default = ju1_gl, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%fbc_j2, &
-     &                label   = "fbc_j2:", &
-     &                default = j2_gl, rc=STATUS )
+                      label   = "fbc_j2:", &
+                      default = j2_gl, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_years, &
-     &                label   = "forc_bc_years:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_years:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_start_num, &
-     &                label   = "forc_bc_start_num:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_start_num:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_kmin, &
-     &                label   = "forc_bc_kmin:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_kmin:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_kmax, &
-     &                label   = "forc_bc_kmax:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_kmax:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       self%forc_bc_map(:)      = 0
 
       call rcEsmfReadTable(gmiConfigFile, forcedBcSpeciesNames, &
-     &                     "forcedBcSpeciesNames::", rc=STATUS)
+                           "forcedBcSpeciesNames::", rc=STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_init_val, &
-     &                label   = "forc_bc_init_val:", &
-     &                default = 0.0d0, rc=STATUS )
+                      label   = "forc_bc_init_val:", &
+                      default = 0.0d0, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_incrpyr, &
-     &                label   = "forc_bc_incrpyr:", &
-     &                default = 0.3d0, rc=STATUS )
+                      label   = "forc_bc_incrpyr:", &
+                      default = 0.3d0, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_lz_val, &
-     &                label   = "forc_bc_lz_val:", &
-     &                default = 0.0d0, rc=STATUS )
+                      label   = "forc_bc_lz_val:", &
+                      default = 0.0d0, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_infile_name, &
-     &                label   = "forc_bc_infile_name:", &
-     &                default = 'forc_bc_co2.asc', rc=STATUS )
+                      label   = "forc_bc_infile_name:", &
+                      default = 'forc_bc_co2.asc', rc=STATUS )
       VERIFY_(STATUS)
-
+!
+!... Because we have mechanisms with incomplete VSLBr species
+!...  we need to compensate in other VSLBr species, for now CH3Br and CH2Br2
+      ich3br = getSpeciesIndex('CH3Br',.true.)   ! .true. arg=>don't error exit if species not there
+      ichbr3 = getSpeciesIndex('CHBr3',.true.)
+      ich2br2 = getSpeciesIndex('CH2Br2',.true.)
+!... other VSLBr species that could be included
+!.      ichbr2cl = getSpeciesIndex('CHBr2Cl',.true.)
+!.      ichbrcl2 = getSpeciesIndex('CHBrCl2',.true.)
+!.      ich2brcl = getSpeciesIndex('CH2BrCl',.true.)
+!
       ! Set the initial value of the list
       allocate(tempListNames(NSP))
       tempListNames(:) = ''
@@ -380,72 +396,70 @@ CONTAINS
 
       end if
 
-      deallocate(tempListNames)
-
 ! Does the GMICHEM import restart file exist?  If not,
 ! the species must "freewheel" through the first time step.
 ! ---------------------------------------------------------
-   INQUIRE(FILE=TRIM(importRestartFile),EXIST=self%gotImportRst)
-   IF( MAPL_AM_I_ROOT() ) THEN
-    PRINT *," ",TRIM(importRestartFile)," exists: ",self%gotImportRst
-    PRINT *," "
-   END IF
+      INQUIRE(FILE=TRIM(importRestartFile),EXIST=self%gotImportRst)
+      IF( MAPL_AM_I_ROOT() ) THEN
+       PRINT *," ",TRIM(importRestartFile)," exists: ",self%gotImportRst
+       PRINT *," "
+      END IF
 
 !  GMI grid specification
 !  ----------------------
-   gmi_nborder = 0
-   i1_gl = 1
-   i2_gl = i2
-   ju1_gl = 1
-   jv1_gl = 1
-   j2_gl = j2
-   ju1 = j1
-   jv1 =j1
-   k1 = 1
-   k2 = km
-   k1_gl = 1
-   k2_gl = km
-   NPIJ = 16     ! These three integers are irrelevant
-   NPI = 4
-   NPJ = 4
-   ilo = i1 - gmi_nborder
-   ihi = i2 + gmi_nborder 
-   julo = ju1 - gmi_nborder
-   jvlo = jv1 - gmi_nborder
-   jhi = j2 + gmi_nborder
-   ilo_gl = i1_gl  - gmi_nborder
-   ihi_gl = i2_gl  + gmi_nborder
-   julo_gl = ju1_gl - gmi_nborder
-   jvlo_gl = jv1_gl - gmi_nborder
-   jhi_gl = j2_gl  + gmi_nborder
-   j1p = 0
-   j2p = j2_gl - j1p + 1
-   ilong = i2 - i1 + 1
-   ilat = j2 - ju1 + 1
-   ivert = k2 - k1 + 1
-   itloop = ilat * ilong * ivert
+      gmi_nborder = 0
+      i1_gl = 1
+      i2_gl = i2
+      ju1_gl = 1
+      jv1_gl = 1
+      j2_gl = j2
+      ju1 = j1
+      jv1 =j1
+      k1 = 1
+      k2 = km
+      k1_gl = 1
+      k2_gl = km
+      NPIJ = 16     ! These three integers are irrelevant
+      NPI = 4
+      NPJ = 4
+      ilo = i1 - gmi_nborder
+      ihi = i2 + gmi_nborder 
+      julo = ju1 - gmi_nborder
+      jvlo = jv1 - gmi_nborder
+      jhi = j2 + gmi_nborder
+      ilo_gl = i1_gl  - gmi_nborder
+      ihi_gl = i2_gl  + gmi_nborder
+      julo_gl = ju1_gl - gmi_nborder
+      jvlo_gl = jv1_gl - gmi_nborder
+      jhi_gl = j2_gl  + gmi_nborder
+      j1p = 0
+      j2p = j2_gl - j1p + 1
+      ilong = i2 - i1 + 1
+      ilat = j2 - ju1 + 1
+      ivert = k2 - k1 + 1
+      itloop = ilat * ilong * ivert
 
-   one_proc = .FALSE.
-   loc_proc = -99
-   locGlobProc = -99
-   commu_slaves = -99
+      one_proc = .FALSE.
+      loc_proc = -99
+      locGlobProc = -99
+      commu_slaves = -99
    
 ! Set GMI's clock
 ! ---------------
-   CALL Set_begGmiDate(self%gmiClock, nymd)
-   CALL Set_begGmiTime(self%gmiClock, nhms)
-   CALL Set_curGmiDate(self%gmiClock, nymd)
-   CALL Set_curGmiTime(self%gmiClock, nhms)
-   CALL Set_numTimeSteps(self%gmiClock, 0)
+      CALL Set_begGmiDate(self%gmiClock, nymd)
+      CALL Set_begGmiTime(self%gmiClock, nhms)
+      CALL Set_curGmiDate(self%gmiClock, nymd)
+      CALL Set_curGmiTime(self%gmiClock, nhms)
+      CALL Set_numTimeSteps(self%gmiClock, 0)
 
 ! Discretization
-! --------------
-   CALL InitializeGmiGrid(self%gmiGrid, NPIJ, NPI, NPJ, &
-                          gmi_nborder, i1, i2, ju1, jv1, j2, k1, k2, &
-                          i1_gl, i2_gl, ju1_gl, jv1_gl, j2_gl, k1_gl, k2_gl, &
-                          ilo, ihi, julo, jvlo, jhi, &
-                          ilo_gl, ihi_gl, julo_gl, jvlo_gl, jhi_gl, &
-                          ilong, ilat, ivert, itloop, j1p, j2p)  
+! -   -------------
+      CALL InitializeGmiGrid(self%gmiGrid, NPIJ, NPI, NPJ, &
+                             gmi_nborder, i1, i2, ju1, jv1, j2, k1, k2, &
+                             i1_gl, i2_gl, ju1_gl, jv1_gl, j2_gl, k1_gl, k2_gl, &
+                             ilo, ihi, julo, jvlo, jhi, &
+                             ilo_gl, ihi_gl, julo_gl, jvlo_gl, jhi_gl, &
+                             ilong, ilat, ivert, itloop, j1p, j2p)  
 
 ! Perform a consistency check with setkin_par.h.
 !   NSP is the number of species in setkins
@@ -459,12 +473,12 @@ CONTAINS
 !     NMR - 2     ! number in GMI_Mech_Registry - 2
 !     NSP - 1     ! number in setkins - 1
 ! --------------------------------------------------------------------------------
-   NMR = bgg%nq + bxx%nq
-   IF( NMR-2 /= NSP-1 ) THEN
-    PRINT *,TRIM(IAm),': Number of species from GMI_Mech_Registry.rc does not match number in setkin_par.h'
-    STATUS = 1
-    VERIFY_(STATUS)
-   END IF
+      NMR = bgg%nq + bxx%nq
+      IF( NMR-2 /= NSP-1 ) THEN
+       PRINT *,TRIM(IAm),': Number of species from GMI_Mech_Registry.rc does not match number in setkin_par.h'
+       STATUS = 1
+       VERIFY_(STATUS)
+      END IF
 
 ! Allocate space, etc., but the initialization of the
 ! species from the internal state is left to the run method.
@@ -477,13 +491,67 @@ CONTAINS
       ! Boundary forcing Data
       if (self%forc_bc_num > 0) then
          Allocate (self%forc_bc_data(FBC_LATDIM, FBC_MONDIM,  &
-         &            self%forc_bc_years, self%forc_bc_num))
+                     self%forc_bc_years, self%forc_bc_num))
          self%forc_bc_data = 0.0d0 
          call readForcedBcData (self%pr_diag, loc_proc, self%forc_bc_opt, &
                              self%forc_bc_years, self%forc_bc_num, &
                              self%forc_bc_data, &
                              self%forc_bc_init_val, self%forc_bc_infile_name)
+!
+!... Because we have mechanisms with incomplete VSLBr chemistry
+!...  we need to compensate in the other existing VSLBr species if they are fixed BCs
+!... species importance in order:
+!...  CH3Br   - unless have CHBr3 and CH2Br2 in mech, add extra 5.0 ppt (
+!...  CHBr3   - subtract 3.6 from CH3Br's extra 5 ppt
+!...  CH2Br2  - make CH3Br extra 0 ppt and add extra 1 ppt to CH2Br2
+!...  CHBr2Cl - subtract 0.6 from CH2Br2 extra 1 ppt
+!...  CHBrCl2 - subtract 0.3 from CH2Br2 extra 1 ppt
+!...  CH2BrCl - subtract 0.1 from CH2Br2 extra 1 ppt
+         if(ich3br .gt. 0) then
+           add_ch3br = 5.0d-12
+           if(ichbr3 .gt. 0) then
+             add_ch3br = add_ch3br-3.6d-12
+             if(ich2br2 .gt. 0) then
+               add_ch3br = 0.0d-12
+               add_ch2br2 = 1.0d-12
+!... other VSLBr species that could be included (CHBr2Cl, CHBrCl2, CH2BrCl)
+!.               if(ichbr2cl .gt. 0) then
+!.                 add_ch2br2 = add_ch2br2-0.6d-12
+!.                 if(ichbrcl2 .gt. 0) then
+!.                   add_ch2br2 = add_ch2br2-0.3d-12
+!.                   if(ich2brcl .gt. 0) then
+!.                     add_ch2br2 = add_ch2br2-0.1d-12
+!.                   endif
+!.                 endif
+!.               endif
+             endif
+           endif
+         endif
+!... set up fixed boundary conditions for VSLBr
+         do ic = 1, self%forc_bc_num
+            self%forc_bc_map(ic) = getSpeciesIndex(tempListNames(ic))
+!... adjust VSLBr boundary conditions data
+!... CH3Br is forced BC field so...
+            if(ich3br.gt.0  .and. ich3br .eq.self%forc_bc_map(ic)) then
+               self%forc_bc_data(:,:,:,ic) = self%forc_bc_data(:,:,:,ic) + add_ch3br
+               if ( MAPL_AM_I_ROOT() ) then
+                  print *, "Adjusting ",trim(tempListNames(ic))," fixed BCs by:  ", add_ch3br, " ppv"
+                  print *, " "
+               endif
+            endif
+!... CH2Br2 is flux BC field so...
+            if(ich2br2.gt.0 .and. ich2br2.eq.self%forc_bc_map(ic)) then
+               self%forc_bc_data(:,:,:,ic) = self%forc_bc_data(:,:,:,ic) + add_ch2br2
+               if ( MAPL_AM_I_ROOT() ) then
+                  print *, "Adjusting ",trim(tempListNames(ic))," fixed BCs by:  ", add_ch2br2," ppv"
+                  print *, " "
+               endif
+            endif
+         end do
+!
       end if
+
+      deallocate(tempListNames)
 
       if (self%forc_bc_opt <= 2) then
 
@@ -536,10 +604,10 @@ CONTAINS
     ! GEOS-5 species indices
     !---------------------------------------------------------------
 
-    allocate(self%mapSpecies(NSP))
-    self%mapSpecies(:) = speciesReg_for_CCM(lchemvar, NSP, bgg%reg%vname, bxx%reg%vname )
+      allocate(self%mapSpecies(NSP))
+      self%mapSpecies(:) = speciesReg_for_CCM(lchemvar, NSP, bgg%reg%vname, bxx%reg%vname )
 
-  RETURN
+      RETURN
 
   END SUBROUTINE GmiForcingBC_GridCompInitialize
 

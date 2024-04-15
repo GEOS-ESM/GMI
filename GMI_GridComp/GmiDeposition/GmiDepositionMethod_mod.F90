@@ -44,6 +44,7 @@
 !
   public  :: t_Deposition
 
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 #     include "gmi_emiss_constants.h"
 

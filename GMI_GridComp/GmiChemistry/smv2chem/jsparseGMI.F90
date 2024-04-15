@@ -842,7 +842,7 @@
 
       if (ic /= savedVars%nallrat(ncs)) then
         Write (6,810) ic, savedVars%nallrat(ncs)
-        err_msg = ' Problem in Jsparse '
+        err_msg = ' Problem in Jsparse 1 '
         call GmiPrintError (err_msg, .true., 0, 0, 0, 0, 0.0d0, 0.0d0)
       end if
 
@@ -917,7 +917,7 @@
         if ((numgaint(k,ncs) > MAXGL) .or.  &
      &      (numlost (k,ncs) > MAXGL)) then
           Write (6,820) namesp2(j,ncs), numgaint(k,ncs), numlost(k,ncs)
-          err_msg = ' Problem in Jsparse '
+          err_msg = ' Problem in Jsparse 2 '
           call GmiPrintError (err_msg, .true., 0, 0, 0, 0, 0.0d0, 0.0d0)
         end if
 
@@ -927,7 +927,7 @@
      &    (ngnfrac(ncs) > MAXGL)) then
         Write (6,830) MAXGL2, savedVars%nmoth(ncs), MAXGL3, savedVars%nolosp(ncs),  &
      &                MAXGL, ngnfrac(ncs)
-        err_msg = ' Problem in Jsparse '
+        err_msg = ' Problem in Jsparse 3 '
         call GmiPrintError (err_msg, .true., 0, 0, 0, 0, 0.0d0, 0.0d0)
       end if
 
@@ -1170,7 +1170,7 @@
      &                  MXCOUNT4, nprcoun, MXCOUNT4, nfrcoun,  &
      &                  MXCOUNT2, npdcoun
 
-          err_msg = ' Problem in Jsparse '
+          err_msg = ' Problem in Jsparse 4 '
           call GmiPrintError (err_msg, .true., 0, 0, 0, 0, 0.0d0, 0.0d0)
 
         end if

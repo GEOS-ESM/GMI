@@ -18,6 +18,7 @@
 ! !PUBLIC MEMBER FUNCTIONS:
       public  :: calcThermalRateConstants, Accum_Qqjk
 
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 #     include "gmi_phys_constants.h"
 !
@@ -55,7 +56,7 @@
 
       subroutine calcThermalRateConstants (do_wetchem, rootProc,    &
      &               num_time_steps, ih2o_num, imgas_num, nymd, rxnr_adjust_map,&
-     &               pres3c, tropp, temp3, clwc, cmf, sadgmi, qkgmi,            &
+     &               pres3c, tropp, temp3, clwc, fcld, cmf, sadgmi, qkgmi,      &
      &               concentration, rxnr_adjust, Eradius, Tarea,                &
      &               relativeHumidity, conPBLFlag, do_AerDust_Calc, do_LBSplusBCOC_SAD, phot_opt,   &
      &               pr_diag, loc_proc, num_rxnr_adjust, rxnr_adjust_timpyr,    &
@@ -68,6 +69,7 @@
 #     include "gmi_time_constants.h"
 #     include "setkin_par.h"
 #     include "gmi_AerDust_const.h"
+#     include "gmi_sad_constants.h"
 !
 ! !INPUT PARAMETERS:
       logical, intent(in) :: pr_diag
@@ -106,6 +108,8 @@
       real*8 , intent(in) :: tropp (i1:i2,   ju1:j2)
                              ! convective mass flux   (kg/m^2*s)
       real*8 , intent(in) :: cmf   (i1:i2,   ju1:j2,   k1:k2)
+                             ! total cloud fraction
+      real*8 , intent(in) :: fcld  (i1:i2,   ju1:j2,   k1:k2)
                              ! cloud liquid water content, grid box average (g/m^3)
       real*8 , intent(in) :: clwc  (i1:i2,   ju1:j2,   k1:k2)
       REAL*8 , intent(in) :: relativeHumidity (i1:i2, ju1:j2, k1:k2)
@@ -139,6 +143,7 @@
       real*8  :: prescol (k1:k2)
       real*8  :: tempcol (k1:k2)
       real*8  :: lwccol  (k1:k2)
+      real*8  :: fcldcol (k1:k2)
       integer :: cPBLcol (k1:k2)
       real*8  :: constcol(num_molefrac, k1:k2)
       real*8  :: qkcol   (num_qks,      k1:k2)
@@ -167,7 +172,8 @@
 
           if (do_wetchem) then
 
-              lwccol(:) = clwc(il,ij,:)
+              lwccol(:)  = clwc(il,ij,:)
+              fcldcol(:) = fcld(il,ij,:)
 
           end if
 
@@ -187,6 +193,7 @@
 
           do ic = 1, num_sad
              sadcol(ic,:) = sadgmi(ic)%pArray3D(il,ij,:)
+!             sadreff(ic,:) = 
           end do
 
           do ic = 1, NSADdust+NSADaer
@@ -210,7 +217,8 @@
           if (do_LBSplusBCOC_SAD) then
             sadcol(1,:) = sadcol(1,:) + sadcol2(NSADdust+2,:) + sadcol2(NSADdust+3,:)
           endif
-!
+!... if GOCART has SO4v then replace STS for strat het reaction
+          sadcol(ISTSSAD,:) = sadcol2(NSADdust+6,:)
 !
 	  cPBLcol(:) = conPBLFlag(il,ij,:)
 
@@ -218,7 +226,7 @@
           call Kcalc  &
 !         ==========
      &        (ivert, sadcol, sadcol2, prescol, tropp(il,ij),  cPBLcol, &
-     &         tempcol, lwccol, adcol, constcol, qkcol, radA, rhcol)
+     &         tempcol, fcldcol, lwccol, adcol, constcol, qkcol, radA, rhcol)
 
           do iq = 1, num_qks
             qkgmi(iq)%pArray3D(il,ij,:) = Max (0.0d0, qkcol(iq,:))
