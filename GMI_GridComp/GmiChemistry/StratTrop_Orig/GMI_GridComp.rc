@@ -281,11 +281,49 @@ forc_bc_kmax: 2
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/RCP6.0_5BrWMO2014_ch4latvar_1950_2100.asc
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/RCP6.0_5BrWMO2018_ch4latvar_1950_2100.asc
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/ccmiRefD1_GMIbc_1950_2018.asc
-forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_extra5Br_1950_2018.asc
+#forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_extra5Br_1950_2018.asc
+forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_no5Br_1950_2018.asc
 
 #alternative /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/RCP6.0_WMO2018_QingHFCs_ch4latvarGMDscl_1950_2022Hindcast.asc
 
 forcedBcSpeciesNames:: 
+#CFC11
+#CFC12
+#CFC113
+#CFC114
+#CFC115
+#CCl4
+#CH3CCl3
+#HCFC22
+#HCFC141b
+#HCFC142b
+#CF2ClBr
+#CF2Br2
+#CF3Br
+#H2402
+#CH3Br
+#CH3Cl
+#CH4
+#N2O
+#xxx
+#xxx
+#xxx
+#xxx
+#xxx
+#xxx
+#xxx
+#xxx
+::
+
+# The xxx entries above are for HFC23 HFC32 HFC125 HFC134a HFC143a HFC152a SF6 and CO2
+
+        ###########################################################
+        # GHG and ODS surface source gases - read with ExtData
+        # (import name = <species_name>_BC )
+        ###########################################################
+ext_bc_kmin: 1
+ext_bc_kmax: 2
+extdataBcSpeciesNames:: 
 CFC11
 CFC12
 CFC113
@@ -304,25 +342,14 @@ CH3Br
 CH3Cl
 CH4
 N2O
-xxx
-xxx
-xxx
-xxx
-xxx
-xxx
-xxx
-xxx
-::
-
-# The xxx entries above are for HFC23 HFC32 HFC125 HFC134A HFC143A HFC152A SF6 and CO2
-
-        ###########################################################
-        # GHG and ODS surface source gases - read with ExtData
-        ###########################################################
-ext_bc_kmin: 1
-ext_bc_kmax: 2
-extdataBcSpeciesNames:: 
-#CH4
+# HFC23
+# HFC32
+# HFC125
+# HFC134a
+# HFC143a
+# HFC152a
+# SF6
+# CO2
 ::
 
 

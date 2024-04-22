@@ -5,6 +5,9 @@ Collections:
 
   ## Monthly values
 
+  GMI_boundary_conds.monthly.1950-2018:                { valid_range: "1950-01-16T12:00/2018-12-16T12:00", template: /discover/nobackup/mmanyin/CCM/bc/GMI/BC.360x180/RefD1_plus_HFC/GMIbc_RefD1_plusHFC_noExtraBr.x360_y180_t12.%y4.L5.nc }
+  GMI_boundary_conds.monthly.1950-2100:                { valid_range: "1950-01-16T12:00/2100-12-16T12:00", template: /discover/nobackup/mmanyin/CCM/bc/GMI/BC.360x180/RefD2_plus_HFC/GMIbc_RefD2_plusHFC_noExtraBr.x360_y180_t12.%y4.L5.nc }
+
   GMI.CMIP6_BB.emis.monthly.1950-2015:                 { valid_range: "1950-01-16T00:00/2015-12-16T00:00", template: ExtData/CMIP6/sfc/biomass_burning/CMIP6_BB.emis.x1440_y720_t12.%y4.nc4 }
   GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100:          { valid_range: "2015-01-16T00:00/2100-12-16T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4 }
 
@@ -264,3 +267,31 @@ Exports:
 
 # just for testing CH4 boundary conditions:
 # CH4_BC:                      { variable: CH4,                  collection: GMI.CH4_surf_values.monthly.2000-2009,                regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  CFC11_BC:                    { variable: CFC11,                collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CFC12_BC:                    { variable: CFC12,                collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CFC113_BC:                   { variable: CFC113,               collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CFC114_BC:                   { variable: CFC114,               collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CFC115_BC:                   { variable: CFC115,               collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CCl4_BC:                     { variable: CCl4,                 collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CH3CCl3_BC:                  { variable: CH3CCl3,              collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  HCFC22_BC:                   { variable: HCFC22,               collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  HCFC141b_BC:                 { variable: HCFC141b,             collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  HCFC142b_BC:                 { variable: HCFC142b,             collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CF2ClBr_BC:                  { variable: CF2ClBr,              collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CF2Br2_BC:                   { variable: CF2Br2,               collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CF3Br_BC:                    { variable: CF3Br,                collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  H2402_BC:                    { variable: H2402,                collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CH3Br_BC:                    { variable: CH3Br,                collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily,            }
+  CH3Cl_BC:                    { variable: CH3Cl,                collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CH4_BC:                      { variable: CH4,                  collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  N2O_BC:                      { variable: N2O,                  collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  HFC23_BC:                    { variable: HFC23,                collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  HFC32_BC:                    { variable: HFC32,                collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  HFC125_BC:                   { variable: HFC125,               collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  HFC134a_BC:                  { variable: HFC134a,              collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  HFC143a_BC:                  { variable: HFC143a,              collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  HFC152a_BC:                  { variable: HFC152a,              collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  SF6_BC:                      { variable: SF6,                  collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+  CO2_BC:                      { variable: CO2,                  collection: GMI_boundary_conds.monthly.1950-2100,                 regrid: CONSERVE,  sample: GMI.daily             }
+

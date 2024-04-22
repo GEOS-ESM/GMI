@@ -105,7 +105,7 @@
  endif
 !
  if (index == UNKNOWN_SPECIES) then
-    err_msg = 'The species does not exist: '// name
+    err_msg = 'The species does not exist: "'// TRIM(name) // '"'
     call GmiPrintError(err_msg, .true., 1, index, 0, 0, 0.0d0, 0.0d0)
  end if
 

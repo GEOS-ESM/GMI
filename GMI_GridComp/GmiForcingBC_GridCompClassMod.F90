@@ -29,6 +29,7 @@
    use GmiArrayBundlePointer_mod,     only : t_GmiArrayBundle, CleanArrayPointer
    use GmiSpeciesRegistry_mod,        only : getSpeciesIndex, UNKNOWN_SPECIES
    use GmiSwapSpeciesBundlesMod,      ONLY : SwapSpeciesBundles, speciesReg_for_CCM
+   use GmiBCandFluxAdjust_mod,        ONLY : GetBrAdjustments
 
    IMPLICIT NONE
    INTEGER, PARAMETER :: DBL = KIND(0.00D+00)
@@ -129,6 +130,8 @@
    TYPE(t_gmiGrid   )           :: gmiGrid
    TYPE(t_GmiClock  )           :: gmiClock
    TYPE(t_SpeciesConcentration) :: SpeciesConcentration
+
+   real(kind=DBL) :: add_ch3br, add_ch2br2
  
   END TYPE GmiForcingBC_GridComp
 
@@ -192,7 +195,8 @@ CONTAINS
    CHARACTER(LEN=255) :: namelistFile
    CHARACTER(LEN=255) :: importRestartFile
    CHARACTER(LEN=255) :: string
-      character (len=MAX_LENGTH_SPECIES_NAME), pointer :: tempListNames(:)
+      character (len=MAX_LENGTH_SPECIES_NAME), pointer :: tempListNames1(:)  ! for Forced BCs
+      character (len=MAX_LENGTH_SPECIES_NAME), pointer :: tempListNames2(:)  ! for Ext BCs
       character (len=MAX_STRING_LENGTH      ) ::  forcedBcSpeciesNames
       character (len=MAX_STRING_LENGTH      ) :: extdataBcSpeciesNames
    
@@ -225,32 +229,27 @@ CONTAINS
    REAL(KIND=DBL) :: dfbc_lat
    REAL(KIND=DBL), ALLOCATABLE :: latRad(:,:)
 
-! Grid cell area can be set by initialize
-! ---------------------------------------
-   REAL, POINTER, DIMENSION(:,:) :: cellArea
+   REAL(KIND=DBL) :: offset
 
-   integer           :: ib
-   character (len=4) :: binName
-
-   self%name = 'GMI Forcing Boundary Conditions'
+      self%name = 'GMI Forcing Boundary Conditions'
 
 !  Initialize local variables
 !  --------------------------
-   rc = 0
-   i1 = self%i1
-   i2 = self%i2
-   im = self%im
+      rc = 0
+      i1 = self%i1
+      i2 = self%i2
+      im = self%im
 
-   j1 = self%j1
-   j2 = self%j2
-   jm = self%jm
+      j1 = self%j1
+      j2 = self%j2
+      jm = self%jm
    
-   km = self%km
+      km = self%km
 
-   rootProc=.FALSE.
-   IF( MAPL_AM_I_ROOT() ) THEN
-    rootProc=.TRUE.
-   END IF 
+      rootProc=.FALSE.
+      IF( MAPL_AM_I_ROOT() ) THEN
+       rootProc=.TRUE.
+      END IF 
 
      !-------------------
      ! Load resource file
@@ -269,8 +268,8 @@ CONTAINS
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, importRestartFile, &
-     &                label   = "importRestartFile:", &
-     &                default = ' ', rc=STATUS )
+                      label   = "importRestartFile:", &
+                      default = ' ', rc=STATUS )
       VERIFY_(STATUS)
 
       !------------------------------
@@ -278,15 +277,15 @@ CONTAINS
       !------------------------------
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%pr_diag, &
-     &           label="pr_diag:", default=.false., rc=STATUS)
+                 label="pr_diag:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%verbose, &
-     &           label="verbose:", default=.false., rc=STATUS)
+                 label="verbose:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_synoz, &
-     &           label="do_synoz:", default=.false., rc=STATUS)
+                 label="do_synoz:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
 
 !     ---------------------------
@@ -302,92 +301,92 @@ CONTAINS
 !     --------------------------------------------------
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_opt, &
-     &                label   = "forc_bc_opt:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_opt:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%fbc_j1, &
-     &                label   = "fbc_j1:", &
-     &                default = ju1_gl, rc=STATUS )
+                      label   = "fbc_j1:", &
+                      default = ju1_gl, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%fbc_j2, &
-     &                label   = "fbc_j2:", &
-     &                default = j2_gl, rc=STATUS )
+                      label   = "fbc_j2:", &
+                      default = j2_gl, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_years, &
-     &                label   = "forc_bc_years:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_years:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_start_num, &
-     &                label   = "forc_bc_start_num:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_start_num:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_kmin, &
-     &                label   = "forc_bc_kmin:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_kmin:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%ext_bc_kmin, &
-     &                label   = "ext_bc_kmin:", &
-     &                default = 1, rc=STATUS )
+                      label   = "ext_bc_kmin:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_kmax, &
-     &                label   = "forc_bc_kmax:", &
-     &                default = 1, rc=STATUS )
+                      label   = "forc_bc_kmax:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%ext_bc_kmax, &
-     &                label   = "ext_bc_kmax:", &
-     &                default = 1, rc=STATUS )
+                      label   = "ext_bc_kmax:", &
+                      default = 1, rc=STATUS )
       VERIFY_(STATUS)
 
       self%forc_bc_map(:)      = 0
       self%ext_bc_map(:)       = 0
 
       call rcEsmfReadTable(gmiConfigFile, forcedBcSpeciesNames, &
-     &                     "forcedBcSpeciesNames::", rc=STATUS)
+                           "forcedBcSpeciesNames::", rc=STATUS)
       VERIFY_(STATUS)
 
       call rcEsmfReadTable(gmiConfigFile, extdataBcSpeciesNames, &
-     &                     "extdataBcSpeciesNames::", rc=STATUS)
+                           "extdataBcSpeciesNames::", rc=STATUS)
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_init_val, &
-     &                label   = "forc_bc_init_val:", &
-     &                default = 0.0d0, rc=STATUS )
+                      label   = "forc_bc_init_val:", &
+                      default = 0.0d0, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_incrpyr, &
-     &                label   = "forc_bc_incrpyr:", &
-     &                default = 0.3d0, rc=STATUS )
+                      label   = "forc_bc_incrpyr:", &
+                      default = 0.3d0, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_lz_val, &
-     &                label   = "forc_bc_lz_val:", &
-     &                default = 0.0d0, rc=STATUS )
+                      label   = "forc_bc_lz_val:", &
+                      default = 0.0d0, rc=STATUS )
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_infile_name, &
-     &                label   = "forc_bc_infile_name:", &
-     &                default = 'forc_bc_co2.asc', rc=STATUS )
+                      label   = "forc_bc_infile_name:", &
+                      default = 'forc_bc_co2.asc', rc=STATUS )
       VERIFY_(STATUS)
-
+ 
       ! Set the initial value of the list
-      allocate(tempListNames(NSP))
-      tempListNames(:) = ''
+      allocate(tempListNames1(NSP))
+      tempListNames1(:) = ''
 
       ! Construct the list of names using the long string
-      call constructListNames(tempListNames, forcedBcSpeciesNames)
+      call constructListNames(tempListNames1, forcedBcSpeciesNames)
 
-      self%forc_bc_num = Count (tempListNames(:) /= '')
+      self%forc_bc_num = Count (tempListNames1(:) /= '')
       if (self%forc_bc_num > 0) then
          do ic = 1, self%forc_bc_num
-            self%forc_bc_map(ic) = getSpeciesIndex(tempListNames(ic))
+            self%forc_bc_map(ic) = getSpeciesIndex(tempListNames1(ic))
          end do
 
          IF (rootProc) THEN
@@ -405,17 +404,17 @@ CONTAINS
       !! Now do ExtData (ext) same as ASCII (forc):
  
       ! Set the initial value of the list
-      ! allocate(tempListNames(NSP))   already done above
-      tempListNames(:) = ''
+      allocate(tempListNames2(NSP))
+      tempListNames2(:) = ''
 
       ! Construct the list of names using the long string
-      call constructListNames(tempListNames, extdataBcSpeciesNames)
+      call constructListNames(tempListNames2, extdataBcSpeciesNames)
 
 
-      self%ext_bc_count = Count (tempListNames(:) /= '')
+      self%ext_bc_count = Count (tempListNames2(:) /= '')
       if (self%ext_bc_count > 0) then
          do ic = 1, self%ext_bc_count
-            self%ext_bc_map(ic) = getSpeciesIndex(tempListNames(ic))
+            self%ext_bc_map(ic) = getSpeciesIndex(tempListNames2(ic))
          end do
 
          IF (rootProc) THEN
@@ -428,73 +427,72 @@ CONTAINS
          END IF
 
       end if
-
-      deallocate(tempListNames)
+      deallocate(tempListNames2)
 
 ! Does the GMICHEM import restart file exist?  If not,
 ! the species must "freewheel" through the first time step.
 ! ---------------------------------------------------------
-   INQUIRE(FILE=TRIM(importRestartFile),EXIST=self%gotImportRst)
-   IF( MAPL_AM_I_ROOT() ) THEN
-    PRINT *," ",TRIM(importRestartFile)," exists: ",self%gotImportRst
-    PRINT *," "
-   END IF
+      INQUIRE(FILE=TRIM(importRestartFile),EXIST=self%gotImportRst)
+      IF( MAPL_AM_I_ROOT() ) THEN
+       PRINT *," ",TRIM(importRestartFile)," exists: ",self%gotImportRst
+       PRINT *," "
+      END IF
 
 !  GMI grid specification
 !  ----------------------
-   gmi_nborder = 0
-   i1_gl = 1
-   i2_gl = i2
-   ju1_gl = 1
-   jv1_gl = 1
-   j2_gl = j2
-   ju1 = j1
-   jv1 =j1
-   k1 = 1
-   k2 = km
-   k1_gl = 1
-   k2_gl = km
-   NPIJ = 16     ! These three integers are irrelevant
-   NPI = 4
-   NPJ = 4
-   ilo = i1 - gmi_nborder
-   ihi = i2 + gmi_nborder 
-   julo = ju1 - gmi_nborder
-   jvlo = jv1 - gmi_nborder
-   jhi = j2 + gmi_nborder
-   ilo_gl = i1_gl  - gmi_nborder
-   ihi_gl = i2_gl  + gmi_nborder
-   julo_gl = ju1_gl - gmi_nborder
-   jvlo_gl = jv1_gl - gmi_nborder
-   jhi_gl = j2_gl  + gmi_nborder
-   j1p = 0
-   j2p = j2_gl - j1p + 1
-   ilong = i2 - i1 + 1
-   ilat = j2 - ju1 + 1
-   ivert = k2 - k1 + 1
-   itloop = ilat * ilong * ivert
+      gmi_nborder = 0
+      i1_gl = 1
+      i2_gl = i2
+      ju1_gl = 1
+      jv1_gl = 1
+      j2_gl = j2
+      ju1 = j1
+      jv1 =j1
+      k1 = 1
+      k2 = km
+      k1_gl = 1
+      k2_gl = km
+      NPIJ = 16     ! These three integers are irrelevant
+      NPI = 4
+      NPJ = 4
+      ilo = i1 - gmi_nborder
+      ihi = i2 + gmi_nborder 
+      julo = ju1 - gmi_nborder
+      jvlo = jv1 - gmi_nborder
+      jhi = j2 + gmi_nborder
+      ilo_gl = i1_gl  - gmi_nborder
+      ihi_gl = i2_gl  + gmi_nborder
+      julo_gl = ju1_gl - gmi_nborder
+      jvlo_gl = jv1_gl - gmi_nborder
+      jhi_gl = j2_gl  + gmi_nborder
+      j1p = 0
+      j2p = j2_gl - j1p + 1
+      ilong = i2 - i1 + 1
+      ilat = j2 - ju1 + 1
+      ivert = k2 - k1 + 1
+      itloop = ilat * ilong * ivert
 
-   one_proc = .FALSE.
-   loc_proc = -99
-   locGlobProc = -99
-   commu_slaves = -99
+      one_proc = .FALSE.
+      loc_proc = -99
+      locGlobProc = -99
+      commu_slaves = -99
    
 ! Set GMI's clock
 ! ---------------
-   CALL Set_begGmiDate(self%gmiClock, nymd)
-   CALL Set_begGmiTime(self%gmiClock, nhms)
-   CALL Set_curGmiDate(self%gmiClock, nymd)
-   CALL Set_curGmiTime(self%gmiClock, nhms)
-   CALL Set_numTimeSteps(self%gmiClock, 0)
+      CALL Set_begGmiDate(self%gmiClock, nymd)
+      CALL Set_begGmiTime(self%gmiClock, nhms)
+      CALL Set_curGmiDate(self%gmiClock, nymd)
+      CALL Set_curGmiTime(self%gmiClock, nhms)
+      CALL Set_numTimeSteps(self%gmiClock, 0)
 
 ! Discretization
 ! --------------
-   CALL InitializeGmiGrid(self%gmiGrid, NPIJ, NPI, NPJ, &
-                          gmi_nborder, i1, i2, ju1, jv1, j2, k1, k2, &
-                          i1_gl, i2_gl, ju1_gl, jv1_gl, j2_gl, k1_gl, k2_gl, &
-                          ilo, ihi, julo, jvlo, jhi, &
-                          ilo_gl, ihi_gl, julo_gl, jvlo_gl, jhi_gl, &
-                          ilong, ilat, ivert, itloop, j1p, j2p)  
+      CALL InitializeGmiGrid(self%gmiGrid, NPIJ, NPI, NPJ, &
+                             gmi_nborder, i1, i2, ju1, jv1, j2, k1, k2, &
+                             i1_gl, i2_gl, ju1_gl, jv1_gl, j2_gl, k1_gl, k2_gl, &
+                             ilo, ihi, julo, jvlo, jhi, &
+                             ilo_gl, ihi_gl, julo_gl, jvlo_gl, jhi_gl, &
+                             ilong, ilat, ivert, itloop, j1p, j2p)  
 
 ! Perform a consistency check with setkin_par.h.
 !   NSP is the number of species in setkins
@@ -508,12 +506,12 @@ CONTAINS
 !     NMR - 2     ! number in GMI_Mech_Registry - 2
 !     NSP - 1     ! number in setkins - 1
 ! --------------------------------------------------------------------------------
-   NMR = bgg%nq + bxx%nq
-   IF( NMR-2 /= NSP-1 ) THEN
-    PRINT *,TRIM(IAm),': Number of species from GMI_Mech_Registry.rc does not match number in setkin_par.h'
-    STATUS = 1
-    VERIFY_(STATUS)
-   END IF
+      NMR = bgg%nq + bxx%nq
+      IF( NMR-2 /= NSP-1 ) THEN
+       PRINT *,TRIM(IAm),': Number of species from GMI_Mech_Registry.rc does not match number in setkin_par.h'
+       STATUS = 1
+       VERIFY_(STATUS)
+      END IF
 
 ! Allocate space, etc., but the initialization of the
 ! species from the internal state is left to the run method.
@@ -523,18 +521,60 @@ CONTAINS
                      self%gmiGrid, gmiConfigFile, NSP, NMF, NCHEM,            &
                      loc_proc)
 
-      ! Boundary forcing Data
+
+      CALL GetBrAdjustments( add_ch3br_opt  = self%add_ch3br,     &
+                             add_ch2br2_opt = self%add_ch2br2,    &
+                             __RC__                               )
+
+      if ( MAPL_AM_I_ROOT() ) then
+        print *, "GMI - If using CH3Br  Forced boundary condition, it will be offset by ", self%add_ch3br,  " ppv"
+        print *, "GMI - If using CH2Br2 Forced boundary condition, it will be offset by ", self%add_ch2br2, " ppv"
+      endif
+
+      ! Boundary forcing Data -- ASCII approach
       if (self%forc_bc_num > 0) then
          Allocate (self%forc_bc_data(FBC_LATDIM, FBC_MONDIM,  &
-         &            self%forc_bc_years, self%forc_bc_num))
+                   self%forc_bc_years, self%forc_bc_num))
          self%forc_bc_data = 0.0d0 
          call readForcedBcData (self%pr_diag, loc_proc, self%forc_bc_opt, &
                              self%forc_bc_years, self%forc_bc_num, &
                              self%forc_bc_data, &
                              self%forc_bc_init_val, self%forc_bc_infile_name)
+
+!... set up fixed boundary conditions for VSLBr
+         do ic = 1, self%forc_bc_num
+
+            self%forc_bc_map(ic) = getSpeciesIndex(tempListNames1(ic))
+
+!... adjust VSLBr boundary conditions data
+             offset = 0.0d0
+             if ( TRIM(tempListNames1(ic)) == 'CH3Br'  ) then
+               offset = self%add_ch3br
+               if ( MAPL_AM_I_ROOT() ) then
+                  print *, "Adjusting CH3Br fixed BCs by:  ", offset, " ppv"
+                  print *, " "
+               endif
+             endif
+             if ( TRIM(tempListNames1(ic)) == 'CH2Br2' ) then
+               offset = self%add_ch2br2
+               if ( MAPL_AM_I_ROOT() ) then
+                  print *, "Adjusting CH2Br2 fixed BCs by:  ", offset, " ppv"
+                  print *, " "
+               endif
+             endif
+
+            self%forc_bc_data(:,:,:,ic) = &
+            self%forc_bc_data(:,:,:,ic) + offset
+
+         end do
+!
       end if
 
-      if (self%forc_bc_opt <= 2) then
+      deallocate(tempListNames1)
+
+      ! Alloc self%jlatmd  (Dealloc in Finalize)
+      ! Set   self%jlatmd and self%last_year  -- both will be used in updateForcingBC
+      if (self%forc_bc_opt <= 2 .AND. self%forc_bc_num > 0) then
 
           Allocate (self%jlatmd(i1:i2,ju1:j2))
           self%jlatmd(i1:i2,ju1:j2) = 0
@@ -580,15 +620,15 @@ CONTAINS
 
       end if
 
-    !---------------------------------------------------------------
-    ! Create and populate the array that maps GMI species indices to 
-    ! GEOS-5 species indices
-    !---------------------------------------------------------------
+      !---------------------------------------------------------------
+      ! Create and populate the array that maps GMI species indices to 
+      ! GEOS-5 species indices
+      !---------------------------------------------------------------
 
-    allocate(self%mapSpecies(NSP))
-    self%mapSpecies(:) = speciesReg_for_CCM(lchemvar, NSP, bgg%reg%vname, bxx%reg%vname )
+      allocate(self%mapSpecies(NSP))
+      self%mapSpecies(:) = speciesReg_for_CCM(lchemvar, NSP, bgg%reg%vname, bxx%reg%vname )
 
-  RETURN
+      RETURN
 
   END SUBROUTINE GmiForcingBC_GridCompInitialize
 
@@ -685,6 +725,8 @@ CONTAINS
 
    CHARACTER(LEN=255) :: speciesName
    CHARACTER(LEN=255) :: importName
+
+   REAL(KIND=DBL) :: offset
 
    REAL, POINTER, DIMENSION(:,:) :: PTR2D
 
@@ -801,14 +843,21 @@ CONTAINS
          ! ExtData
          if (self%ext_bc_count > 0) then
            DO ic = 1,self%ext_bc_count
+
              speciesName = TRIM(lchemvar(self%ext_bc_map(ic)))
              importName = TRIM(speciesName)//'_BC'
              CALL MAPL_GetPointer(impChem, PTR2D, TRIM(importName), RC=STATUS)
+             IF ( STATUS .NE. ESMF_SUCCESS ) PRINT*,'Failed to import '//TRIM(speciesName)//'_BC'
              VERIFY_(STATUS)
 
+             offset = 0.0d0
+             if ( TRIM(speciesName) == 'CH3Br'  )  offset = self%add_ch3br
+             if ( TRIM(speciesName) == 'CH2Br2' )  offset = self%add_ch2br2
+
              do k = self%ext_bc_kmin,self%ext_bc_kmax
-               self%SpeciesConcentration%concentration(self%ext_bc_map(ic))%pArray3D(:,:,k) =  PTR2D(:,:)
+               self%SpeciesConcentration%concentration(self%ext_bc_map(ic))%pArray3D(:,:,k) =  PTR2D(:,:) + offset
              end do
+
            end do
          end if
 
@@ -1020,6 +1069,10 @@ CONTAINS
    rc=0
    DEALLOCATE(self%latRad, STAT=STATUS)
    VERIFY_(STATUS)
+   IF (self%forc_bc_opt <= 2 .AND. self%forc_bc_num > 0) THEN
+     DEALLOCATE(self%jlatmd, STAT=STATUS)
+     VERIFY_(STATUS)
+   END IF
    RETURN
 
  END SUBROUTINE GmiForcingBC_GridCompFinalize
