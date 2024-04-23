@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Capability to use 2D ExtData files as Boundary Conditions
 
 ### Changed
+
+- Updated CI to use new v2 orb
+
 ### Removed
 ### Deprecated
 
