@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated CI to use new v2 orb
 - Changed the Monthly Wrap sampling (in ExtData yaml) to hold values constant for the month (zero diff, since DMS currently does not use that sampling)
 - Modified the starting date for several collections in ExtData yaml; now they cover a wider time range
 - Extended SO2 fire flux (ExtData yaml) to include future years from SSP2-4.5
