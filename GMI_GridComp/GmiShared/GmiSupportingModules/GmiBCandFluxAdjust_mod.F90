@@ -99,34 +99,34 @@ module GmiBCandFluxAdjust_mod
 !...  CHBrCl2 - subtract 0.3 from CH2Br2 extra 1 ppt
 !...  CH2BrCl - subtract 0.1 from CH2Br2 extra 1 ppt
       if(ich3br .gt. 0) then
-         add_ch3br = 5.0d-12
+        add_ch3br  = 5.0d-12
         mult_ch3br = -999.0 * 1.0d0     ! need value for this
         if(ichbr3 .gt. 0) then
-           add_ch3br = add_ch3br-3.6d-12
+          add_ch3br  = add_ch3br-3.6d-12
           mult_ch3br = -999.0 * 1.0d0   ! need value for this
           if(ich2br2 .gt. 0) then
-             add_ch3br = 0.0d-12
+            add_ch3br  = 0.0d-12
             mult_ch3br = 1.0d0
-             add_ch2br2 = 1.0d-12   ! NOTE: Only used if CH2Br2 is a Forced Boundary Condition
+            add_ch2br2  = 1.0d-12   ! NOTE: Only used if CH2Br2 is a Forced Boundary Condition
             mult_ch2br2 = 1.8d0     ! NOTE: Only used if CH2Br2 is an Emission  [Qing email 4/3/24]
 !... other VSLBr species that could be included (CHBr2Cl, CHBrCl2, CH2BrCl)
               if(ichbr2cl .gt. 0) then
                 PRINT*,TRIM(Iam)//' Running a new section of code, please review it'
                 PRINT*, " "
                 VERIFY_(101)
-                 add_ch2br2 = add_ch2br2-0.6d-12
+                add_ch2br2  = add_ch2br2-0.6d-12
                 mult_ch2br2 = -999.0 * 1.0d0   ! need value for this
                 if(ichbrcl2 .gt. 0) then
                   PRINT*,TRIM(Iam)//' Running a new section of code, please review it'
                   PRINT*, " "
                   VERIFY_(102)
-                   add_ch2br2 = add_ch2br2-0.3d-12
+                  add_ch2br2  = add_ch2br2-0.3d-12
                   mult_ch2br2 = -999.0 * 1.0d0   ! need value for this
                   if(ich2brcl .gt. 0) then
                     PRINT*,TRIM(Iam)//' Running a new section of code, please review it'
                     PRINT*, " "
                     VERIFY_(103)
-                     add_ch2br2 = add_ch2br2-0.1d-12
+                    add_ch2br2  = add_ch2br2-0.1d-12
                     mult_ch2br2 = -999.0 * 1.0d0   ! need value for this
                   endif
                 endif
