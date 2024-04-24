@@ -161,6 +161,8 @@ SO2_NONENERGY-FLUX
 SO2_ENERGY-FLUX
 SO2_SHIPPING-FLUX
 SO2_AIRCRAFT-FLUX
+CH2BR2_FLUX
+CHBR3_FLUX
 ::
 
 emissionSpeciesLayers::
@@ -195,6 +197,8 @@ emissionSpeciesLayers::
 1
 1
 72
+1
+1
 ::
 
 emissionPointFilenames::
@@ -297,6 +301,43 @@ forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF
 #alternative /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/RCP6.0_WMO2018_QingHFCs_ch4latvarGMDscl_1950_2022Hindcast.asc
 
 forcedBcSpeciesNames:: 
+#CFC11
+#CFC12
+#CFC113
+#CFC114
+#CFC115
+#CCl4
+#CH3CCl3
+#HCFC22
+#HCFC141b
+#HCFC142b
+#CF2ClBr
+#CF2Br2
+#CF3Br
+#H2402
+#CH3Br
+#CH3Cl
+#CH4
+#N2O
+#HFC23
+#HFC32
+#HFC125
+#HFC134A
+#HFC143A
+#HFC152A
+#xxx
+#xxx
+::
+
+# The xxx entries above are for SF6 and CO2
+
+        ###########################################################
+        # GHG and ODS surface source gases - read with ExtData
+        # (import name = <species_name>_BC )
+        ###########################################################
+ext_bc_kmin: 1
+ext_bc_kmax: 2
+extdataBcSpeciesNames:: 
 CFC11
 CFC12
 CFC113
@@ -318,22 +359,11 @@ N2O
 HFC23
 HFC32
 HFC125
-HFC134A
-HFC143A
-HFC152A
-xxx
-xxx
-::
-
-# The xxx entries above are for SF6 and CO2
-
-        ###########################################################
-        # GHG and ODS surface source gases - read with ExtData
-        ###########################################################
-ext_bc_kmin: 1
-ext_bc_kmax: 2
-extdataBcSpeciesNames:: 
-#CH4
+HFC134a
+HFC143a
+HFC152a
+# SF6
+# CO2
 ::
 
 

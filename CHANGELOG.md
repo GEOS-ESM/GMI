@@ -10,10 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Capability to use 2D ExtData files as Boundary Conditions
+- Added surface flux for CH2BR2 and CHBR3 in the HFC+S mechanism
+- Added an automatic Br adjustment, based on the species present in the mechanism. CH3Br and CH2Br2 are changed, either by adding to Forced BC's or by scaling Emissions.
 
 ### Changed
 
 - Updated CI to use new v2 orb
+- Changed the Monthly Wrap sampling (in ExtData yaml) to hold values constant for the month (zero diff, since DMS currently does not use that sampling)
+- Modified the starting date for several collections in ExtData yaml; now they cover a wider time range
+- Extended SO2 fire flux (ExtData yaml) to include future years from SSP2-4.5
+- Changed Forced Boundary Conditions to use the ExtData implementation by default (ASCII still supported); RefD1 and RefD2 BCs available via ExtData, use RefD2 by default.
+- Now automatically scale CH2Br2 emissions by 1.8, when using the HFC+S mechanism, to account for missing Br
 
 ### Removed
 ### Deprecated

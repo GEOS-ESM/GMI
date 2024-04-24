@@ -197,7 +197,7 @@
 ! --------------------------------------------
      LOGICAL :: veg_fraction_done
 !
-! Point mission data
+! Point emission data
 ! --------------------------------------------
      TYPE(t_GmiPointEmiss), pointer :: GmiPointEmiss(:) => null()
  
@@ -540,8 +540,8 @@
       CALL InitializeEmission(self%Emission, self%SpeciesConcentration,       &
                      self%gmiGrid, gmiConfigFile, self%cellArea, IHNO3, IO3,  &
                      NSP, loc_proc, rootProc, self%chem_opt, self%trans_opt,  &
-                     self%pr_diag,                                            &
-                     self%pr_const, self%pr_surf_emiss, self%pr_emiss_3d, tdt)
+                     self%pr_diag, self%pr_const, self%pr_surf_emiss,         &
+                     self%pr_emiss_3d, tdt, __RC__ )
 
       IF (BTEST(self%Emission%emiss_opt,1)) THEN
 
@@ -890,9 +890,13 @@
    REAL(KIND=DBL) :: chemDt
 
    CHARACTER(LEN=ESMF_MAXSTR) :: speciesName
+   CHARACTER(LEN=ESMF_MAXSTR) :: speciesNamePrefix
    CHARACTER(LEN=ESMF_MAXSTR) :: importName
    CHARACTER(LEN=ESMF_MAXSTR) :: fieldName
    CHARACTER(LEN=ESMF_MAXSTR) :: unitsName
+
+   INTEGER ::  ios
+   REAL(KIND=DBL) :: escale
 
    LOGICAL :: found, rootProc
 !  LOGICAL, PARAMETER :: do_qqjk_reset = .TRUE.
@@ -1557,6 +1561,23 @@ CONTAINS
 
     speciesName = TRIM(self%Emission%emissionSpeciesNames(i))
 
+    ! trim off the suffixes like _fosf or _biof or _FLUX
+    ! and ensure upper case
+    ios = INDEX(speciesName,'_')
+    IF(ios > 0) THEN
+      speciesNamePrefix = ESMF_UtilStringUpperCase( speciesName(1:ios-1) )
+    ELSE
+      speciesNamePrefix = ESMF_UtilStringUpperCase( speciesName          )
+    END IF
+
+    escale = 1.0d0
+    IF ( TRIM(speciesNamePrefix) == 'CH3BR'  ) escale = self%Emission%mult_ch3br
+    IF ( TRIM(speciesNamePrefix) == 'CH2BR2' ) escale = self%Emission%mult_ch2br2
+
+    IF ( escale .LT. 0.0 ) THEN
+      _FAIL('GmiEmiss:: Emission scaling invalid for '//TRIM(speciesNamePrefix))
+    END IF
+
 !... Special cases: 
 ! Parameterized ship emissions are handled elsewhere (calcShipEmission)
     IF ( TRIM(speciesName) == '*shipO3*'.OR. TRIM(speciesName) == '*shipHNO3*' ) CYCLE
@@ -1564,10 +1585,7 @@ CONTAINS
     if(TRIM(speciesName) == 'DMS' ) cycle
 
     IF ( self%Emission%emiss_map(i) < 1 ) THEN
-      PRINT *, ' '
-      PRINT *,'GmiEmiss::'//TRIM(IAm)//' Species '//TRIM(speciesName)//' does not map to GMI species.'
-      STATUS = 1
-      VERIFY_(STATUS)
+      _FAIL('GmiEmiss::'//TRIM(IAm)//' Species '//TRIM(speciesName)//' does not map to GMI species.')
     END IF
 
 ! Select single- or multi-layered based on emissionSpeciesLayers
@@ -1577,7 +1595,7 @@ CONTAINS
       CALL MAPL_GetPointer(impChem, PTR2D, TRIM(speciesName), __RC__)
 
       IF(i <= self%num_diurnal_emiss) THEN
-        weightedField2D(:,:) = PTR2D(:,:)*cellWeighting(:,:)
+        weightedField2D(:,:) = PTR2D(:,:)*cellWeighting(:,:)*escale
         CALL Chem_BiomassDiurnal(var2D,                                         &
                                weightedField2D(:,:),                            &
                                self%lonRad(:,:)*real(MAPL_RADIANS_TO_DEGREES),  &
@@ -1585,7 +1603,7 @@ CONTAINS
                                nhms, tdt)
         self%Emission%emissionArray(i)%pArray3D(:,:,1) = var2D(:,:)
       ELSE
-        self%Emission%emissionArray(i)%pArray3D(:,:,1) = PTR2D(:,:)*cellWeighting(:,:)
+        self%Emission%emissionArray(i)%pArray3D(:,:,1) = PTR2D(:,:)*cellWeighting(:,:)*escale
       END IF
 
       self%Emission%emissionArray(i)%pArray3D(:,:,2:km) = 0.00D+00
@@ -1597,14 +1615,11 @@ CONTAINS
       CALL MAPL_GetPointer(impChem, PTR3D, TRIM(speciesName), __RC__)
 
       IF(i <= self%num_diurnal_emiss) THEN
-        PRINT *, ' '
-        PRINT *,'GmiEmiss::'//TRIM(IAm)//':  Species '//TRIM(speciesName)//' cannot be diurnal and 3D.'
-        STATUS = 1
-        VERIFY_(STATUS)
+        _FAIL('GmiEmiss::'//TRIM(IAm)//':  Species '//TRIM(speciesName)//' cannot be diurnal and 3D.')
       ELSE
         DO k = 1,km
           kReverse = km-k+1
-          self%Emission%emissionArray(i)%pArray3D(:,:,kReverse) = PTR3D(:,:,k)*cellWeighting(:,:)
+          self%Emission%emissionArray(i)%pArray3D(:,:,kReverse) = PTR3D(:,:,k)*cellWeighting(:,:)*escale
         END DO
       END IF
 
