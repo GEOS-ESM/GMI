@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+
+- Set the reaction rates for certain ICE and NAT and STS reactions to zero when HCl < min-concentation; this helps prevent HCl problems.
+
 ### Added
 
 - Capability to use 2D ExtData files as Boundary Conditions
@@ -21,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extended SO2 fire flux (ExtData yaml) to include future years from SSP2-4.5
 - Changed Forced Boundary Conditions to use the ExtData implementation by default (ASCII still supported); RefD1 and RefD2 BCs available via ExtData, use RefD2 by default.
 - Now automatically scale CH2Br2 emissions by 1.8, when using the HFC+S mechanism, to account for missing Br
+- Changed the tolerance for the SMV Gear solver; this helps with convergence
 
 ### Removed
 ### Deprecated
