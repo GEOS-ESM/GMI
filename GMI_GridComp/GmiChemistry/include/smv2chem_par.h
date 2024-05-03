@@ -136,7 +136,7 @@
 !     --------------------------------
 
       real*8, parameter ::  &
-     &  ERRMAXIN  = 1.0d-03,     & ! relative error tolerance
+     &  ERRMAXIN  = 1.0d-06,     & ! relative error tolerance
      &  YLOWIN    = 1.0d+04,     & ! absolute error tolerance
      &  YHIIN     = 1.0d+06
 
