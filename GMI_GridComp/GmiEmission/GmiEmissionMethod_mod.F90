@@ -10,7 +10,7 @@
 !
 ! !USES:
 
-      use ESMF, only : ESMF_Config, ESMF_MAXSTR, ESMF_ConfigGetAttribute
+      use ESMF, only : ESMF_Config, ESMF_MAXSTR, ESMF_ConfigGetAttribute, ESMF_SUCCESS
       use MAPL
       use GmiTimeControl_mod  , only : t_GmiClock, Get_curGmiDate
       use GmiGrid_mod, only : t_gmiGrid
@@ -26,10 +26,14 @@
       use GmiSpcConcentrationMethod_mod, only : Get_concentration, Set_concentration
       use GmiSpcConcentrationMethod_mod, only : Get_tracer_opt, Get_tr_source_land
       use GmiSpcConcentrationMethod_mod, only : Get_tr_source_ocean
+      use GmiBCandFluxAdjust_mod,        only : GetBrAdjustments
 !
       use, intrinsic :: iso_fortran_env, only: REAL64
 !
       implicit none
+
+      INTEGER, PARAMETER :: DBL = KIND(0.00D+00)
+
 !
 ! !PUBLIC MEMBER FUNCTIONS:
 !
@@ -53,36 +57,23 @@
   type t_Emission
     integer             :: idaySoilType
     logical             :: firstBiogenicBase
-                           ! current record number for the
-    integer             :: curEmissionFileRecord  
-                           ! main emission file.
+    integer             :: curEmissionFileRecord             ! current record number for the main emission file.
     integer             :: semiss_inchem_flag
-                           ! for fossil fuel scaling
-    logical             :: doScaleNOffEmiss    
-                           ! for biomass burning scaling
-    logical             :: doScaleNObbEmiss 
+    logical             :: doScaleNOffEmiss                  ! for fossil fuel scaling
+    logical             :: doScaleNObbEmiss                  ! for biomass burning scaling
     real*8 , pointer    :: scFacNOff(:,:,:) => null()
     real*8 , pointer    :: scFacNObb(:,:,:) => null()
-                           ! scale factor NO fossil fuel
-    character (len=MAX_LENGTH_FILE_NAME) :: scFactorNOff_infile_name
-                           ! scale factor NO biomass burning
-    character (len=MAX_LENGTH_FILE_NAME) :: scFactorNObb_infile_name
-                           ! Flag to indicate climatological emissions are per unit area (default T)
-    LOGICAL             :: clim_emiss_by_area
-                           ! Names of the emitted species
-    character (len=10 ) :: emittedSpeciesNames (MAX_NUM_CONST)
-                           ! emission conversion flag
-    integer             :: emiss_conv_flag 
-                           ! emission conversion factor (s^-1)
-    real*8              :: emiss_conv_fac 
-                           ! value to initialize emiss array to (kg/s)
-    real*8              :: emiss_init_val
-                           ! do Galactic Cosmic Ray
-    logical             :: do_gcr 
-                           ! ! Galactic Cosmic Ray  input file name
-    character (len=MAX_LENGTH_FILE_NAME) :: gcr_infile_name 
-    character (len=MAX_LENGTH_FILE_NAME) :: soil_infile_name              ! soil type            input file name
-    character (len=MAX_LENGTH_FILE_NAME) :: isopconv_infile_name          ! isoprene convert     input file name
+    character (len=MAX_LENGTH_FILE_NAME) :: scFactorNOff_infile_name   ! scale factor NO fossil fuel
+    character (len=MAX_LENGTH_FILE_NAME) :: scFactorNObb_infile_name   ! scale factor NO biomass burning
+    LOGICAL             :: clim_emiss_by_area                       ! Flag to indicate climatological emissions are per unit area (default T)
+    character (len=10 ) :: emittedSpeciesNames (MAX_NUM_CONST)      ! Names of the emitted species
+    integer             :: emiss_conv_flag                          ! emission conversion flag
+    real*8              :: emiss_conv_fac                           ! emission conversion factor (s^-1)
+    real*8              :: emiss_init_val                           ! value to initialize emiss array to (kg/s)
+    logical             :: do_gcr                                   ! do Galactic Cosmic Ray
+    character (len=MAX_LENGTH_FILE_NAME) ::       gcr_infile_name         ! Galactic Cosmic Ray  input file name
+    character (len=MAX_LENGTH_FILE_NAME) ::      soil_infile_name         ! soil type            input file name
+    character (len=MAX_LENGTH_FILE_NAME) ::  isopconv_infile_name         ! isoprene convert     input file name
     character (len=MAX_LENGTH_FILE_NAME) :: monotconv_infile_name         ! monoterpene convert  input file name
     real*8              :: isop_scale (12)               ! array of monthly isoprene scaling coefficients
 
@@ -165,6 +156,9 @@
     real*8 , pointer    :: emiss_3d_out       (:,:,:,:)   => null()
 
     character (len=MAX_LENGTH_FILE_NAME) :: MEGAN_infile_name       ! File for MEGAN AEF and LAI
+
+    real(kind=DBL) :: mult_ch3br, mult_ch2br2                       ! For possible Br correction
+
   end type t_Emission
 
 !
@@ -684,7 +678,7 @@
   subroutine InitializeEmission (self, SpeciesConcentration, gmiGrid, config,              &
                        mcor, ihno3_num, io3_num, numSpecies, loc_proc, rootProc,           &
                        chem_opt, trans_opt, pr_diag, pr_const, pr_surf_emiss, pr_emiss_3d, &
-                       tdt)
+                       tdt, rc)
 !
 ! !USES:
   use ReadOtherEmissionData_mod, only : readLightData
@@ -705,6 +699,8 @@
 ! !INPUT/OUTPUT VARIABLES:
   type (ESMF_Config), intent(inOut) :: config
   type (t_Emission) , intent(inOut) :: self
+  integer,            intent(  out) ::  rc          ! Error return code
+
 !
 ! !DESCRIPTION:
 ! Initialize the Emission component.
@@ -718,9 +714,15 @@
   integer :: badIndex = -9999
   real*8  :: tr_source_land, tr_source_ocean
   real*8  :: tdt_days, rsecpdy
+
+  character(len=ESMF_MAXSTR) :: IAm
+  integer :: status
+
 !EOP
 !------------------------------------------------------------------------------
 !BOC
+  IAm = "InitializeEmission"
+
   call Get_i1    (gmiGrid, i1)
   call Get_i2    (gmiGrid, i2)
   call Get_ju1   (gmiGrid, ju1)
@@ -825,8 +827,12 @@
       if ( self%emissionSpeciesNames(ix) == '*shipHNO3*' )  self%ship_hno3_index = ix
     end do
 
-    if (self%ship_o3_index   == badIndex) stop "shipO3   is not in emissionArray"
-    if (self%ship_hno3_index == badIndex) stop "shipHNO3 is not in emissionArray"
+    if (self%ship_o3_index   == badIndex) then
+                                               _FAIL("shipO3   is not in emissionArray")
+    end if
+    if (self%ship_hno3_index == badIndex) then
+                                               _FAIL("shipHNO3 is not in emissionArray")
+    end if
 
   endif
 
@@ -840,6 +846,16 @@
                         loc_proc, rootProc, pr_diag, trans_opt, &
                         i1, i2, ju1, j2, k1, k2, i1_gl, i2_gl, ju1_gl, j2_gl)
 
+  CALL GetBrAdjustments( mult_ch3br_opt  = self%mult_ch3br,     &
+                         mult_ch2br2_opt = self%mult_ch2br2,    &
+                         __RC__ )
+
+  if ( MAPL_AM_I_ROOT() ) then
+    print *, "GMI - If using CH3Br  emissions, they will be scaled by ", self%mult_ch3br
+    print *, "GMI - If using CH2Br2 emissions, they will be scaled by ", self%mult_ch2br2
+  endif
+
+  rc = ESMF_SUCCESS
   return
 
   end subroutine InitializeEmission
