@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+### Added
+### Changed
+### Removed
+### Deprecated
+
+
+## [1.3.0] - 2024-05-07
+
+### Fixed
 
 - Set the reaction rates for certain ICE and NAT and STS reactions to zero when HCl < min-concentation; this helps prevent HCl problems.
 
@@ -25,9 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed Forced Boundary Conditions to use the ExtData implementation by default (ASCII still supported); RefD1 and RefD2 BCs available via ExtData, use RefD2 by default.
 - Now automatically scale CH2Br2 emissions by 1.8, when using the HFC+S mechanism, to account for missing Br
 - Changed the tolerance for the SMV Gear solver; this helps with convergence
-
-### Removed
-### Deprecated
 
 
 ## [1.2.0] - 2023-12-07
