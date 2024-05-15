@@ -2517,7 +2517,8 @@
           where( hcl > minconc )
             sksts_clono2_hcl = 0.25d0 * gprob_hcl * avgvel * sad / hcl
           elsewhere
-            sksts_clono2_hcl = 0.25d0 * gprob_hcl * avgvel * sad
+!.old            sksts_clono2_hcl = 0.25d0 * gprob_hcl * avgvel * sad
+            sksts_clono2_hcl = 0.0d0
           end where
 !
           where( sad < 0.0d0 ) sksts_clono2_hcl = 0.0d0
@@ -2673,7 +2674,8 @@
           where( hcl > minconc )
             sksts_hocl_hcl = 0.25d0 * gprob_tot * avgvel * sad / hcl
           elsewhere
-            sksts_hocl_hcl = 0.25d0 * gprob_tot * avgvel * sad
+!.old            sksts_hocl_hcl = 0.25d0 * gprob_tot * avgvel * sad
+            sksts_hocl_hcl = 0.0d0
           end where
 !
           where( sad < 0.0d0 ) sksts_hocl_hcl   = 0.0d0
@@ -2787,7 +2789,8 @@
           where( hcl > minconc )
             sksts_hobr_hcl = 0.25d0 * gprob_tot * avgvel * sad / hcl
          elsewhere
-            sksts_hobr_hcl = 0.25d0 * gprob_tot * avgvel * sad
+!.old            sksts_hobr_hcl = 0.25d0 * gprob_tot * avgvel * sad
+            sksts_hobr_hcl = 0.0d0
          end where
 !
           where( sad < 0.0d0 ) sksts_hobr_hcl = 0.0d0
@@ -2898,7 +2901,8 @@
           sknat_hcl_clono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
-            sknat_hcl_clono2  = sknat_hcl_clono2 / minconc
+!.old            sknat_hcl_clono2  = sknat_hcl_clono2 / minconc
+            sknat_hcl_clono2  = 0.0d0
           elsewhere
             sknat_hcl_clono2  = sknat_hcl_clono2 / hcl
           end where
@@ -2938,7 +2942,8 @@
           sknat_hcl_hocl(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
-            sknat_hcl_hocl  = sknat_hcl_hocl / minconc
+!.old            sknat_hcl_hocl  = sknat_hcl_hocl / minconc
+            sknat_hcl_hocl  = 0.0d0
           elsewhere
             sknat_hcl_hocl  = sknat_hcl_hocl / hcl
           end where
@@ -2978,7 +2983,8 @@
           sknat_hcl_brono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
-            sknat_hcl_brono2  = sknat_hcl_brono2 / minconc
+!.old            sknat_hcl_brono2  = sknat_hcl_brono2 / minconc
+            sknat_hcl_brono2  = 0.0d0
           elsewhere
             sknat_hcl_brono2  = sknat_hcl_brono2 / hcl
           end where
@@ -3018,7 +3024,8 @@
           sknat_hcl_hobr(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
-            sknat_hcl_hobr  = sknat_hcl_hobr / minconc
+!.old            sknat_hcl_hobr  = sknat_hcl_hobr / minconc
+            sknat_hcl_hobr  = 0.0d0
           elsewhere
             sknat_hcl_hobr  = sknat_hcl_hobr / hcl
           end where
@@ -3129,7 +3136,8 @@
           skice_hcl_clono2(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
-            skice_hcl_clono2   = skice_hcl_clono2 / minconc
+!.old            skice_hcl_clono2   = skice_hcl_clono2 / minconc
+            skice_hcl_clono2   = 0.0d0
           elsewhere
             skice_hcl_clono2   = skice_hcl_clono2 / hcl
           end where
@@ -3171,7 +3179,8 @@
           skice_hcl_hocl(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
-            skice_hcl_hocl   = skice_hcl_hocl / minconc
+!.old            skice_hcl_hocl   = skice_hcl_hocl / minconc
+            skice_hcl_hocl   = 0.0d0
           elsewhere
             skice_hcl_hocl   = skice_hcl_hocl / hcl
           end where
@@ -3214,7 +3223,8 @@
           skice_hcl_brono2(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
-            skice_hcl_brono2   = skice_hcl_brono2 / minconc
+!.old            skice_hcl_brono2   = skice_hcl_brono2 / minconc
+            skice_hcl_brono2   = 0.0d0
           elsewhere
             skice_hcl_brono2   = skice_hcl_brono2 / hcl
           end where
@@ -3256,7 +3266,8 @@
           skice_hcl_hobr(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
-            skice_hcl_hobr   = skice_hcl_hobr / minconc
+!.old            skice_hcl_hobr   = skice_hcl_hobr / minconc
+            skice_hcl_hobr   = 0.0d0
           elsewhere
             skice_hcl_hobr   = skice_hcl_hobr / hcl
           end where
