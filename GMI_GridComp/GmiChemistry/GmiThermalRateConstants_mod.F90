@@ -21,6 +21,7 @@
 #     include "setkin_par.h"
 #     include "GmiParameters.h"
 #     include "gmi_phys_constants.h"
+#     include "gmi_sad_constants.h"
 !
 ! !AUTHOR:
 ! John Tannahill, LLNL, jrt@llnl.gov
@@ -69,7 +70,6 @@
 #     include "gmi_time_constants.h"
 #     include "setkin_par.h"
 #     include "gmi_AerDust_const.h"
-#     include "gmi_sad_constants.h"
 !
 ! !INPUT PARAMETERS:
       logical, intent(in) :: pr_diag

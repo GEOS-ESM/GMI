@@ -120,11 +120,6 @@
       integer :: num_loops
       real*8  :: chemintv
       type (t_GmiArrayBundle) :: tm1Conc(num_species)
-!.sds.debug
-!.      real :: r
-!.      integer :: iH, iMO2, iCL, iCH3CL, i, j ,k, ddp, iO1d, iO3p, iBrO, iCH3CCl3, iHCFC22, iHCFC141b, iHCFC142b
-!.      integer :: iCCL4, iCFC11, iCFC12, iCFC113, iCFC114, iCFC115, iCF2ClBr
-
 !
 ! !REVISION HISTORY:
 !  Initial code.

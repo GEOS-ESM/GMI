@@ -46,8 +46,8 @@
 !
       implicit none
 !
-#     include "gmi_forc_bc.h"
 #     include "setkin_par.h"
+#     include "gmi_forc_bc.h"
 #     include "GmiParameters.h"
 !
 ! !INPUT PARAMETERS:

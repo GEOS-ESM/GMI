@@ -1819,8 +1819,8 @@ CONTAINS
    type(Species_Bundle), pointer   :: bxx         ! GMI Species - not transported
    integer                         :: nymd, nhms  ! time
    real                            :: gmiDt       ! chemistry timestep (secs)
-   real                            :: runDt, r       ! heartbeat (secs)
-   integer                         :: i, i2, iOX, iT2M, iOCS, j2, k, km, m, n, iH2SO4 !, j, iHCL
+   real                            :: runDt       ! heartbeat (secs)
+   integer                         :: i, i2, iOX, iT2M, iOCS, j2, k, km, m, n, iH2SO4
    LOGICAL                         :: RunGMINow
 
    type(ESMF_Config)               :: CF
@@ -2110,10 +2110,7 @@ CONTAINS
      m = 1
      n = ggReg%nq
      iH2SO4 = -1
-!     iHCL = -1
      DO i = m,n
-!       IF (TRIM(ggReg%vname(i)) == "H2SO4") iH2SO4 = i
-!       IF (TRIM(ggReg%vname(i)) == "HCl") iHCl = i
        IF (TRIM(ggReg%vname(i)) == "H2SO4") THEN
          iH2SO4 = i
          EXIT
@@ -2129,25 +2126,6 @@ CONTAINS
        endif
      ENDIF
    ENDIF H2SO4LOSS
-
-!!... check HCl
-!    r = MAXVAL( bgg%qa(ihcl)%data3d(:,:,:))
-!    IF(r > 4.00E-09) THEN
-!      PRINT *,TRIM(Iam)//": Found ",TRIM(ggReg%vname(iHCl))," above limit: " &
-!        ,r*1.00E+09," ppbv ", iHCl
-!      DO i = 1,i2
-!        DO j = 1,j2
-!          DO k = 1,km
-!            IF (  bgg%qa(ihcl)%data3d(i,j,k) > 4.00E-09 ) THEN
-!              PRINT '(''b4 Phase1'',f9.3,'' ppb- '',3i5)' &
-!                , bgg%qa(ihcl)%data3d(i,j,k)*1.00E+09,i,j,k
-!            END IF
-!          END DO
-!        END DO
-!      END DO
-!    END IF
-
-
 
 ! At the Heartbeat do Run 1
 ! -------------------------
@@ -2170,21 +2148,6 @@ CONTAINS
     ! Also compute AOA (age of air) - see below
 
    END IF Phase1
-
-!... check HCl
-!    r = MAXVAL( bgg%qa(ihcl)%data3d(:,:,:))
-!    IF(r > 4.00E-09) THEN
-!      PRINT *,TRIM(Iam)//": Found ",TRIM(ggReg%vname(iHCl))," above limit: ",r*1.00E+09," ppbv", iHCl
-!      DO i = 1,i2
-!        DO j = 1,j2
-!          DO k = 1,km
-!            IF (  bgg%qa(ihcl)%data3d(i,j,k) > 4.00E-09 ) THEN
-!              PRINT '(''b4 Phase2'',f9.3,'' ppb- '',3i5)', bgg%qa(ihcl)%data3d(i,j,k)*1.00E+09,i,j,k
-!            END IF
-!          END DO
-!        END DO
-!      END DO
-!    END IF
 
 ! At the Heartbeat do Deposition, and at GMI timestep do the rest of chemistry
 ! ----------------------------------------------------------------------------
@@ -2214,21 +2177,6 @@ CONTAINS
      ! Also compute OVP fields - see below
 
    END IF Phase2
-
-!... check HCl
-!    r = MAXVAL( bgg%qa(ihcl)%data3d(:,:,:))
-!    IF(r > 4.00E-09) THEN
-!      PRINT *,TRIM(Iam)//": Found ",TRIM(ggReg%vname(iHCl))," above limit: ",r*1.00E+09," ppbv", iHCl
-!      DO i = 1,i2
-!        DO j = 1,j2
-!          DO k = 1,km
-!            IF (  bgg%qa(ihcl)%data3d(i,j,k) > 4.00E-09 ) THEN
-!              PRINT '(''After Phase2'',f9.3,'' ppb- '',3i5)', bgg%qa(ihcl)%data3d(i,j,k)*1.00E+09,i,j,k
-!            END IF
-!          END DO
-!        END DO
-!      END DO
-!    END IF
 
 ! At GMI timestep do emissions and chemistry (old approach)
 ! ---------------------------------------------------------
@@ -2269,23 +2217,6 @@ CONTAINS
      bgg%qa(n)%data3d(:,:,:) = bgg%qa(n)%data3d(:,:,:)+runDt/86400.00
      bgg%qa(n)%data3d(:,:,km) = 0.00
    END IF
-
-!... check HCl
-!    r = MAXVAL( bgg%qa(ihcl)%data3d(:,:,:))
-!    IF(r > 4.00E-09) THEN
-!      PRINT *,TRIM(Iam)//": Found ",TRIM(ggReg%vname(iHCl))," above limit: ",r*1.00E+09," ppbv", iHCl
-!      DO i = 1,i2
-!        DO j = 1,j2
-!          DO k = 1,km
-!            IF (  bgg%qa(ihcl)%data3d(i,j,k) > 4.00E-09 ) THEN
-!              PRINT '(''Before diags'',f9.3,'' ppb- '',3i5)', bgg%qa(ihcl)%data3d(i,j,k)*1.00E+09,i,j,k
-!            END IF
-!          END DO
-!        END DO
-!      END DO
-!      STATUS = 99
-!      VERIFY_(STATUS)
-!    END IF
 
 !  Gas-phase water in mole fraction.  Purpose: Allow plotting of mole 
 !  fraction when using quickplot.  This avoids potential conflicts 
