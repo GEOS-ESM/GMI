@@ -789,6 +789,13 @@ CONTAINS
        ! end fixes for H2
        !=================
 
+       ! If CARMA is providing stratospheric SAD and REFF, update sadcol2(iSO4)
+       !   and radA(iSO4)
+       if(gcSAD%lbssad_opt .eq. 5) then
+          TAREA(:,:,:,NSADdust+1)   = gcSAD%lbssad(:,:,:)
+          ERADIUS(:,:,:,NSADdust+1) = gcSAD%refflbs(:,:,:)
+       endif
+
        CALL Get_numTimeSteps(self%gmiClock, num_time_steps)
 
        call calcThermalRateConstants (self%do_wetchem,       &

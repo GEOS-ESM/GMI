@@ -138,6 +138,7 @@
 
     type (t_GmiArrayBundle), pointer :: sadgmi(:) => null()
     real(KIND=DBL), pointer :: lbssad   (:,:,:)   => null()
+    real(KIND=DBL), pointer :: refflbs  (:,:,:)   => null()
     real(KIND=DBL), pointer :: loss_freq(:,:,:,:) => null()
     real(KIND=DBL), pointer :: h2oback  (:,:,:)   => null()
     real(KIND=DBL), pointer :: h2ocond  (:,:,:)   => null()
@@ -383,6 +384,7 @@ CONTAINS
 !       2: (OBSOLETE)  read in lbssad 3d fields
 !       3: (OBSOLETE)  read in lbssad zonal average fields
 !       4:  lbssad provided by AGCM (ExtData)
+!       5:  lbssad provided by CARMA SO4SAREA
 !     ----------------------------------------------
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%lbssad_opt, &
      &                label   = "lbssad_opt:", &
@@ -568,11 +570,16 @@ CONTAINS
 
                Allocate(self%lbssad(i1:i2, ju1:j2, k1:k2))
                self%lbssad = 0.0d0
+
+               Allocate(self%refflbs(i1:i2, ju1:j2, k1:k2))
+               self%refflbs = 0.0d0
           end if
 
           if (self%sad_opt == 3) then
             Allocate(self%lbssad(i1:i2, ju1:j2, k1:k2))
             self%lbssad = 0.0d0
+            Allocate(self%refflbs(i1:i2, ju1:j2, k1:k2))
+            self%refflbs = 0.0d0
           end if
 
       end if
@@ -1063,6 +1070,18 @@ CONTAINS
       CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
       VERIFY_(STATUS)
       self%lbssad(:,:,1:km) = PTR3D(:,:,km:1:-1)
+      NULLIFY(PTR3D)
+    ELSEIF(self%lbssad_opt == 5) THEN
+      importName = 'SO4SAREA'
+      CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
+      VERIFY_(STATUS)
+      self%lbssad(:,:,1:km) = PTR3d(:,:,km:1:-1) * 0.01 ! convert from m2/m3 to cm2/cm3
+      NULLIFY(PTR3D)
+
+      importName = 'SO4REFF'
+      CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
+      VERIFY_(STATUS)
+      self%refflbs(:,:,1:km) = PTR3d(:,:,km:1:-1) * 100.0 ! convert from m to cm
       NULLIFY(PTR3D)
     END IF
   end if
