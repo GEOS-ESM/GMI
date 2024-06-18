@@ -361,7 +361,7 @@ CONTAINS
        VERIFY_(STATUS)
 
        CALL MAPL_AddImportSpec(GC,  &
-              SHORT_NAME         = 'SO4Reff',  &
+              SHORT_NAME         = 'SO4REFF',  &
               LONG_NAME          = 'SO4 aerosol effective radius (non-Volcanic)',  &
               UNITS              = 'm', &
               DIMS               = MAPL_DimsHorzVert,    &
