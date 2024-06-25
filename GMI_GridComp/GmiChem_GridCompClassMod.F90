@@ -732,6 +732,9 @@ CONTAINS
 ! ------------------------------------------------
    REAL(KIND=DBL), POINTER, DIMENSION(:,:,:) :: HNO3GASsad    !  pointer to use for GetPointer
 
+! Cloud fraction for in-cloud SO2 oxidation
+   REAL, POINTER, DIMENSION(:,:,:) :: FCLD
+
 !  Local
 !  -----
    INTEGER :: cymd, dymd, emiss_opt, hms
@@ -821,6 +824,9 @@ CONTAINS
    VERIFY_(STATUS)
 
    CALL MAPL_GetPointer(expChem,  HNO3GASsad,  'HNO3GASsad', RC=STATUS)
+   VERIFY_(STATUS)
+
+   CALL MAPL_GetPointer(impChem,  FCLD,  'FCLD', RC=STATUS)
    VERIFY_(STATUS)
 
 !  Reserve some local work space
@@ -938,7 +944,7 @@ CONTAINS
                  self%do_ftiming, self%do_qqjk_inchem, self%pr_qqjk,           &
                  self%do_semiss_inchem, self%pr_smv2, self%pr_nc_period,       &
                  i1, i2, j1, j2, 1, km,                                        &
-                 rootProc, self%metdata_name_org, self%metdata_name_model, tdt)
+                 rootProc, self%metdata_name_org, self%metdata_name_model, tdt, FCLD)
 
 ! Return species concentrations to the chemistry bundle
 ! -----------------------------------------------------

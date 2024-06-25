@@ -322,6 +322,12 @@
       integer IMGAS
       parameter (IMGAS     = 129)
 
+      integer ISO2
+      parameter (ISO2      = 124)
+
+      integer IH2SO4
+      parameter (IH2SO4    = 125)
+
 !.... Additional model-required parameters
 
       integer IN2

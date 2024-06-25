@@ -646,7 +646,7 @@
                     pr_diag, do_ftiming, do_qqjk_inchem, pr_qqjk,               &
                     do_semiss_inchem, pr_smv2, pr_nc_period,                    &
                     i1, i2, ju1, j2, k1, k2,                                    &
-                    rootProc, metdata_name_org, metdata_name_model, tdt4)
+                    rootProc, metdata_name_org, metdata_name_model, tdt4, FCLD)
 
 ! !USES:
       use GmiUpdateChemistry_mod, only : updateChemistry
@@ -679,6 +679,7 @@
       character (len=MAX_LENGTH_MET_NAME), intent(in) :: metdata_name_org
       character (len=MAX_LENGTH_MET_NAME), intent(in) :: metdata_name_model
       real,             intent(in) :: tdt4
+      real,             intent(in) :: FCLD(:,:,:) ! z-dimension top to bottom
       integer, intent(in) :: i1, i2, ju1, j2, k1, k2
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -695,7 +696,9 @@
 
       integer       :: ydummy, thisDay, thisMonth, thisDate, ddummy
       integer       :: nymd, nhms, num_time_steps, start_ymd
+      integer       :: i,j,k
       real*8        :: tdt8, gmi_sec
+      real*8        :: SO2, H2O2, fc, T, L
       integer       :: ilo, ihi, julo, jhi
       integer       :: ilong, ilat, ivert, itloop
 !      integer       :: i1, i2, ju1, j2, k1, k2
@@ -765,6 +768,36 @@
                  self%num_qjo, self%num_sad, self%num_molefrac, self%num_chem, &
                  self%num_active, ilong, ilat, ivert, itloop, ilo, ihi, julo,  &
                  jhi, i1, i2, ju1, j2, k1, k2)
+
+      ! Spatial Loop
+      if ((ISO2 .ne. 0) .and. (IH2O2 .ne. 0) .and. (IH2SO4 .ne. 0)) then
+        do k = 1, k2
+          do j = 1, j2
+            do i = 1, i2
+              SO2  = concentration(ISO2)%pArray3d(i,j,k)
+              H2O2 = concentration(IH2O2)%pArray3d(i,j,k)
+              fc   = FCLD(i,j,k2+1-k)
+              T    = kel(i,j,k)
+              if ((fc .gt. 0.) .and. (SO2 .gt. 0.) .and. (T .gt. 258.)) then
+                if (SO2 .gt. H2O2) then
+                  H2O2 = H2O2 * (1.-fc)
+                  fc = fc*(H2O2/SO2)
+                else
+                  H2O2 = H2O2 * (1.-fc*SO2/H2O2)
+                end if
+                L = SO2 * fc ! Loss in v/v/timestep
+                SO2 = SO2 * (1.-fc)
+              else
+                L = 0.
+              end if
+              concentration(ISO2)%pArray3d(i,j,k)  = SO2
+              concentration(IH2O2)%pArray3d(i,j,k) = H2O2
+              concentration(IH2SO4)%pArray3d(i,j,k) = &
+                concentration(IH2SO4)%pArray3d(i,j,k) + L
+            end do
+          end do
+        end do
+      end if
 
       call Set_concentration(SpeciesConcentration, concentration)
 
