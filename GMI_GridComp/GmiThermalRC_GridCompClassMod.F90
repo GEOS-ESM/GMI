@@ -29,11 +29,11 @@
    USE GmiGrid_mod,                   ONLY : t_gmiGrid
    USE GmiTimeControl_mod,            ONLY : t_GmiClock
    USE GmiESMFrcFileReading_mod,      ONLY : rcEsmfReadTable
-   use GmiArrayBundlePointer_mod, only : t_GmiArrayBundle, CleanArrayPointer
-   use GmiFieldBundleESMF_mod,        ONLY : obtainTracerFromBundle
-   use GmiFieldBundleESMF_mod,        ONLY : updateTracerToBundle
-   use GmiFieldBundleESMF_mod,        ONLY : addTracerToBundle
-   use GmiSwapSpeciesBundlesMod,      ONLY : SwapSpeciesBundles, speciesReg_for_CCM
+   USE GmiArrayBundlePointer_mod,     ONLY : t_GmiArrayBundle, CleanArrayPointer
+   USE GmiFieldBundleESMF_mod,        ONLY : obtainTracerFromBundle
+   USE GmiFieldBundleESMF_mod,        ONLY : updateTracerToBundle
+   USE GmiFieldBundleESMF_mod,        ONLY : addTracerToBundle
+   USE GmiSwapSpeciesBundlesMod,      ONLY : SwapSpeciesBundles, speciesReg_for_CCM
 
    IMPLICIT NONE
    INTEGER, PARAMETER :: DBL = KIND(0.00D+00)
@@ -43,6 +43,7 @@
 #include "gmi_phys_constants.h"
 #include "setkin_mw.h"
 #include "setkin_lchem.h"
+#include "gmi_sad_constants.h"
 
 ! !TYPES:
 
@@ -124,6 +125,10 @@
    TYPE(t_gmiGrid   )           :: gmiGrid
    TYPE(t_GmiClock  )           :: gmiClock
    TYPE(t_SpeciesConcentration) :: SpeciesConcentration
+
+! Set by the parent GC
+! Copied from TYPE GmiPhotolysis_GridComp
+   logical                      :: so4v_saexist  ! SO4v is from GOCART2G
  
   END TYPE GmiThermalRC_GridComp
 
@@ -501,7 +506,7 @@ CONTAINS
 !
 
    SUBROUTINE GmiThermalRC_GridCompRun ( self, bgg, bxx, impChem, expChem, nymd, nhms, &
-                                tdt, rc )
+                                tdt, gcSAD,   rc )
 
 ! !USES:
 
@@ -510,6 +515,7 @@ CONTAINS
    USE GmiTimeControl_mod,            ONLY : Set_gmiSeconds, GetSecondsFromJanuary1
    USE GmiSpcConcentrationMethod_mod, ONLY : resetFixedConcentration
    use GmiThermalRateConstants_mod  , only : calcThermalRateConstants
+   USE GmiSAD_GCCMod
 
    IMPLICIT none
 
@@ -531,6 +537,8 @@ CONTAINS
    INTEGER, INTENT(OUT) ::  rc                  ! Error return code:
                                                 !  0 - all is well
                                                 !  1 -
+
+   TYPE (GmiSAD_GridComp), INTENT(IN) :: gcSAD
 
 ! !DESCRIPTION: This routine implements the GMI Strat/Trop Driver. That 
 !               is, adds chemical tendencies to each of the constituents
@@ -557,7 +565,7 @@ CONTAINS
    REAL, POINTER, DIMENSION(:,:) :: frland, frlandice, asnow
 
    REAL, POINTER, DIMENSION(:,:,:) :: ple, Q, T, zle
-   REAL, POINTER, DIMENSION(:,:,:) :: ql,cnv_mfc
+   REAL, POINTER, DIMENSION(:,:,:) :: ql, cnv_mfc, fcldin
    REAL, POINTER, DIMENSION(:,:,:) :: rh2
 
 !  Exports not part of internal state
@@ -609,12 +617,15 @@ CONTAINS
    REAL(KIND=DBL), ALLOCATABLE :: press3c(:,:,:)
    REAL(KIND=DBL), ALLOCATABLE :: kel(:,:,:)
    REAL(KIND=DBL), ALLOCATABLE :: clwc(:,:,:)
+   REAL(KIND=DBL), ALLOCATABLE :: fcld(:,:,:)
    REAL(KIND=DBL), ALLOCATABLE :: cmf(:,:,:)
    REAL(KIND=DBL), ALLOCATABLE :: relativeHumidity(:,:,:)
 
    REAL(KIND=DBL), ALLOCATABLE :: tArea  (:,:,:,:)
    REAL(KIND=DBL), ALLOCATABLE :: eRadius(:,:,:,:)
    type (t_GmiArrayBundle), pointer :: gmiSAD(:) => null()
+!
+!... start
 
    loc_proc = -99
 
@@ -681,6 +692,8 @@ CONTAINS
    ALLOCATE(               kel(i1:i2,j1:j2,1:km),STAT=STATUS)
    VERIFY_(STATUS)
    ALLOCATE(              clwc(i1:i2,j1:j2,1:km),STAT=STATUS)
+   VERIFY_(STATUS)
+   ALLOCATE(              fcld(i1:i2,j1:j2,1:km),STAT=STATUS)
    VERIFY_(STATUS)
    ALLOCATE(               cmf(i1:i2,j1:j2,1:km),STAT=STATUS)
    VERIFY_(STATUS)
@@ -755,45 +768,53 @@ CONTAINS
 ! GMI Thermal Rate Constants
 ! ------------------------------------------------------------------------
 
-      IF (self%gotImportRst) THEN
+   IF (self%gotImportRst) THEN
 
-         !--------------------------------------------------------
-         ! Calculate the air density at the center of each grid box
-         ! (molecules/cm^3).
-         ! NOTE: BOLTZMN_E units = erg/K/molec
-         !--------------------------------------------------------
+      !--------------------------------------------------------
+      ! Calculate the air density at the center of each grid box
+      ! (molecules/cm^3).
+      ! NOTE: BOLTZMN_E units = erg/K/molec
+      !--------------------------------------------------------
 
-          self%SpeciesConcentration%concentration(IMGAS)%pArray3D(:,:,:) =  &
-     &                press3c(i1:i2,ju1:j2,:) * MB2CGS /  &
-     &                (kel (i1:i2,ju1:j2,:) * BOLTZMN_E)
+       self%SpeciesConcentration%concentration(IMGAS)%pArray3D(:,:,:) =  &
+                   press3c(i1:i2,ju1:j2,:) * MB2CGS /  &
+                   (kel (i1:i2,ju1:j2,:) * BOLTZMN_E)
 
-          self%SpeciesConcentration%concentration(IOXYGEN)%pArray3D(:,:,:) =  &
-     &        self%SpeciesConcentration%concentration(IMGAS)%pArray3D(:,:,:) * MXRO2
+       self%SpeciesConcentration%concentration(IOXYGEN)%pArray3D(:,:,:) =  &
+           self%SpeciesConcentration%concentration(IMGAS)%pArray3D(:,:,:) * MXRO2
 
-          self%SpeciesConcentration%concentration(INITROGEN)%pArray3D(:,:,:) =  &
-     &        self%SpeciesConcentration%concentration(IMGAS)%pArray3D(:,:,:) * MXRN2
+       self%SpeciesConcentration%concentration(INITROGEN)%pArray3D(:,:,:) =  &
+           self%SpeciesConcentration%concentration(IMGAS)%pArray3D(:,:,:) * MXRN2
 
-          !===========================================
-          ! Fixes for H2 - Provided by David Considine
-          !===========================================
-          self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,:) = MXRH2
-          !=================
-          ! end fixes for H2
-          !=================
+       !===========================================
+       ! Fixes for H2 - Provided by David Considine
+       !===========================================
+       self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,:) = MXRH2
+       !=================
+       ! end fixes for H2
+       !=================
 
-          CALL Get_numTimeSteps(self%gmiClock, num_time_steps)
+       ! If CARMA is providing stratospheric SAD and REFF, update sadcol2(iSO4)
+       !   and radA(iSO4)
+       if(gcSAD%lbssad_opt .eq. 5) then
+            TAREA(:,:,:,NSADdust+ISO4SAD) = gcSAD%lbssad(:,:,:)
+          ERADIUS(:,:,:,NSADdust+ISO4SAD) = gcSAD%refflbs(:,:,:)
+       endif
 
-          call calcThermalRateConstants (self%do_wetchem,       &
-     &             rootProc, num_time_steps, IH2O, IMGAS, nymd,                 &
-     &             self%rxnr_adjust_map,     &
-     &             press3c, tropopausePress, kel, clwc, cmf, gmiSAD,    &
-     &             self%qkgmi, self%SpeciesConcentration%concentration,         &
-     &             self%rxnr_adjust, eRadius, tArea, relativeHumidity,          &
-     &             conPBLFlag, self%do_AerDust_Calc, self%do_LBSplusBCOC_SAD, self%phot_opt,             &
-     &             self%pr_diag, loc_proc, self%num_rxnr_adjust,                &
-     &             self%rxnr_adjust_timpyr, ivert, NSAD, NUM_K, NMF, NSP,       &
-     &             ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
-      END IF
+       CALL Get_numTimeSteps(self%gmiClock, num_time_steps)
+
+       call calcThermalRateConstants (self%do_wetchem,                       &
+                rootProc, num_time_steps, IH2O, IMGAS, nymd,                 &
+                self%rxnr_adjust_map,                                        &
+                press3c, tropopausePress, kel, clwc, fcld, cmf, gmiSAD,      &
+                self%qkgmi, self%SpeciesConcentration%concentration,         &
+                self%rxnr_adjust, eRadius, tArea, self%so4v_saexist,         &
+                relativeHumidity, conPBLFlag, self%do_AerDust_Calc,          &
+                self%do_LBSplusBCOC_SAD, self%phot_opt,                      &
+                self%pr_diag, loc_proc, self%num_rxnr_adjust,                &
+                self%rxnr_adjust_timpyr, ivert, NSAD, NUM_K, NMF, NSP,       &
+                ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
+   END IF
 
 ! Return species concentrations to the chemistry bundle
 ! -----------------------------------------------------
@@ -816,7 +837,7 @@ CONTAINS
    DEALLOCATE(tropopausePress, STAT=STATUS)
    VERIFY_(STATUS)
 
-   DEALLOCATE(pl, press3c, kel, clwc, cmf, relativeHumidity, &
+   DEALLOCATE(pl, press3c, kel, clwc, fcld, cmf, relativeHumidity, &
               conPBLFlag, STAT=STATUS)
    VERIFY_(STATUS)
 
@@ -1122,6 +1143,8 @@ CONTAINS
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(impChem,       zle,	'ZLE', RC=STATUS)
    VERIFY_(STATUS)
+   CALL MAPL_GetPointer(impChem,    fcldin,    'FCLD', RC=STATUS)
+   VERIFY_(STATUS)
    CALL MAPL_GetPointer(impChem,	ql,	 'QL', RC=STATUS)
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(impChem,   cnv_mfc, 'CNV_MFC', RC=STATUS)
@@ -1142,6 +1165,7 @@ CONTAINS
     CALL pmaxmin('T:', T, qmin, qmax, iXj, km, 1. )
     CALL pmaxmin('ZLE:', zle, qmin, qmax, iXj, km+1, 1. )
     CALL pmaxmin('PLE (hPa):', ple, qmin, qmax, iXj, km+1, 0.01 )
+    CALL pmaxmin('FCLD:', fcldin, qmin, qmax, iXj, km, 1. )
     CALL pmaxmin('QL:', ql, qmin, qmax, iXj, km, 1. )
     CALL pmaxmin('CNV_MFC:', cnv_mfc, qmin, qmax, iXj, km+1, 1. )
     CALL pmaxmin('RH2:', rh2, qmin, qmax, iXj, km, 1. )
@@ -1205,6 +1229,7 @@ CONTAINS
    press3c(i1:i2,j1:j2,kReverse) = pl(i1:i2,j1:j2,k)*Pa2hPa                 ! Pa               hPa
    kel(i1:i2,j1:j2,kReverse) = T(i1:i2,j1:j2,k)                             ! K
    clwc(i1:i2,j1:j2,kReverse) = ql(i1:i2,j1:j2,k)*ToGrPerKg                 ! kg kg^{-1}       g kg^{-1}
+   fcld(i1:i2,j1:j2,kReverse) = fcldin(i1:i2,j1:j2,k)                       ! fraction
    relativeHumidity(i1:i2,j1:j2,kReverse) = rh2(i1:i2,j1:j2,k)              ! fraction
 
   END DO

@@ -252,6 +252,9 @@
   SSCOD   	    | 1              | xyz | C |    |	|   |	  | coarse_sea_salt_optical_depth_(400_nm)
   SSCHYGRO   	    | 1              | xyz | C |    |	|   |	  | hygroscopic_growth_of_coarse_sea_salt
   SSCSA   	    | cm+2 cm-3      | xyz | C |    |	|   |	  | coarse_sea_salt_surface_area
+  SO4vOD   	    | 1              | xyz | C |    |	|   |	  | volc_sulfate_optical_depth_(400_nm)
+  SO4vHYGRO   	    | 1              | xyz | C |    |	|   |	  | hygroscopic_growth_of_volc_sulfate
+  SO4vSA   	    | cm+2 cm-3      | xyz | C |    |	|   |	  | volc_sulfate_surface_area
   O3    	    | kg kg-1        | xyz | C |    |	|   |	  | ozone_mass_mixing_ratio
   O3PPMV    	    | ppmv           | xyz | C |    |	|   |	  | ozone_mass_mixing_ratio_in_ppm
   OX_TEND    	    | kg kg-1 s-1    | xyz | C |    |	|   |	  | tendency_of_odd_oxygen_mixing_ratio_due_to_chemistry
@@ -265,6 +268,8 @@
   NATSAD  	    | cm+2 cm-3      | xyz | C |    |	|   |	  | NAT_surface_area_density
   ICESAD  	    | cm+2 cm-3      | xyz | C |    |	|   |	  | ice_surface_area_density
   LBSSAD  	    | cm+2 cm-3      | xyz | C |    |	|   |	  | LBS_surface_area_density
+  STSSAD            | cm+2 cm-3      | xyz | C |    |   |   |     | STS_surface_area_density
+  SOOTSAD           | cm+2 cm-3      | xyz | C |    |   |   |     | Soot_surface_area_density
   AIRMASS           | kg m-2         | xyz | C |    |   |   |     | mass_of_air_in_layer
   OCS_JRATE         | s-1            | xyz | C |    |   |   |     | Jrate_for_OCS    
 # ------------------|----------------|-----|---|----|---|---|-----|---------------------------------

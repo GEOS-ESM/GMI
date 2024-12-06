@@ -49,6 +49,7 @@
 ! !PUBLIC MEMBER DATA:
       public  :: t_Emission
 
+# include "setkin_par.h"
 # include "GmiParameters.h"
 # include "gmi_emiss_constants.h"
 # include "gmi_phys_constants.h"

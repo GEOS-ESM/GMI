@@ -202,6 +202,11 @@
     real*8, pointer     :: dust     (:,:,:,:) => null()
     real*8, pointer     :: wAersl   (:,:,:,:) => null()
     real*8, pointer     :: dAersl   (:,:,:,:) => null()
+!... tying in G2G volc sulfate
+    real*8, pointer     :: so4v_nden  (:,:,:) => null()
+    real*8, pointer     :: so4v_sa    (:,:,:) => null()
+    real*8              :: so4v_sareff
+    logical             :: so4v_saexist
 
 
 ! Component derived type declarations
@@ -958,6 +963,14 @@ CONTAINS
          Allocate(self%tArea(i1:i2, ju1:j2, k1:k2, nSADdust+nSADaer))
          self%tArea = 0.0d0
 
+!... G2G SO4volc
+         Allocate(self%so4v_nden(i1:i2, ju1:j2, k1:k2))
+         self%so4v_nden = 0.0d0
+         Allocate(self%so4v_sa(i1:i2, ju1:j2, k1:k2))
+         self%so4v_sa(:,:,:) = 0.0d0
+         self%so4v_sareff = 0.0d0
+         self%so4v_saexist = .FALSE.
+
          Allocate(self%optDepth(i1:i2, ju1:j2, k1:k2, num_AerDust))
          self%optDepth = 0.0d0
 
@@ -1166,7 +1179,7 @@ CONTAINS
    type(ESMF_State)   :: bc_state
    type(ESMF_State)   :: oc_state
    type(ESMF_State)   :: br_state
-   type(ESMF_State)   :: su_state
+   type(ESMF_State)   :: su_state, suv_state
    type(ESMF_State)   :: du_state
    type(ESMF_State)   :: ss_state
 
@@ -1207,6 +1220,7 @@ CONTAINS
    REAL, POINTER, DIMENSION(:,:,:) :: BCOD, BCHYGRO, BCSA
    REAL, POINTER, DIMENSION(:,:,:) :: OCOD, OCHYGRO, OCSA
    REAL, POINTER, DIMENSION(:,:,:) :: SSAOD, SSAHYGRO, SSASA, SSCOD, SSCHYGRO, SSCSA
+   REAL, POINTER, DIMENSION(:,:,:) :: SO4vOD, SO4vHYGRO, SO4vSA
 
 !  Export for Ship Emissions
    REAL, POINTER, DIMENSION(:,:) :: arr2D
@@ -1284,6 +1298,8 @@ CONTAINS
 
 
    REAL(KIND=DBL), ALLOCATABLE :: solarZenithAngle(:,:)
+
+   INTEGER                     :: rcvolc
 
    loc_proc = -99
 
@@ -1391,19 +1407,21 @@ CONTAINS
      DEALLOCATE(itemNameList, __STAT__ )
 
      IF ( data_driven ) THEN
-       call ESMF_StateGet(aero_state, 'CA.bc.data_AERO', bc_state, __RC__)
-       call ESMF_StateGet(aero_state, 'CA.oc.data_AERO', oc_state, __RC__)
-       call ESMF_StateGet(aero_state, 'CA.br.data_AERO', br_state, __RC__)
-       call ESMF_StateGet(aero_state,    'SU.data_AERO', su_state, __RC__)
-       call ESMF_StateGet(aero_state,    'DU.data_AERO', du_state, __RC__)
-       call ESMF_StateGet(aero_state,    'SS.data_AERO', ss_state, __RC__)
+       call ESMF_StateGet(aero_state,   'CA.bc.data_AERO', bc_state, __RC__)
+       call ESMF_StateGet(aero_state,   'CA.oc.data_AERO', oc_state, __RC__)
+       call ESMF_StateGet(aero_state,   'CA.br.data_AERO', br_state, __RC__)
+       call ESMF_StateGet(aero_state,      'SU.data_AERO', su_state, __RC__)
+       call ESMF_StateGet(aero_state, 'SU.volc.data_AERO', suv_state,  rc=rcvolc)
+       call ESMF_StateGet(aero_state,      'DU.data_AERO', du_state, __RC__)
+       call ESMF_StateGet(aero_state,      'SS.data_AERO', ss_state, __RC__)
      ELSE
-       call ESMF_StateGet(aero_state,      'CA.bc_AERO', bc_state, __RC__)
-       call ESMF_StateGet(aero_state,      'CA.oc_AERO', oc_state, __RC__)
-       call ESMF_StateGet(aero_state,      'CA.br_AERO', br_state, __RC__)
-       call ESMF_StateGet(aero_state,         'SU_AERO', su_state, __RC__)
-       call ESMF_StateGet(aero_state,         'DU_AERO', du_state, __RC__)
-       call ESMF_StateGet(aero_state,         'SS_AERO', ss_state, __RC__)
+       call ESMF_StateGet(aero_state,        'CA.bc_AERO', bc_state, __RC__)
+       call ESMF_StateGet(aero_state,        'CA.oc_AERO', oc_state, __RC__)
+       call ESMF_StateGet(aero_state,        'CA.br_AERO', br_state, __RC__)
+       call ESMF_StateGet(aero_state,           'SU_AERO', su_state, __RC__)
+       call ESMF_StateGet(aero_state,      'SU.volc_AERO', suv_state,  rc=rcvolc)
+       call ESMF_StateGet(aero_state,           'DU_AERO', du_state, __RC__)
+       call ESMF_StateGet(aero_state,           'SS_AERO', ss_state, __RC__)
      END IF
 
    END IF
@@ -1464,26 +1482,28 @@ CONTAINS
                              CLOCK=self%clock, tdt=tdt, label='GMI-PHOT', &
                              SZA=solarZenithAngle, __RC__ )
 
-          call calcPhotolysisRateConstants (self%JXbundle,                     &
-                     tropopausePress,                         &
-     &               self%pr_qj_o3_o1d, self%pr_qj_opt_depth,                  & ! VV
-     &               pctm2, mass, press3e, press3c, kel,                       &
-     &               self%SpeciesConcentration%concentration, solarZenithAngle,&
-     &               self%cellArea, surf_alb, fracCloudCover,                  &
-     &               tau_cloud, tau_clw, tau_cli, totalCloudFraction,          &
-     &               qi_, ql_, ri_, rl_,                                       &
-     &               self%overheadO3col, self%qjgmi, gridBoxThickness,         &
-     &               self%optDepth, self%eRadius, self%tArea, self%odAer,      &
-     &               relativeHumidity, self%odMdust, self%dust, self%wAersl,   &
-     &               self%dAersl, humidity, num_AerDust, self%phot_opt,        &
-     &               self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, &
-     &               self%do_AerDust_Calc, self%do_ozone_inFastJX,             &
-     &               self%do_synoz, self%qj_timpyr, IO3, IH2O, ISYNOZ,         &
-     &               self%chem_mask_khi, nymd, nhms, self%pr_diag, loc_proc,   &
-     &               self%synoz_threshold, self%AerDust_Effect_opt, NSP,       &
-     &               NUM_J, self%num_qjo, ilo, ihi, julo, jhi,                 &
-     &               i1, i2, ju1, j2, k1, k2, self%jNOindex, self%jNOamp,      &
-     &               self%cldflag)
+          call calcPhotolysisRateConstants (self%JXbundle,                 &
+                 tropopausePress,                                          &
+                 self%pr_qj_o3_o1d, self%pr_qj_opt_depth,                  & ! VV
+                 pctm2, mass, press3e, press3c, kel,                       &
+                 self%SpeciesConcentration%concentration, solarZenithAngle,&
+                 self%cellArea, surf_alb, fracCloudCover,                  &
+                 tau_cloud, tau_clw, tau_cli, totalCloudFraction,          &
+                 qi_, ql_, ri_, rl_,                                       &
+                 self%overheadO3col, self%qjgmi, gridBoxThickness,         &
+                 self%optDepth, self%eRadius, self%tArea, self%odAer,      &
+                 relativeHumidity, self%odMdust, self%dust, self%wAersl,   &
+                 self%dAersl, humidity, num_AerDust, self%phot_opt,        &
+                 self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, &
+                 self%do_AerDust_Calc, self%do_ozone_inFastJX,             &
+                 self%do_synoz, self%qj_timpyr, IO3, IH2O, ISYNOZ,         &
+                 self%chem_mask_khi, nymd, nhms, self%pr_diag, loc_proc,   &
+                 self%synoz_threshold, self%AerDust_Effect_opt, NSP,       &
+                 self%so4v_nden, self%so4v_sa,                             &
+                 self%so4v_sareff, self%so4v_saexist,                      &
+                 NUM_J, self%num_qjo, ilo, ihi, julo, jhi,                 &
+                 i1, i2, ju1, j2, k1, k2, self%jNOindex, self%jNOamp,      &
+                 self%cldflag)
         endif
       END IF
 
@@ -2157,8 +2177,28 @@ CONTAINS
      CALL MAPL_MaxMin('SO4:', so4_3d_array)
     END IF
 
- ! Currently, no volcanic SU exists, suggest ignoring by Pete 
- ! ----------------------------------------------------------
+ ! Volcanic SU
+ ! -----------
+    if(rcvolc .eq. ESMF_SUCCESS) then
+     call ESMF_StateGet(suv_state,    'SO4',          so4_3d_field, __RC__)
+     call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
+     CALL MAPL_MaxMin('GMI: SO4v:      ', so4_3d_array)
+!... volc SO4 number density
+     self%so4v_nden(:,:,km:1:-1) = so4_3d_array(:,:,1:km)*airdens(:,:,1:km)
+!
+     call ESMF_StateGet(suv_state, 'SO4SAREA',        so4_3d_field, __RC__)
+     call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
+     CALL MAPL_MaxMin('GMI: SO4v_SArea(m^2/m^3?):', so4_3d_array)
+     call ESMF_AttributeGet(suv_state, NAME='effective_radius_in_microns', VALUE=self%so4v_sareff, __RC__)
+     self%so4v_sareff = self%so4v_sareff * 1.0d-4
+     if(MAPL_AM_I_ROOT()) print *, 'GMI:SO4vSA Reff(cm): ', self%so4v_sareff
+!
+     self%so4v_saexist = .TRUE.
+     self%so4v_sa(:,:,km:1:-1) = so4_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3 
+!
+    endif
+
+
 !     CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
 !     VERIFY_(STATUS)
   
@@ -2304,26 +2344,29 @@ CONTAINS
    IF(self%gotImportRst .AND. self%phot_opt == 3 .AND. self%do_AerDust_calc) THEN
      DO k=k1,k2
        kReverse = k2-k+k1
-       IF(ASSOCIATED(FJXCLDOD)) FJXCLDOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 1)
-       IF(ASSOCIATED( FJXFCLD))  FJXFCLD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 2)
-!      IF(ASSOCIATED(        ))         (i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 3)
-       IF(ASSOCIATED(  DUSTOD))   DUSTOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 4)
-       IF(ASSOCIATED(  DUSTSA))   DUSTSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 5)
-       IF(ASSOCIATED(   SO4OD))    SO4OD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 6)
-       IF(ASSOCIATED(SO4HYGRO)) SO4HYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 7)
-       IF(ASSOCIATED(   SO4SA))    SO4SA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 8)
-       IF(ASSOCIATED(    BCOD))     BCOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 9)
-       IF(ASSOCIATED( BCHYGRO))  BCHYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,10)
-       IF(ASSOCIATED(    BCSA))     BCSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,11)
-       IF(ASSOCIATED(    OCOD))     OCOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,12)
-       IF(ASSOCIATED( OCHYGRO))  OCHYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,13)
-       IF(ASSOCIATED(    OCSA))     OCSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,14)
-       IF(ASSOCIATED(   SSAOD))    SSAOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,15)
-       IF(ASSOCIATED(SSAHYGRO)) SSAHYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,16)
-       IF(ASSOCIATED(   SSASA))    SSASA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,17)
-       IF(ASSOCIATED(   SSCOD))    SSCOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,18)
-       IF(ASSOCIATED(SSCHYGRO)) SSCHYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,19)
-       IF(ASSOCIATED(   SSCSA))    SSCSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,20)
+       IF(ASSOCIATED( FJXCLDOD))  FJXCLDOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 1)
+       IF(ASSOCIATED(  FJXFCLD))   FJXFCLD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 2)
+!      IF(ASSOCIATED(         ))          (i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 3)
+       IF(ASSOCIATED(   DUSTOD))    DUSTOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 4)
+       IF(ASSOCIATED(   DUSTSA))    DUSTSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 5)
+       IF(ASSOCIATED(    SO4OD))     SO4OD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 6)
+       IF(ASSOCIATED( SO4HYGRO))  SO4HYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 7)
+       IF(ASSOCIATED(    SO4SA))     SO4SA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 8)
+       IF(ASSOCIATED(     BCOD))      BCOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 9)
+       IF(ASSOCIATED(  BCHYGRO))   BCHYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,10)
+       IF(ASSOCIATED(     BCSA))      BCSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,11)
+       IF(ASSOCIATED(     OCOD))      OCOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,12)
+       IF(ASSOCIATED(  OCHYGRO))   OCHYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,13)
+       IF(ASSOCIATED(     OCSA))      OCSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,14)
+       IF(ASSOCIATED(    SSAOD))     SSAOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,15)
+       IF(ASSOCIATED( SSAHYGRO))  SSAHYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,16)
+       IF(ASSOCIATED(    SSASA))     SSASA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,17)
+       IF(ASSOCIATED(    SSCOD))     SSCOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,18)
+       IF(ASSOCIATED( SSCHYGRO))  SSCHYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,19)
+       IF(ASSOCIATED(    SSCSA))     SSCSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,20)
+       IF(ASSOCIATED(   SO4vOD))    SO4vOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,21)
+       IF(ASSOCIATED(SO4vHYGRO)) SO4vHYGRO(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,22)
+       IF(ASSOCIATED(   SO4vSA))    SO4vSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k,23)
      END DO
    END IF
 
@@ -2530,7 +2573,13 @@ CONTAINS
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(expChem,    SSCSA,    'SSCSA', RC=STATUS)
    VERIFY_(STATUS)
-   
+   CALL MAPL_GetPointer(expChem,   SO4vOD,   'SO4vOD', RC=STATUS)
+   VERIFY_(STATUS)
+   CALL MAPL_GetPointer(expChem,SO4vHYGRO,'SO4vHYGRO', RC=STATUS)
+   VERIFY_(STATUS)
+   CALL MAPL_GetPointer(expChem,   SO4vSA,   'SO4vSA', RC=STATUS)
+   VERIFY_(STATUS)
+
 !  Validation
 !  ----------
    Validate: IF(self%verbose) THEN

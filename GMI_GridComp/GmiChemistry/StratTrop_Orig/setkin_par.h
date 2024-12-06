@@ -50,7 +50,7 @@
 
       parameter (NSAD  =   5)
       parameter (NSADdust =   7)
-      parameter (NSADaer =   5)
+      parameter (NSADaer =   6)
 
 
 !.... Species individual identifications

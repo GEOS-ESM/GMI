@@ -17,6 +17,7 @@
 !
       implicit none
 !
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 #     include "gmi_phys_constants.h"
 #     include "gmi_sad_constants.h"

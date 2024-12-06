@@ -11,9 +11,9 @@
  public  :: set_molWeightSpecies, get_molWeightSpecies
  public  :: UNKNOWN_SPECIES
 
-# include "GmiParameters.h"
-!# include "setkin_par.h"
+# include "setkin_par.h"
 !# include "setkin_lchem.h"
+# include "GmiParameters.h"
 
  integer, parameter :: UNKNOWN_SPECIES         = -2
 

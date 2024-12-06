@@ -19,6 +19,7 @@
 ! !PUBLIC MEMBER FUNCTIONS:
       public  :: updateChemistry
 !
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 #     include "gmi_phys_constants.h"
 #     include "gmi_time_constants.h"
@@ -55,7 +56,6 @@
 !
       implicit none
 
-#     include "setkin_par.h"
 #     include "gmi_AerDust_const.h"
 !
 ! !INPUT PARAMETERS:

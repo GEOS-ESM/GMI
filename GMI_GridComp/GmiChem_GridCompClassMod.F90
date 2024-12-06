@@ -945,8 +945,8 @@ CONTAINS
                  gmiQQK, gmiQJ, gmiQQJ, surfEmissForChem, self%pr_diag,        &
                  self%do_ftiming, self%do_qqjk_inchem, self%pr_qqjk,           &
                  self%do_semiss_inchem, self%pr_smv2, self%pr_nc_period,       &
-                 rootProc, self%metdata_name_org,             &
-                 self%metdata_name_model, tdt)
+                 i1, i2, j1, j2, 1, km,                                        &
+                 rootProc, self%metdata_name_org, self%metdata_name_model, tdt)
 
 ! Return species concentrations to the chemistry bundle
 ! -----------------------------------------------------

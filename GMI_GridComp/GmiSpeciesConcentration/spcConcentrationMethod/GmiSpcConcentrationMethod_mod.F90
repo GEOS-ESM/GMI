@@ -49,9 +49,9 @@
   integer          :: numMoleFrac
   integer          :: numChem
 
-#     include "GmiParameters.h"
 #     include "setkin_par.h"
 #     include "setkin_lchem.h"
+#     include "GmiParameters.h"
 
   type t_SpeciesConcentration
 !    private

@@ -30,6 +30,7 @@
         module procedure rcEsmfReadTable2ListWords
       end interface
 
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 !
 ! !DESCRIPTION:

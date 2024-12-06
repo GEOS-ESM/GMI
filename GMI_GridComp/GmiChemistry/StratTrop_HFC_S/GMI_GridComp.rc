@@ -203,6 +203,8 @@ emissionSpeciesLayers::
 
 emissionPointFilenames::
 SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
+#SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
+#H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
 ::
 # NOTE: Units for the volcano point source files: kg(S)/s
 #       Units that GMI wants                    : kg(SO2)/s
@@ -295,12 +297,19 @@ forc_bc_kmax: 2
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/RCP6.0_5BrWMO2014_ch4latvar_1950_2100.asc
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/RCP6.0_5BrWMO2018_ch4latvar_1950_2100.asc
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/ccmiRefD1_GMIbc_1950_2018.asc
+#forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_extra5Br_1950_2018.asc
 #forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/bench_10-26-0_gmi_free_c360_72lev/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_1950_2018.asc
+
+#forc_bc_infile_name:  /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/ccmiRefD2_GMIbc_1950_2100_24species_no5Br_wHFCs.asc
+# CFC11 CFC12 CFC113 CFC114 CFC115 CCl4 CH3CCl3 HCFC22 HCFC141b HCFC142b
+# CF2ClBr CF2Br2 CF3Br H2402 CH3Br CH3Cl CH4 N2O HFC23 HFC32
+# HFC125 HFC134a HFC143a HFC152a
+
 forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_no5Br_1950_2018.asc
 
 #alternative /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/RCP6.0_WMO2018_QingHFCs_ch4latvarGMDscl_1950_2022Hindcast.asc
 
-forcedBcSpeciesNames:: 
+forcedBcSpeciesNames::
 #CFC11
 #CFC12
 #CFC113
@@ -381,9 +390,10 @@ sad_opt: 2
 #     ----------------------------------------------
 #     lbssad_opt
 #       1:  set all lbssad values to lbssad_init_val
-#       2:  OBSOLETE - read in lbssad 3d fields
-#       3:  OBSOLETE - read in lbssad zonal average fields
-#       4:  lbssad provided by AGCM, current month only.
+#       2: (OBSOLETE)  read in lbssad 3d fields
+#       3: (OBSOLETE)  read in lbssad zonal average fields
+#       4:  lbssad provided by AGCM (ExtData)
+#       5:  lbssad provided by CARMA SO4SAREA
 #     ----------------------------------------------
 #     (as listed in GmiSAD_GridCompClassMod.F90)
 

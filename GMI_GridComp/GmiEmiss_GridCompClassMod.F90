@@ -2070,7 +2070,7 @@ CONTAINS
 !!  IF(ASSOCIATED(EM_pointer)) EM_pointer(i1:i2,j1:j2,km:1:-1) = &
 !!                               (AIRDENS(i1:i2,j1:j2,km:1:-1) * gridBoxThickness(i1:i2,j1:j2,1:km)) / MAPL_AIRMW
 
-!! NATSAD and ICESAD
+!! NATSAD, ICESAD, LBSSAD, SOOTSAD and STSSAD (really VOLCSAD for now)
      call ESMF_StateGet (expChem, "gmiSAD", sadBundle, RC=STATUS )
      VERIFY_(STATUS)
 
@@ -2089,6 +2089,18 @@ CONTAINS
      CALL MAPL_GetPointer(expChem, EM_pointer, "LBSSAD", __RC__)
      IF(ASSOCIATED(EM_pointer)) THEN
        CALL obtainTracerFromBundle(sadBundle, ptr3D, ILBSSAD)
+       EM_pointer(i1:i2,j1:j2,1:km) = ptr3D(i1:i2,j1:j2,1:km)
+     END IF
+
+     CALL MAPL_GetPointer(expChem, EM_pointer, "STSSAD", __RC__)
+     IF(ASSOCIATED(EM_pointer)) THEN
+       CALL obtainTracerFromBundle(sadBundle, ptr3D, ISTSSAD)
+       EM_pointer(i1:i2,j1:j2,1:km) = ptr3D(i1:i2,j1:j2,1:km)
+     END IF
+
+     CALL MAPL_GetPointer(expChem, EM_pointer, "SOOTSAD", __RC__)
+     IF(ASSOCIATED(EM_pointer)) THEN
+       CALL obtainTracerFromBundle(sadBundle, ptr3D, ISTSSAD)
        EM_pointer(i1:i2,j1:j2,1:km) = ptr3D(i1:i2,j1:j2,1:km)
      END IF
 

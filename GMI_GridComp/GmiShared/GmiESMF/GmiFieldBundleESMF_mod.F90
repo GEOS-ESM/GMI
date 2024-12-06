@@ -51,6 +51,7 @@
          module procedure obtainTracerFromBundle_ByName2D_r8
       end interface
 
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 
 ! !DESCRIPTION:
@@ -87,12 +88,18 @@
 !EOP
 !------------------------------------------------------------------------------
 !BOC
-      field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, &
-              name = fieldName, RC=STATUS )
-      VERIFY_(STATUS)
+      field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, name=fieldName, __RC__ )
 
-      call MAPL_FieldBundleAdd ( bundle, field, rc=STATUS )
-      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="DIMS",               value=MAPL_DimsHorzVert,    __RC__)
+      call ESMF_AttributeSet(field,name="VLOCATION",          value=MAPL_VLocationCenter, __RC__)
+      call ESMF_AttributeSet(field,name="UNITS",              value="NA",                 __RC__)
+      call ESMF_AttributeSet(field,name="LONG_NAME",          value="NA",                 __RC__)
+      call ESMF_AttributeSet(field,name="FIELD_TYPE",         value=1,                    __RC__)
+      call ESMF_AttributeSet(field,name="REFRESH_INTERVAL",   value=0,                    __RC__)
+      call ESMF_AttributeSet(field,name="AVERAGING_INTERVAL", value=0,                    __RC__)
+
+      call MAPL_FieldBundleAdd ( bundle, field, __RC__ )
+
 
       return
 
@@ -124,12 +131,17 @@
 !EOP
 !------------------------------------------------------------------------------
 !BOC
-      field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, &
-              name = fieldName, RC=STATUS )
-      VERIFY_(STATUS)
+      field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, name=fieldName, __RC__ )
 
-      call MAPL_FieldBundleAdd ( bundle, field, rc=STATUS )
-      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="DIMS",               value=MAPL_DimsHorzVert,    __RC__)
+      call ESMF_AttributeSet(field,name="VLOCATION",          value=MAPL_VLocationCenter, __RC__)
+      call ESMF_AttributeSet(field,name="UNITS",              value="NA",                 __RC__)
+      call ESMF_AttributeSet(field,name="LONG_NAME",          value="NA",                 __RC__)
+      call ESMF_AttributeSet(field,name="FIELD_TYPE",         value=1,                    __RC__)
+      call ESMF_AttributeSet(field,name="REFRESH_INTERVAL",   value=0,                    __RC__)
+      call ESMF_AttributeSet(field,name="AVERAGING_INTERVAL", value=0,                    __RC__)
+
+      call MAPL_FieldBundleAdd ( bundle, field, __RC__ )
 
       return
 
@@ -493,12 +505,17 @@
 !EOP
 !------------------------------------------------------------------------------
 !BOC
-      field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, &
-              name = fieldName, RC=STATUS )
-      VERIFY_(STATUS)
+      field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, name=fieldName, __RC__ )
 
-      call MAPL_FieldBundleAdd ( bundle, field, rc=STATUS )
-      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="DIMS",                value=MAPL_DimsHorzOnly,  __RC__)
+      call ESMF_AttributeSet(field,name="VLOCATION",           value=MAPL_VLocationNone, __RC__)
+      call ESMF_AttributeSet(field,name="UNITS",               value="NA",               __RC__)
+      call ESMF_AttributeSet(field,name="LONG_NAME",           value="NA",               __RC__)
+      call ESMF_AttributeSet(field,name="FIELD_TYPE",          value=1,                  __RC__)
+      call ESMF_AttributeSet(field,name="REFRESH_INTERVAL",    value=0,                  __RC__)
+      call ESMF_AttributeSet(field,name="AVERAGING_INTERVAL",  value=0,                  __RC__)
+
+      call MAPL_FieldBundleAdd ( bundle, field, __RC__ )
 
       return
 
@@ -530,12 +547,17 @@
 !EOP
 !------------------------------------------------------------------------------
 !BOC
-      field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, &
-              name = fieldName, RC=STATUS )
-      VERIFY_(STATUS)
+      field = ESMF_FieldCreate(grid=grid, fArrayptr=PTR, name=fieldName, __RC__ )
 
-      call MAPL_FieldBundleAdd ( bundle, field, rc=STATUS )
-      VERIFY_(STATUS)
+      call ESMF_AttributeSet(field,name="DIMS",               value=MAPL_DimsHorzOnly,  __RC__)
+      call ESMF_AttributeSet(field,name="VLOCATION",          value=MAPL_VLocationNone, __RC__)
+      call ESMF_AttributeSet(field,name="UNITS",              value="NA",               __RC__)
+      call ESMF_AttributeSet(field,name="LONG_NAME",          value="NA",               __RC__)
+      call ESMF_AttributeSet(field,name="FIELD_TYPE",         value=1,                  __RC__)
+      call ESMF_AttributeSet(field,name="REFRESH_INTERVAL",   value=0,                  __RC__)
+      call ESMF_AttributeSet(field,name="AVERAGING_INTERVAL", value=0,                  __RC__)
+
+      call MAPL_FieldBundleAdd ( bundle, field, __RC__ )
 
       return
 
