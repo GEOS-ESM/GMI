@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 ### Added
+
+- Added features required for the 2024 Hunga experiments, including treatment of SO4v, lbssad_opt 5 (for CARMA), and using sulfate surface area density and effective radius from the AERO state
+
 ### Changed
 
 - Update GitHub actions to use v4
