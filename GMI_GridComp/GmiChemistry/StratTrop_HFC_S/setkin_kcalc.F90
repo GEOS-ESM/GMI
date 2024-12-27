@@ -26,8 +26,8 @@
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
-     &  temperature,lwc,adcol,specarr,rcarr,radA,FRH)
-
+     &  temperature,fcld,lwc,adcol,specarr,rcarr,radA,FRH)
+!
       implicit none
 
 #     include "gmi_phys_constants.h"
@@ -42,6 +42,7 @@
       REAL*8,  INTENT (IN)  :: ptrop
 
       REAL*8,  INTENT (IN)  :: adcol       (       npres0)
+      REAL*8,  INTENT (IN)  :: fcld        (       npres0)
       REAL*8,  INTENT (IN)  :: lwc         (       npres0)
       REAL*8,  INTENT (IN)  :: pressure    (       npres0)
       REAL*8,  INTENT (IN)  :: temperature (       npres0)
@@ -71,7 +72,11 @@
      & ,sad_sts  (npres0)
 
       real*8 mw(NSP)
-
+!
+      real*8, DIMENSION (npres0) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl
+!... effective radii of stratospheric aerosols
+      real*8 reff_lbs, reff_sts, reff_nat, reff_ice, reff_soot
+!
       mw(:) = mw_data(:)
 
       naltmax     = npres0
@@ -88,7 +93,13 @@
       nitrogen(:) = adcol(:) * MXRN2
       oxygen(:)   = adcol(:) * MXRO2
       water(:)    = specarr(44 ,:)
-
+!... * 0.0d0
+      reff_lbs  = 0.221d-4
+      reff_sts  = 0.221d-4
+      reff_nat  = 0.221d-4
+      reff_ice  = 0.221d-4
+      reff_soot = 0.221d-4
+!
       sad_lbs(:)  = sadcol(1, :)
       sad_sts(:)  = sadcol(2, :)
       sad_nat(:)  = sadcol(3, :)
@@ -96,6 +107,9 @@
 !.old      sad_soot(:) = sadcol(5, :)
 !... Use GOCART soot (BC+OC) for this reaction
       sad_soot(:) = sadcol2(NSADdust+2,:)+sadcol2(NSADdust+3,:)
+!
+!... since STS is not calculated at present put Volc SO4 in there
+
 !
 !
 !....          Start thermal rate constants
@@ -2175,7 +2189,7 @@
 !=======================================================================
 !     N2O5 + stratospheric sulfate aerosol = 2 HNO3
 !=======================================================================
-!           
+!
 !.sds..!.... First order reaction rate constant
 !.sds..!.... PSC 3/30/99
 !.sds..      gamma     = 0.10d0
@@ -2465,6 +2479,7 @@
           where( hcl > minconc )
             sksts_clono2_hcl = 0.25d0 * gprob_hcl * avgvel * sad / hcl
           elsewhere
+!.old            sksts_clono2_hcl = 0.25d0 * gprob_hcl * avgvel * sad
             sksts_clono2_hcl = 0.0d0
           end where
 !
@@ -2621,6 +2636,7 @@
           where( hcl > minconc )
             sksts_hocl_hcl = 0.25d0 * gprob_tot * avgvel * sad / hcl
           elsewhere
+!.old            sksts_hocl_hcl = 0.25d0 * gprob_tot * avgvel * sad
             sksts_hocl_hcl = 0.0d0
           end where
 !
@@ -2735,6 +2751,7 @@
           where( hcl > minconc )
             sksts_hobr_hcl = 0.25d0 * gprob_tot * avgvel * sad / hcl
          elsewhere
+!.old            sksts_hobr_hcl = 0.25d0 * gprob_tot * avgvel * sad
             sksts_hobr_hcl = 0.0d0
          end where
 !
@@ -2846,6 +2863,7 @@
           sknat_hcl_clono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
+!.old            sknat_hcl_clono2  = sknat_hcl_clono2 / minconc
             sknat_hcl_clono2  = 0.0d0
           elsewhere
             sknat_hcl_clono2  = sknat_hcl_clono2 / hcl
@@ -2886,6 +2904,7 @@
           sknat_hcl_hocl(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
+!.old            sknat_hcl_hocl  = sknat_hcl_hocl / minconc
             sknat_hcl_hocl  = 0.0d0
           elsewhere
             sknat_hcl_hocl  = sknat_hcl_hocl / hcl
@@ -2926,6 +2945,7 @@
           sknat_hcl_brono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
+!.old            sknat_hcl_brono2  = sknat_hcl_brono2 / minconc
             sknat_hcl_brono2  = 0.0d0
           elsewhere
             sknat_hcl_brono2  = sknat_hcl_brono2 / hcl
@@ -2966,6 +2986,7 @@
           sknat_hcl_hobr(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
+!.old            sknat_hcl_hobr  = sknat_hcl_hobr / minconc
             sknat_hcl_hobr  = 0.0d0
           elsewhere
             sknat_hcl_hobr  = sknat_hcl_hobr / hcl
@@ -3077,6 +3098,7 @@
           skice_hcl_clono2(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
+!.old            skice_hcl_clono2   = skice_hcl_clono2 / minconc
             skice_hcl_clono2   = 0.0d0
           elsewhere
             skice_hcl_clono2   = skice_hcl_clono2 / hcl
@@ -3119,6 +3141,7 @@
           skice_hcl_hocl(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
+!.old            skice_hcl_hocl   = skice_hcl_hocl / minconc
             skice_hcl_hocl   = 0.0d0
           elsewhere
             skice_hcl_hocl   = skice_hcl_hocl / hcl
@@ -3162,6 +3185,7 @@
           skice_hcl_brono2(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
+!.old            skice_hcl_brono2   = skice_hcl_brono2 / minconc
             skice_hcl_brono2   = 0.0d0
           elsewhere
             skice_hcl_brono2   = skice_hcl_brono2 / hcl
@@ -3204,6 +3228,7 @@
           skice_hcl_hobr(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
           where (hcl < minconc)
+!.old            skice_hcl_hobr   = skice_hcl_hobr / minconc
             skice_hcl_hobr   = 0.0d0
           elsewhere
             skice_hcl_hobr   = skice_hcl_hobr / hcl
@@ -3412,7 +3437,7 @@
 ! use the HO2-only algebraic expression.
 !
 !----------------
-        CASE ( 8, 9, 10, 11, 12)  
+        CASE ( 8, 9, 10, 11, 12, 13)  
 !
 !... Mean molecular speed [cm/s]
           w = 14550.5d0 * sqrt(TEMP/(SQM*SQM))
@@ -3480,7 +3505,10 @@
 !...  which is in the middle of the 0.04-0.1 range recommended
 !...  by Thornton et al. (2008)
 !... 
-          IF ( AEROTYPE == 8 .and. CONTINENTAL_PBL == 1) THEN
+          IF ( AEROTYPE ==  8 .and. CONTINENTAL_PBL == 1) THEN
+            GAMMA = 0.07
+          ENDIF 
+          IF ( AEROTYPE == 13 .and. CONTINENTAL_PBL == 1) THEN
             GAMMA = 0.07
           ENDIF 
 !

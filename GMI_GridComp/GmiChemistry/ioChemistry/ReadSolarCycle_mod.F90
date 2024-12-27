@@ -40,6 +40,7 @@
 !
       implicit none
 !
+#include "setkin_par.h"
 #include "GmiParameters.h"
 #include "parm_MIE_fastJX65.h"
 !

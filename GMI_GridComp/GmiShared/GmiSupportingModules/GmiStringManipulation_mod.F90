@@ -11,6 +11,7 @@
 !
       implicit none
 !
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 !
 ! !PUBLIC MEMBER FUNCTIONS:

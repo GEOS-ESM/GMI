@@ -83,16 +83,17 @@
 
       integer, parameter :: MAX_COL_DIAG_PRES  =   50 ! maximum number of pressures for column
                                                       ! diagnostic output
-      integer, parameter :: MAX_COL_DIAG_SITES = 300 ! maximum number of column diagnostic sites
+      integer, parameter :: MAX_COL_DIAG_SITES =  300 ! maximum number of column diagnostic sites
       integer, parameter :: MAX_INFILE_NAMES   = 1826 ! maximum number of input file names
       integer, parameter :: MAX_NUM_CONST_GIO  =  185 ! maximum number of const gen. I/O species
       integer, parameter :: MAX_NUM_QJ         =  200 ! maximum number of qj (photolysis) rxns
       integer, parameter :: MAX_NUM_QK         =  500 ! maximum number of qk (thermal)    rxns
 
-      integer, parameter :: num_AerDust        = 20   ! Number of entries for aerosol/dust 
-                                                      ! diagnostics
-      integer, parameter :: num_CM_AerDust     =  5   ! Number of column mass entries for 
-                                                      ! aerosol/dust diagnostics
+      integer, parameter :: num_AerDust = 3 + 2 + 3*nSADaer ! Number of entries needed for
+                                                            !  aerosol photolysis diagnostics
+                                                            !  = 3 + 2 + 3*nSADaer
+      integer, parameter :: num_CM_AerDust     =    5       ! Number of column mass entries for 
+                                                            ! aerosol/dust diagnostics
 
       integer, parameter :: MAX_STRING_LENGTH = MAX_LENGTH_SPECIES_NAME*MAX_COL_DIAG_SITES
 
