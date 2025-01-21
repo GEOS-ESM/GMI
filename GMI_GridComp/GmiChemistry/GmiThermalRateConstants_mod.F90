@@ -18,8 +18,10 @@
 ! !PUBLIC MEMBER FUNCTIONS:
       public  :: calcThermalRateConstants, Accum_Qqjk
 
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 #     include "gmi_phys_constants.h"
+#     include "gmi_sad_constants.h"
 !
 ! !AUTHOR:
 ! John Tannahill, LLNL, jrt@llnl.gov
@@ -53,20 +55,19 @@
 ! !INTERFACE:
 !
 
-      subroutine calcThermalRateConstants (do_wetchem, rootProc,    &
-     &               num_time_steps, ih2o_num, imgas_num, nymd, rxnr_adjust_map,&
-     &               pres3c, tropp, temp3, clwc, cmf, sadgmi, qkgmi,            &
-     &               concentration, rxnr_adjust, Eradius, Tarea,                &
-     &               relativeHumidity, conPBLFlag, do_AerDust_Calc, do_LBSplusBCOC_SAD, phot_opt,   &
-     &               pr_diag, loc_proc, num_rxnr_adjust, rxnr_adjust_timpyr,    &
-     &               ivert, num_sad, num_qks, num_molefrac, num_species,        &
-     &               ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
-
+      subroutine calcThermalRateConstants (do_wetchem, rootProc,                &
+                     num_time_steps, ih2o_num, imgas_num, nymd, rxnr_adjust_map,&
+                     pres3c, tropp, temp3, clwc, fcld, cmf, sadgmi, qkgmi,      &
+                     concentration, rxnr_adjust, Eradius, Tarea, so4v_saexist,  &
+                     relativeHumidity, conPBLFlag, do_AerDust_Calc,             &
+                     do_LBSplusBCOC_SAD, phot_opt,                              &
+                     pr_diag, loc_proc, num_rxnr_adjust, rxnr_adjust_timpyr,    &
+                     ivert, num_sad, num_qks, num_molefrac, num_species,        &
+                     ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
 
       implicit none
 
 #     include "gmi_time_constants.h"
-#     include "setkin_par.h"
 #     include "gmi_AerDust_const.h"
 !
 ! !INPUT PARAMETERS:
@@ -97,28 +98,22 @@
       INTEGER, POINTER, intent(in)    :: rxnr_adjust_map(:)
 
       integer, intent(in) :: conPBLFlag(i1:i2,   ju1:j2,   k1:k2)
-                             ! atmospheric pressure at the center of each grid 
-                             ! box (mb)
-      real*8 , intent(in) :: pres3c(ilo:ihi, julo:jhi, k1:k2)
-                             ! temperature (degK)
-      real*8 , intent(in) :: temp3 (ilo:ihi, julo:jhi, k1:k2)
-                             ! tropopause pressure (mb)
-      real*8 , intent(in) :: tropp (i1:i2,   ju1:j2)
-                             ! convective mass flux   (kg/m^2*s)
-      real*8 , intent(in) :: cmf   (i1:i2,   ju1:j2,   k1:k2)
-                             ! cloud liquid water content, grid box average (g/m^3)
-      real*8 , intent(in) :: clwc  (i1:i2,   ju1:j2,   k1:k2)
+      real*8 , intent(in) :: pres3c(ilo:ihi, julo:jhi, k1:k2) ! atmospheric pressure at the center of each grid box (mb)
+      real*8 , intent(in) :: temp3 (ilo:ihi, julo:jhi, k1:k2) ! temperature (degK)
+      real*8 , intent(in) :: tropp (i1:i2,   ju1:j2)          ! tropopause pressure (mb)
+      real*8 , intent(in) :: cmf   (i1:i2,   ju1:j2,   k1:k2) ! convective mass flux   (kg/m^2*s)
+      real*8 , intent(in) :: fcld  (i1:i2,   ju1:j2,   k1:k2) ! total cloud fraction
+      real*8 , intent(in) :: clwc  (i1:i2,   ju1:j2,   k1:k2) ! cloud liquid water content, grid box average (g/m^3)
       REAL*8 , intent(in) :: relativeHumidity (i1:i2, ju1:j2, k1:k2)
-      REAL*8 , intent(in) :: ERADIUS (i1:i2, ju1:j2, k1:k2, NSADdust+NSADaer)
-      REAL*8 , intent(in) :: TAREA   (i1:i2, ju1:j2, k1:k2, NSADdust+NSADaer)
-                             ! array of reaction rate adjustment factors
-      real*8 , intent(in) :: rxnr_adjust(i1:i2, ju1:j2, k1:k2, num_rxnr_adjust, &
-     &                       rxnr_adjust_timpyr)
-                             ! surface area densities (cm^2/cm^3)
-      type (t_GmiArrayBundle), intent(in) :: sadgmi(num_sad)
-                             ! species concentration, known at zone centers 
-                             ! (mixing ratio)
-      type (t_GmiArrayBundle), intent(in) :: concentration(num_species)
+      REAL*8 , intent(in) :: ERADIUS (i1:i2, ju1:j2, k1:k2, nSADdust+nSADaer)
+      REAL*8 , intent(in) :: TAREA   (i1:i2, ju1:j2, k1:k2, nSADdust+nSADaer)
+      logical, intent(in) :: so4v_saexist
+
+      ! array of reaction rate adjustment factors:
+      real*8 , intent(in) :: rxnr_adjust(i1:i2, ju1:j2, k1:k2, num_rxnr_adjust, rxnr_adjust_timpyr)
+
+      type (t_GmiArrayBundle), intent(in) :: sadgmi(num_sad) ! surface area densities (cm^2/cm^3)
+      type (t_GmiArrayBundle), intent(in) :: concentration(num_species) ! species concentration, known at zone centers (mixing ratio)
 
 !
 ! !INPUT/OUTPUT PARAMETERS:
@@ -139,12 +134,13 @@
       real*8  :: prescol (k1:k2)
       real*8  :: tempcol (k1:k2)
       real*8  :: lwccol  (k1:k2)
+      real*8  :: fcldcol (k1:k2)
       integer :: cPBLcol (k1:k2)
       real*8  :: constcol(num_molefrac, k1:k2)
       real*8  :: qkcol   (num_qks,      k1:k2)
-      real*8  :: sadcol  (num_sad,      k1:k2)
-      real*8  :: sadcol2 (NSADdust+NSADaer,   k1:k2)
-      real*8  :: radA    (NSADdust+NSADaer,   k1:k2)
+      real*8  :: sadcol  (num_sad,      k1:k2)        ! originally for tropospheric aerosols
+      real*8  :: sadcol2 (nSADdust+nSADaer,   k1:k2)  ! originally for stratospheric aerosols
+      real*8  :: radA    (nSADdust+nSADaer,   k1:k2)
       real*8  :: rhcol   (k1:k2)
 !
 !EOP
@@ -167,7 +163,8 @@
 
           if (do_wetchem) then
 
-              lwccol(:) = clwc(il,ij,:)
+              lwccol(:)  = clwc(il,ij,:)
+              fcldcol(:) = fcld(il,ij,:)
 
           end if
 
@@ -187,9 +184,10 @@
 
           do ic = 1, num_sad
              sadcol(ic,:) = sadgmi(ic)%pArray3D(il,ij,:)
+!             sadreff(ic,:) =
           end do
 
-          do ic = 1, NSADdust+NSADaer
+          do ic = 1, nSADdust+nSADaer
              sadcol2(ic,:) = 0.0d0
              radA   (ic,:) = 0.0d0
           end do
@@ -197,28 +195,35 @@
 
           if (phot_opt == 3) then
              if (do_AerDust_Calc) then
-                do ic = 1, NSADdust+NSADaer
-                   sadcol2(ic,:) = TAREA  (il,ij,:,ic)
-                   radA   (ic,:) = ERADIUS(il,ij,:,ic)
+
+                do ic = 1, nSADdust+nSADaer
+                   sadcol2(ic,:) = TAREA  (il,ij,:,ic)  ! would be better if Surface Area came from AERO_PROVIDER
+                   radA   (ic,:) = ERADIUS(il,ij,:,ic)  ! would be better if Eff Radius   came from AERO_PROVIDER
                 end do
                 rhcol(:)     = relativeHumidity(il,ij,:)
+
+                ! Special case to add GOCART BC + OC to LBS for O3 het reactions
+                !  use GOCART soot (BC+OC) for these reactions
+                if (do_LBSplusBCOC_SAD) then
+                  sadcol(ILBSSAD,:) = &
+                  sadcol(ILBSSAD,:) + sadcol2(nSADdust+IBCSAD,:) + sadcol2(nSADdust+IOCSAD,:)
+                endif
+
+                ! If GOCART has SO4v then replace STS for strat het reaction
+                if (so4v_saexist) then
+                  sadcol(ISTSSAD,:) = sadcol2(nSADdust+ISO4vSAD,:)
+                endif
+
              end if
           end if
 !
-!... Special case to add GOCART BC + OC to LBS for O3 het reactions
-!...  use GOCART soot (BC+OC) for these reactions
-          if (do_LBSplusBCOC_SAD) then
-            sadcol(1,:) = sadcol(1,:) + sadcol2(NSADdust+2,:) + sadcol2(NSADdust+3,:)
-          endif
-!
-!
-	  cPBLcol(:) = conPBLFlag(il,ij,:)
+          cPBLcol(:) = conPBLFlag(il,ij,:)
 
 !         ==========
           call Kcalc  &
 !         ==========
      &        (ivert, sadcol, sadcol2, prescol, tropp(il,ij),  cPBLcol, &
-     &         tempcol, lwccol, adcol, constcol, qkcol, radA, rhcol)
+     &         tempcol, fcldcol, lwccol, adcol, constcol, qkcol, radA, rhcol)
 
           do iq = 1, num_qks
             qkgmi(iq)%pArray3D(il,ij,:) = Max (0.0d0, qkcol(iq,:))

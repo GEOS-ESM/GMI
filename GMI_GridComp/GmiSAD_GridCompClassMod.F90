@@ -138,6 +138,7 @@
 
     type (t_GmiArrayBundle), pointer :: sadgmi(:) => null()
     real(KIND=DBL), pointer :: lbssad   (:,:,:)   => null()
+    real(KIND=DBL), pointer :: refflbs  (:,:,:)   => null()
     real(KIND=DBL), pointer :: loss_freq(:,:,:,:) => null()
     real(KIND=DBL), pointer :: h2oback  (:,:,:)   => null()
     real(KIND=DBL), pointer :: h2ocond  (:,:,:)   => null()
@@ -383,6 +384,7 @@ CONTAINS
 !       2: (OBSOLETE)  read in lbssad 3d fields
 !       3: (OBSOLETE)  read in lbssad zonal average fields
 !       4:  lbssad provided by AGCM (ExtData)
+!       5:  lbssad provided by CARMA SO4SAREA
 !     ----------------------------------------------
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%lbssad_opt, &
      &                label   = "lbssad_opt:", &
@@ -398,9 +400,9 @@ CONTAINS
      &                default = 0.0d0, rc=STATUS )
       VERIFY_(STATUS)
 
-!.sds... only allow lbssad_opt == "1" or "4"
+!.sds... only allow lbssad_opt == "1" or "4" or "5"
       if (self%lbssad_opt /= 1) then
-        call CheckNamelistOptionRange ('lbssad_opt', self%lbssad_opt, 4, 4)
+        call CheckNamelistOptionRange ('lbssad_opt', self%lbssad_opt, 4, 5)
       endif
 
       call CheckNamelistOptionRange ('sad_opt', self%sad_opt, 0, 3)
@@ -568,11 +570,16 @@ CONTAINS
 
                Allocate(self%lbssad(i1:i2, ju1:j2, k1:k2))
                self%lbssad = 0.0d0
+
+               Allocate(self%refflbs(i1:i2, ju1:j2, k1:k2))
+               self%refflbs = 0.0d0
           end if
 
           if (self%sad_opt == 3) then
             Allocate(self%lbssad(i1:i2, ju1:j2, k1:k2))
             self%lbssad = 0.0d0
+            Allocate(self%refflbs(i1:i2, ju1:j2, k1:k2))
+            self%refflbs = 0.0d0
           end if
 
       end if
@@ -908,47 +915,48 @@ CONTAINS
 ! Check for HNO3COND above chosen limit
 ! -------------------------------------
     DO ic = 1,NSP
-     IF(TRIM(lchemvar(ic)) == "HNO3COND") EXIT
+      IF(TRIM(lchemvar(ic)) == "HNO3COND") EXIT
     END DO
     r = MAXVAL(self%SpeciesConcentration%concentration(ic)%pArray3D(:,:,:))
     IF(r > self%HNO3Ice_MAX*1.00E-09) THEN
-     PRINT *,TRIM(Iam)//": Found HNO3COND above limit: ",r*1.00E+09," ppbv"
-     DO i = i1,i2
-     DO j = j1,j2
-     DO k = 1,km
-         IF ( self%SpeciesConcentration%concentration(ic)%pArray3D(i,j,k) > self%HNO3Ice_MAX*1.00E-09 ) THEN
-           PRINT*,'TRAP HNO3COND ', &
+      PRINT *,TRIM(Iam)//": Found HNO3COND above limit: ",r*1.00E+09," ppbv"
+      DO i = i1,i2
+        DO j = j1,j2
+          DO k = 1,km
+            IF ( self%SpeciesConcentration%concentration(ic)%pArray3D(i,j,k) > self%HNO3Ice_MAX*1.00E-09 ) THEN
+              PRINT*,'TRAP HNO3COND ', &
                    self%SpeciesConcentration%concentration(ic)%pArray3D(i,j,k)*1.00E+09, &
                    latDeg(i,j), lonDeg(i,j), press3c(i,j,k)
-         END IF
-     END DO
-     END DO
-     END DO
-     status = 1
-     VERIFY_(status)
+            END IF
+          END DO
+        END DO
+      END DO
+      status = 1
+      VERIFY_(status)
     END IF
 
 ! Check for HCl above chosen limit
 ! -------------------------------------
     DO ic = 1,NSP
-     IF(TRIM(lchemvar(ic)) == "HCl") EXIT
+      IF(TRIM(lchemvar(ic)) == "HCl") EXIT
     END DO
     r = MAXVAL(self%SpeciesConcentration%concentration(ic)%pArray3D(:,:,:))
     IF(r > self%HCl_MAX*1.00E-09) THEN
-     PRINT *,TRIM(Iam)//": Found HCl above limit: ",r*1.00E+09," ppbv"
-     DO i = i1,i2
-     DO j = j1,j2
-     DO k = 1,km
-         IF ( self%SpeciesConcentration%concentration(ic)%pArray3D(i,j,k) > self%HCl_MAX*1.00E-09 ) THEN
-           PRINT*,'TRAP HCl ', &
+      PRINT *,TRIM(Iam)//": Found HCl above limit: ",r*1.00E+09," ppbv"
+      DO i = i1,i2
+        DO j = j1,j2
+          DO k = 1,km
+            IF ( self%SpeciesConcentration%concentration(ic)%pArray3D(i,j,k) > self%HCl_MAX*1.00E-09 ) THEN
+              PRINT '(''TRAP HCl '',f9.3,'' ppb- lat,lon,press3c: '',3f9.3)', &
                    self%SpeciesConcentration%concentration(ic)%pArray3D(i,j,k)*1.00E+09, &
                    latDeg(i,j), lonDeg(i,j), press3c(i,j,k)
-         END IF
-     END DO
-     END DO
-     END DO
-     status = 1
-     VERIFY_(status)
+              PRINT '(''Indices used: '',5i6)',IHNO3COND, self%idehyd_num, ICH4, IHNO3, IH2O
+            END IF
+          END DO
+        END DO
+      END DO
+      status = 1
+      VERIFY_(status)
     END IF
 
    END IF
@@ -1062,6 +1070,18 @@ CONTAINS
       CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
       VERIFY_(STATUS)
       self%lbssad(:,:,1:km) = PTR3D(:,:,km:1:-1)
+      NULLIFY(PTR3D)
+    ELSEIF(self%lbssad_opt == 5) THEN
+      importName = 'SO4SAREA'
+      CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
+      VERIFY_(STATUS)
+      self%lbssad(:,:,1:km) = PTR3d(:,:,km:1:-1) * 0.01 ! convert from m2/m3 to cm2/cm3
+      NULLIFY(PTR3D)
+
+      importName = 'SO4REFF'
+      CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
+      VERIFY_(STATUS)
+      self%refflbs(:,:,1:km) = PTR3d(:,:,km:1:-1) * 100.0 ! convert from m to cm
       NULLIFY(PTR3D)
     END IF
   end if

@@ -18,6 +18,7 @@
 ! !PUBLIC MEMBER FUNCTIONS:
       public  :: updateForcingBC
 !     
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 #     include "gmi_phys_constants.h"
 #     include "gmi_time_constants.h"

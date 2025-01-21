@@ -92,13 +92,13 @@
       real, dimension(L_) :: CLDFRW, CLDIWCW, CLDLWCW, CLDREFFI, CLDREFFL
       logical :: oldgmi_aero=.true.
 !
-!. tropSO4, BC, OC, SeaSalt(accum), SeaSalt(coarse)
+!. tropSO4, BC, OC, SeaSalt(accum), SeaSalt(coarse), volcSO4
       integer :: IR, IRH, ioffd, kdry
-      integer, parameter :: idxAtype(NSADaer)=(/-1, -14, -22, -4, -5/), NRH_GMI=(7)
+      integer, parameter :: idxAtype(NSADaer)=(/-1, -14, -22, -4, -5, -2/), NRH_GMI=(7)
 !. old tropSO4, BC, OC, SeaSalt(accum), SeaSalt(coarse) densities
       real, dimension(NSADdust), parameter :: dMSDENS=(/2500.0, 2500.0, 2500.0, 2500.0, 2650.0, 2650.0, 2650.0/)
-      real, dimension(NSADaer), parameter :: wMSDENS=(/1700.0, 1000.0, 1800.0, 2200.0, 2200.0/)
-!      INTEGER, parameter :: IND(NSADaer) = (/22, 29, 36, 43, 50/)
+      real, dimension(NSADaer), parameter :: wMSDENS=(/1700.0, 1000.0, 1800.0, 2200.0, 2200.0, 1700./)
+!      INTEGER, parameter :: IND(NSADaer) = (/22, 29, 36, 43, 50, ??/)
       REAL*8 :: FRAC, REFF, scaleR, scaleQ
 !
 !

@@ -18,6 +18,7 @@
 ! !PUBLIC MEMBER FUNCTIONS:
       public  :: Update_Smv2chem
 !
+#     include "setkin_par.h"
 #     include "GmiParameters.h"
 #     include "gmi_phys_constants.h"
 #     include "gmi_time_constants.h"
@@ -160,20 +161,20 @@
         end where
       END IF
 
-       allocate(speciesConc(i1:i2, ju1:j2, k1:k2, num_species))
-       do ic = 1, num_species
-          speciesConc(:,:,:,ic) = concentration(ic)%pArray3D(:,:,:)
-       end do
+      allocate(speciesConc(i1:i2, ju1:j2, k1:k2, num_species))
+      do ic = 1, num_species
+         speciesConc(:,:,:,ic) = concentration(ic)%pArray3D(:,:,:)
+      end do
 
-       allocate(loc_qjgmi(i1:i2, ju1:j2, k1:k2, num_qjo))
-       do ic = 1, num_qjo
-          loc_qjgmi(:,:,:,ic) = qjgmi(ic)%pArray3D(:,:,:)
-       end do
+      allocate(loc_qjgmi(i1:i2, ju1:j2, k1:k2, num_qjo))
+      do ic = 1, num_qjo
+         loc_qjgmi(:,:,:,ic) = qjgmi(ic)%pArray3D(:,:,:)
+      end do
 
-       allocate(loc_qkgmi(i1:i2, ju1:j2, k1:k2, num_qks))
-       do ic = 1, num_qks
-          loc_qkgmi(:,:,:,ic) = qkgmi(ic)%pArray3D(:,:,:)
-       end do
+      allocate(loc_qkgmi(i1:i2, ju1:j2, k1:k2, num_qks))
+      do ic = 1, num_qks
+         loc_qkgmi(:,:,:,ic) = qkgmi(ic)%pArray3D(:,:,:)
+      end do
 
 !     IF(rootProc) PRINT *,"Calling Do_Smv2_Solver with do_semiss_inchem=",do_semiss_inchem
 !     ===================

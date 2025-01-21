@@ -136,7 +136,7 @@
 !     --------------------------------
 
       real*8, parameter ::  &
-     &  ERRMAXIN  = 1.0d-06,     & ! relative error tolerance  previously 1d-3
+     &  ERRMAXIN  = 1.0d-06,     & ! relative error tolerance  previously 1d-3, seems to help w/ HCl blowups and O1D spikes
      &  YLOWIN    = 1.0d+04,     & ! absolute error tolerance
      &  YHIIN     = 1.0d+06
 
