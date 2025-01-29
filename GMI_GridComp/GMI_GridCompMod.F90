@@ -196,7 +196,6 @@
    INTEGER, INTENT(out) ::  rc                ! Error return code:
                                               !  0 - all is well
                                               !  1 -
-#include "setkin_par.h"
 
 ! !DESCRIPTION: This routine implements the GMI Strat/Trop Driver. That 
 !               is, adds chemical tendencies to each of the constituents
@@ -268,8 +267,7 @@
 ! !OUTPUT PARAMETERS:
    INTEGER, INTENT(out) ::  rc                ! Error return code:
                                               !  0 - all is well
-#include "setkin_par.h"
-                                             !  1 -
+                                              !  1 -
 
 ! !DESCRIPTION: This routine implements the GMI Strat/Trop Driver. That 
 !               is, adds chemical tendencies to each of the constituents
