@@ -4,6 +4,10 @@
 # Mechanism: StratTrop_HFC_S
 #==================================
 
+###
+###  MEM - Added CH3BR2 and CHBR3 to emission flux  (missing from GOLF)
+###
+
         #############################
         # Where is the GMI mechanism?
         #############################
@@ -81,7 +85,7 @@ pr_const: T
 pr_surf_emiss: T
 pr_emiss_3d: T
 # only set TRUE if you need QQJ, QQK exports:
-pr_qqjk: F
+pr_qqjk: T
 pr_noon: F
 pr_local: F
 do_ftiming: F
@@ -202,9 +206,8 @@ emissionSpeciesLayers::
 ::
 
 emissionPointFilenames::
-SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
-#SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
-#H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
+SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
+H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
 ::
 # NOTE: Units for the volcano point source files: kg(S)/s
 #       Units that GMI wants                    : kg(SO2)/s
@@ -221,7 +224,7 @@ SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%
 # Ship Emissions requires SHIP_NO in ExtData:
 do_ShipEmission: T
 doMEGANemission: T
-doMEGANviaHEMCO: F
+doMEGANviaHEMCO: T
 
 isop_scale::
 0.7d0
@@ -283,7 +286,7 @@ AerDust_Effect_opt: 0
         ###########################################################
 
 forc_bc_opt: 2
-forc_bc_years: 69
+forc_bc_years: 151
 forc_bc_start_num: 1950
 forc_bc_kmin: 1
 forc_bc_kmax: 2
@@ -296,56 +299,13 @@ forc_bc_kmax: 2
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/RCP6.0_5BrWMO2014_ch4latvar_1950_2100.asc
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/RCP6.0_5BrWMO2018_ch4latvar_1950_2100.asc
 #forc_bc_infile_name:              ExtData/g5chem/x/GMI/ccmiRefD1_GMIbc_1950_2018.asc
-#forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_extra5Br_1950_2018.asc
 #forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/bench_10-26-0_gmi_free_c360_72lev/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_1950_2018.asc
+forc_bc_infile_name:  /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/ccmiRefD2_GMIbc_1950_2100_24species_no5Br_wHFCs.asc
 
-#forc_bc_infile_name:  /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/ccmiRefD2_GMIbc_1950_2100_24species_no5Br_wHFCs.asc
-# CFC11 CFC12 CFC113 CFC114 CFC115 CCl4 CH3CCl3 HCFC22 HCFC141b HCFC142b
-# CF2ClBr CF2Br2 CF3Br H2402 CH3Br CH3Cl CH4 N2O HFC23 HFC32
-# HFC125 HFC134a HFC143a HFC152a
-
-forc_bc_infile_name:  /discover/nobackup/projects/gmao/ccmdev/mmanyin/bench/GOLF/INPUT/BC/ccmiRefD1_GMIbc_plusHFC_no5Br_1950_2018.asc
 
 #alternative /discover/nobackup/projects/gmi/gmidata2/users/steenrod/input/source_gas/RCP6.0_WMO2018_QingHFCs_ch4latvarGMDscl_1950_2022Hindcast.asc
 
 forcedBcSpeciesNames::
-#CFC11
-#CFC12
-#CFC113
-#CFC114
-#CFC115
-#CCl4
-#CH3CCl3
-#HCFC22
-#HCFC141b
-#HCFC142b
-#CF2ClBr
-#CF2Br2
-#CF3Br
-#H2402
-#CH3Br
-#CH3Cl
-#CH4
-#N2O
-#HFC23
-#HFC32
-#HFC125
-#HFC134A
-#HFC143A
-#HFC152A
-#xxx
-#xxx
-::
-
-# The xxx entries above are for SF6 and CO2
-
-        ###########################################################
-        # GHG and ODS surface source gases - read with ExtData
-        # (import name = <species_name>_BC )
-        ###########################################################
-ext_bc_kmin: 1
-ext_bc_kmax: 2
-extdataBcSpeciesNames:: 
 CFC11
 CFC12
 CFC113
@@ -370,9 +330,9 @@ HFC125
 HFC134a
 HFC143a
 HFC152a
-# SF6
-# CO2
 ::
+
+# The xxx entries above are for SF6 and CO2
 
 
 #     ----------------------------------------------------
@@ -511,32 +471,58 @@ HCl_limit: 5.0
 
 stOX_loss_reactions::
 # loss of O3, O1D or NO2
-  QQJ002  1.0   'O3 + hv = O + O2'
-  QQJ006  1.0   'NO2 + hv = NO + O'
-  QQK002  1.0   'O + O3 = 2 O2'
-  QQK004  1.0   'O1D + O2 = O + O2'
-  QQK005  2.0   'O1D + O3 = 2 O2'
-  QQK006  2.0   'O1D + O3 = 2 O + O2'
-  QQK007  1.0   'H2O + O1D = 2 OH'
-  QQK008  1.0   'H2 + O1D = H + OH'
-  QQK027  1.0   'O3 + OH = HO2 + O2'
-  QQK028  1.0   'HO2 + O3 = 2 O2 + OH'
-  QQK029  2.0   'NO2 + O3 = NO3 + O2'
-  QQK050  1.0   'N + NO2 = N2O + O'
-  QQK051  1.0   'NO2 + O = NO + O2'
-  QQK053  1.0   'NO2 + OH = HNO3'
-  QQK057  1.0   'HO2 + NO2 = HNO4'
-  QQK063  1.0   'NO2 + NO3 = N2O5'
-  QQK164  0.7   'IALD + O3 =  0.12 CH2O +  0.28 GLYC +  0.20 GLYX +  0.20 HAC +  0.20 HCOOH +  0.60 MGLY +  0.30 O3 +  0.10 OH'
-  QQK184  0.9   'ISOP + O3 =  0.90 CH2O +  0.05 CO +  0.06 HO2 +  0.39 MACR +  0.16 MVK +  0.10 O3 +  0.27 OH +  0.07 PRPE'
-  QQK193  0.8   'MACR + O3 =  0.70 CH2O +  0.20 CO +  0.28 HO2 +  0.80 MGLY +  0.20 O3 +  0.22 OH'
-  QQK204  1.0   'MAO3 + NO2 = PMN'
-  QQK214  1.0   'MCO3 + NO2 = PAN'
-  QQK230  0.8   'MVK + O3 =  0.04 ALD2 +  0.80 CH2O +  0.05 CO +  0.06 HO2 +  0.82 MGLY +  0.20 O3 +  0.08 OH'
-  QQK250  1.0   'O3 + PRPE =  0.50 ALD2 +  0.54 CH2O +  0.42 CO +  0.06 H2 +  0.30 HO2 +  0.31 MO2 +  0.14 OH'
-  QQK273  1.0   'NO2 + RCO3 = PPN'
-  QQK324  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3'
-  QQK331  1.0   'O3 + SO2 = H2SO4'
+  QQJ002  1.0   'O3 + hv = O + O2
+  QQJ006  1.0   'NO2 + hv = NO + O
+  QQK002  1.0   'O + O3 = 2 O2
+  QQK003  1.0   'N2 + O1D = N2 + O
+  QQK004  1.0   'O1D + O2 = O + O2
+  QQK005  2.0   'O1D + O3 = 2 O2
+  QQK006  2.0   'O1D + O3 = 2 O + O2
+  QQK007  1.0   'H2O + O1D = 2 OH
+  QQK008  1.0   'H2 + O1D = H + OH
+  QQK022  1.0   'H + O3 = O2 + OH
+  QQK026  1.0   'O3 + OH = HO2 + O2
+  QQK027  1.0   'HO2 + O3 = 2 O2 + OH
+  QQK035  1.0   'NO + O3 = NO2 + O2
+  QQK036  2.0   'NO2 + O3 = NO3 + O2
+  QQK048  1.0   'NO2 + O = NO + O2
+  QQK049  1.0   'NO2 + O = NO3
+  QQK053  1.0   'N + NO2 = N2O + O
+  QQK054  1.0   'NO2 + OH = HNO3
+  QQK058  1.0   'HO2 + NO2 = HNO4
+  QQK064  1.0   'NO2 + NO3 = N2O5
+  QQK070  1.0   'Cl + O3 = ClO + O2
+  QQK091  1.0   'Br + O3 = BrO + O2
+  QQK177  1.0   'ISOP + O3 =  0.83 CH2O +  0.41 CO +  0.01 H2O2 +  0.58 HCOOH +  0.16 HO2 +  0.42 MACR +  0.41 MO2 +  0.18 MVK +  0.28 OH
+  QQK185  1.0   'MACR + O3 =  0.12 CH2O +  0.12 CO +  0.88 HCOOH +  0.12 MCO3 +  0.88 MGLY +  0.12 OH
+  QQK188  1.0   'MAO3 + NO2 = PMN
+  QQK194  1.0   'MCO3 + NO2 = PAN
+  QQK201  0.8   'MVK + O3 =  0.04 ALD2 +  0.80 CH2O +  0.05 CO +  0.06 HO2 +  0.82 MGLY +  0.20 O3 +  0.08 OH
+  QQK219  1.0   'O3 + PRPE =  0.12 ACTA +  0.50 ALD2 +  0.50 CH2O +  0.10 CH4 +  0.56 CO +  0.22 HCOOH +  0.28 HO2 +  0.28 MO2 +  0.36 OH
+  QQK239  1.0   'NO2 + RCO3 = PPN
+  QQK291  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3
+  QQK299  1.0   'O3 + SO2 = H2SO4
 ::
+#... but why not: 
+#  QQK009: N2O + O1D = N2 + O2
+#  QQK010: N2O + O1D = 2 NO
+#  QQK011: CH4 + O1D = MO2 + OH
+#  QQK012: CH4 + O1D = CH2O + H + HO2
+#  QQK013: CH4 + O1D = CH2O + H2
+#  QQK014: CFC12 + O1D = 2 Cl
+#  QQK015: CFC113 + O1D = 3 Cl
+#  QQK016: CFC114 + O1D = 2 Cl
+#  QQK017: CFC115 + O1D = Cl
+#  QQK018: HCFC22 + O1D = Cl
+#  QQK019: HCFC141b + O1D = 2 Cl
+#  QQK020: HCFC142b + O1D = Cl
+#  QQK080: ClO + NO2 = ClONO2
+#  QQK097: BrO + NO2 = BrONO2
+#  QQK115: HFC23 + O1D =  0.25 H2O +  0.75 O
+#  QQK116: HFC32 + O1D =  0.30 H2O +  0.70 O
+#  QQK117: HFC125 + O1D =  0.15 H2O +  0.25 O +  0.60 OH
+#  QQK118: HFC134a + O1D =  0.11 H2O +  0.65 O +  0.24 OH
+#  QQK119: HFC143a + O1D =  0.27 H2O +  0.35 O +  0.38 OH
+#  QQK120: HFC152a + O1D =  0.40 H2O +  0.45 O +  0.15 OH
 
 OCS_JRATE: QJ075
