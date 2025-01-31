@@ -8,8 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 ### Added
+- StratTrop_JPL19 mechanism
 ### Changed
 ### Removed
+- got rid of do_wetchem switch
 ### Deprecated
 
 

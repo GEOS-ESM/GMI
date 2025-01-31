@@ -38,9 +38,6 @@
 !     "if ((phot_opt == 3) .or. (phot_opt == 8))" before
 !     "if (do_AerDust_Calc)". This was done to make sure that "sadcol2"
 !     and "radA" are initialized only if fastJ or fastJX is employed.
-!   10January 2011 - Jules Kouatchou
-!     Used the provided cloud liquid water content instead of 
-!     calculating it internally. THis is done when do_wetchem is set to true.
 !   22October2022 - Stephen Steenrod
 !     Took out chem_mecha and obsolete phot_opts 4-8
 !     
@@ -55,7 +52,7 @@
 ! !INTERFACE:
 !
 
-      subroutine calcThermalRateConstants (do_wetchem, rootProc,                &
+      subroutine calcThermalRateConstants (rootProc,                            &
                      num_time_steps, ih2o_num, imgas_num, nymd, rxnr_adjust_map,&
                      pres3c, tropp, temp3, clwc, fcld, cmf, sadgmi, qkgmi,      &
                      concentration, rxnr_adjust, Eradius, Tarea, so4v_saexist,  &
@@ -73,8 +70,7 @@
 ! !INPUT PARAMETERS:
       logical, intent(in) :: pr_diag
       logical, intent(in) :: do_AerDust_Calc, do_LBSplusBCOC_SAD, rootProc
-           ! do wet chemistry?
-      logical, intent(in) :: do_wetchem
+
       integer, intent(in) :: loc_proc
       integer, intent(in) :: num_species
       integer, intent(in) :: num_sad, num_qks, num_molefrac
@@ -151,7 +147,7 @@
       end if
 
       lwccol (:) = 0.0d0
-
+      fcldcol(:) = 0.0d0
       qkcol(:,:) = 0.0d0
 
       do ij = ju1, j2
@@ -161,12 +157,8 @@
 
           tempcol(:) = temp3 (il,ij,:)
 
-          if (do_wetchem) then
-
-              lwccol(:)  = clwc(il,ij,:)
-              fcldcol(:) = fcld(il,ij,:)
-
-          end if
+          lwccol(:)  = clwc(il,ij,:)
+          fcldcol(:) = fcld(il,ij,:)
 
           !==================================================='
           ! Variables needed for gas/heterogeneous chemistry.'

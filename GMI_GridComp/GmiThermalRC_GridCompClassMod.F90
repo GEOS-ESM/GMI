@@ -88,7 +88,6 @@
    LOGICAL :: do_qqjk_inchem
    LOGICAL :: do_qqjk_reset
    LOGICAL :: pr_qqjk
-   LOGICAL :: do_wetchem
    LOGICAL :: do_AerDust_Calc
    LOGICAL :: do_LBSplusBCOC_SAD
    INTEGER :: phot_opt
@@ -268,10 +267,6 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%verbose, &
      &           label="verbose:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_wetchem, &
-     &           label="do_wetchem:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%metdata_name_org, &
@@ -803,9 +798,8 @@ CONTAINS
 
        CALL Get_numTimeSteps(self%gmiClock, num_time_steps)
 
-       call calcThermalRateConstants (self%do_wetchem,                       &
-                rootProc, num_time_steps, IH2O, IMGAS, nymd,                 &
-                self%rxnr_adjust_map,                                        &
+       call calcThermalRateConstants (rootProc, num_time_steps, IH2O,        &
+                IMGAS, nymd, self%rxnr_adjust_map,                           &
                 press3c, tropopausePress, kel, clwc, fcld, cmf, gmiSAD,      &
                 self%qkgmi, self%SpeciesConcentration%concentration,         &
                 self%rxnr_adjust, eRadius, tArea, self%so4v_saexist,         &
@@ -985,7 +979,7 @@ CONTAINS
 
       call ESMF_FieldBundleGet(qkBundle, fieldCount=numVars, rc=STATUS)
       VERIFY_(STATUS)
-      _ASSERT(numVars == NUM_K,'needs informative message')
+      _ASSERT(numVars == NUM_K,'qkgmi bundle dimensioned wrong')
 
       do ib = 1, numVars
          ptr3D(:,:,:) = self%qkgmi(ib)%pArray3D(:,:,km:1:-1)

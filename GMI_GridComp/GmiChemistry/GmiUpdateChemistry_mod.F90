@@ -46,7 +46,7 @@
                        press3e, pr_smv2, pr_nc_period, mass, concentration,    &
                        qjgmi, qkgmi, kel, humidity, pctm2, qqjgmi, qqkgmi, yda,&
                        qqkda, qqjda, do_smv_reord, do_synoz,                   &
-                       do_semiss_inchem, do_wetchem, nymd, nhms, gmi_sec, tdt, &
+                       do_semiss_inchem, nymd, nhms, gmi_sec, tdt,             &
                        pr_diag, loc_proc, synoz_threshold, chem_cycle,         &
                        chem_mask_klo, chem_mask_khi, imgas_num, initrogen_num, &
                        ioxygen_num, isynoz_num, num_species, num_qks, num_qjs, &
@@ -63,7 +63,6 @@
       character (len=*) ,intent(in) :: metdata_name_model ! second part of metdata_name, e.g., "MATCH"
       logical, intent(in) :: pr_diag
       logical, intent(in) :: do_smv_reord, do_synoz, do_semiss_inchem
-      logical, intent(in) :: do_wetchem
       logical, intent(in) :: rootProc, do_ftiming
       logical, intent(in) :: do_qqjk_inchem
       logical, intent(in) :: pr_qqjk

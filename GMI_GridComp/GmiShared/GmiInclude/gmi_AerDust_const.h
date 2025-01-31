@@ -20,5 +20,5 @@
 !      integer, parameter :: naer_ndust = naer_b + ndust_b
 
       integer, parameter :: nrh_b   = 7  ! number of relative humidity bins
-
+!... number entries in fastjx RAA table
       INTEGER, parameter :: NP_b = 56
