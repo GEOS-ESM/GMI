@@ -1,0 +1,424 @@
+# 
+# Input mechanism: GeosCCM_Combo_2020_HFC_S_VSLCL_JPL19.txt
+# 
+# This the GMI Grid Component Registry. It defines Import,
+# Internal and Export states for this component as well as
+# any
+#
+# !REVISION HISTORY:
+#  16Aug2006  da Silva   First Version
+#   1Feb2007  Kouatchou  Population of specs
+#  29Mar2007  Nielsen    Name validation, inclusion for GEOS-5
+#
+# -----------------------------------------------------------------
+
+  COMP_NAME: GMICHEM
+
+# Only change the Registry version when major structural changes
+# occurs, not changes in content
+# --------------------------------------------------------------
+  MAPL_REGISTRY_VERSION: 1.00
+
+#                               ------------
+#                               Import State
+#                               ------------
+
+<ImportSpec name="GMICHEM", cols="short_name,units,dims,vlocation,stat,refresh_interval,averaging_interval,num_subtiles,default,norestart,long_name">
+# -------------------|-----------------|-----|---|----|---|---|-----|------|----|--------------------------
+#    Short           |                 |     | V |Item|Intervl| Sub | Def  | No | Long
+#    Name            |     Units       | Dim |Loc|Type| R | A |Tiles| ault |Rsrt| Name
+# -------------------|-----------------|-----|---|----|---|---|-----|------|----|--------------------------
+  DELP               |  Pa             | xyz | C |    |   |   |     |      |    | pressure_tickness
+  PLE                |  Pa             | xyz | E |    |   |   |     |      |    | air_pressure
+  Q                  |  kg kg-1        | xyz | C |    |   |   |     |      |    | specific_humidity
+  QCTOT              |  kg kg-1        | xyz | C |    |   |   |     |      |    | mass_fraction_of_total_cloud_water
+  T                  |  K              | xyz | C |    |   |   |     |      |    | air_temperature
+  AIRDENS            |  kg m-3         | xyz | C |    |   |   |     |      |    | air_density
+  ZLE                |  m              | xyz | E |    |   |   |     |      |    | geopotential_height
+  FCLD               |  fraction       | xyz | C |    |   |   |     |      |    | cloud_fraction_for_radiation
+  TAUCLW             |  1              | xyz | C |    |   |   |     |      |    | optical_thickness_for_liquid_clouds
+  TAUCLI             |  1              | xyz | C |    |   |   |     |      |    | optical_thickness_for_ice_clouds
+  QL                 |  kg kg-1        | xyz | C |    |   |   |     |      |    | cloud_liquid_for_radiation
+  QI                 |  kg kg-1        | xyz | C |    |   |   |     |      |    | cloud_ice_for_radiation
+  RI                 |  m              | xyz | C |    |   |   |     |      |    | ice_phase_cloud_particle_effective_radius
+  RL                 |  m              | xyz | C |    |   |   |     |      |    | liquid_cloud_particle_effective_radius
+  CNV_MFC            |  kg m-2 s-1     | xyz | E |    |   |   |     |      |    | cumulative_mass_flux
+  CNV_MFD            |  kg m-2 s-1     | xyz | C |    |   |   |     |      |    | detraining_mass_flux
+  RH2                |  1              | xyz | C |    |   |   |     |      |    | relative_humidity_after_moist
+  DQDT               |  s-1            | xyz | C |    |   |   |     |      |    | specific_humidity_tendency_due_to_moist
+  PFL_CN             |  kg m-2 s-1     | xyz | E |    |   |   |     |      |    | 3D_flux_of_liquid_convective_precipitation
+  PFL_LSAN           |  kg m-2 s-1     | xyz | E |    |   |   |     |      |    | 3D_flux_of_liquid_nonconvective_precipitation
+  CN_PRCP            |  kg m-2 s-1     | xy  |   |    |   |   |     |      |    | convective_precipitation
+  TPREC              |  kg m-2 s-1     | xy  |   |    |   |   |     |      |    | total_precipitation
+  TA                 |  K              | xy  |   |    |   |   |     |      |    | surface_air_temperature
+  T2M                |  K              | xy  |   |    |   |   |     |      |    | 2-meter_air_temperature
+  ALBVF              |  1              | xy  |   |    |   |   |     |      |    | surface_albedo_for_visible_diffuse
+  LWI                |  1              | xy  |   |    |   |   |     |      |    | land-ocean-ice_mask
+  ZPBL               |  m              | xy  |   |    |   |   |     |      |    | planetary_boundary_layer_height
+  LAI                |  1              | xy  |   |    |   |   |     |      |    | leaf_area_index
+  U10M               |  m s-1          | xy  |   |    |   |   |     |      |    | 10-meter_eastward_wind
+  V10M               |  m s-1          | xy  |   |    |   |   |     |      |    | 10-meter_northward_wind
+  FROCEAN            |  1              | xy  |   |    |   |   |     |      |    | Fraction of ocean
+  TS                 |  K              | xy  |   |    |   |   |     |      |    | Surface skin temperature
+  USTAR              |  m s-1          | xy  |   |    |   |   |     |      |    | surface_velocity_scale
+  Z0H                |  m              | xy  |   |    |   |   |     |      |    | surface_roughness_for_heat
+  SWNDSRF            |  W m-2          | xy  |   |    |   |   |     |      |    | surface_net_downward_shortwave_flux
+  CLDTT              |  1              | xy  |   |    |   |   |     |      |    | total_cloud_area_fraction
+  WET1               |  1              | xy  |   |    |   |   |     |      |    | surface_soil_wetness
+  TROPP              |  Pa             | xy  |   |    |   |   |     |      |    | tropopause_pressure_based_on_blended_estimate
+  DFPAR              |  W m-2          | xy  |   |    |   |   |     |      |    | surface_downwelling_par_diffuse_flux
+  DRPAR              |  W m-2          | xy  |   |    |   |   |     |      |    | surface_downwelling_par_beam_flux
+  FRLAND             |  1              | xy  |   |    |   |   |     |      |    | fraction_of_land
+  FRLANDICE          |  1              | xy  |   |    |   |   |     |      |    | fraction_of_land_ice
+  ASNOW              |  1              | xy  |   |    |   |   |     |      |    | fractional_area_of_land_snowcover
+  SNOWDP             |  1              | xy  |   |    |   |   |     |      |    | snow_depth
+  AREA               |  m^2            | xy  |   |    |   |   |     |      |    | agrid_cell_area
+  LFR                |  km-2 s-1       | xy  |   |    |   |   |     |      |    | lightning_flash_rate
+  ACET_FIXED         |  mol mol-1      | xyz | C |    |   |   |     |      |  x | acetone
+  SAD                |  cm+2 cm-3      | xyz | C |    |   |   |     |      |  x | sulfate_surface_area_density
+  SOILFERT           |  ng N m-2 s-1   | xy  |   |    |   |   |     |      |  x | fertilizers
+  SOILPRECIP         |  mm d-1         | xy  |   |    |   |   |     |      |  x | precipitation
+  ALD2_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALD2_Biofuel_Emissions
+  ALD2_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALD2_Biomass_Burning_Emissions
+  ALK4_fosf          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALK4_Fossil_Fuel_Emissions
+  ALK4_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALK4_Biofuel_Emissions
+  ALK4_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALK4_Biomass_Burning_Emissions
+  C2H6_fosf          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C2H6_Fossil_Fuel_Emissions
+  C2H6_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C2H6_Biofuel_Emissions
+  C2H6_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C2H6_Biomass_Burning_Emissions
+  PRPE_fosf          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H6_Fossil_Fuel_Emissions
+  PRPE_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H6_Biofuel_Emissions
+  PRPE_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H6_Biomass_Burning_Emissions
+  C3H8_fosf          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H8_Fossil_Fuel_Emissions
+  C3H8_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H8_Biofuel_Emissions
+  C3H8_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H8_Biomass_Burning_Emissions
+  CH2O_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CH2O_Fossil_Fuel_Emissions
+  CH2O_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CH2O_Biofuel_Burning_Emissions
+  CH4_biom           |  kg CH4 m-2 s-1 | xy  |   |    |   |   |     |      |  x | CH4_Biomass_Emissions
+  CH4_aggr           |  kg CH4 m-2 s-1 | xy  |   |    |   |   |     |      |  x | CH4_Emissions_aggregated
+  MEK_fosf           |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | MEK_Fossil_Fuel_Emissions
+  MEK_biof           |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | MEK_Biofuel_Emissions
+  MEK_biom           |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | MEK_Biomass_Burning_Emissions
+  CO_fosf            |  kg CO m-2 s-1  | xy  |   |    |   |   |     |      |  x | CO_fossil_fuel_emissions
+  CO_biof            |  kg CO m-2 s-1  | xy  |   |    |   |   |     |      |  x | CO_biofuel_emissions
+  CO_biom            |  kg CO m-2 s-1  | xy  |   |    |   |   |     |      |  x | CO_biomass_burning_emissions
+  NO_air             |  kg NO m-2 s-1  | xyz | C |    |   |   |     |      |  x | NO_aircraft_emissions
+  NO_lgt             |  kg NO m-2 s-1  | xyz | C |    |   |   |     |      |  x | NO_lightning_emissions
+  NO_fosf            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_fossil_fuel_emissions_(non-PP)
+  NO_biof            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_biofuel_emissions
+  NO_biom            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_biomass_burning_emissions
+  NO_pwrp            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_power_plant_emissions
+  NO_ship            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_shipping_emissions
+  CFC11_FLUX         |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CFC11_emissions
+  CFC12_FLUX         |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CFC12_emissions
+  CFC113_FLUX        |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CFC113_emissions
+  HCFC22_FLUX        |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | HCFC22_emissions
+  CH3CCL3_FLUX       |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CH3CCL3_emissions
+  CCL4_FLUX          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CCL4_emissions
+  CHBR3_FLUX         |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CHBR3_emissions
+  CH2BR2_FLUX        |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CH2BR2_emissions
+  N2O_OCEAN-FLUX     |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | N2OOCEAN_emissions
+  N2O_LAND-FLUX      |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | N2OLAND_emissions
+  N2O_ANTHRO-FLUX    |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | N2OANTHRO_emissions
+  SO2_FIRES-FLUX     |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | SO2FIRES_emissions
+  SO2_NONENERGY-FLUX |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | SO2NONENERGY_emissions
+  SO2_ENERGY-FLUX    |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | SO2ENERGY_emissions
+  SO2_SHIPPING-FLUX  |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | SO2SHIPPING_emissions
+  SO2_AIRCRAFT-FLUX  |  kg m-2 s-1     | xyz | C |    |   |   |     |      |  x | SO2AIRCRAFT_emissions
+  DMS_OCEAN          |  kg / m3        | xy  |   |    |   |   |     |      |  x | DMSOCEAN
+  MEGAN_ISOP         |  mg C m-2 h-1   | xy  |   |    |   |   |     |      |  x | biogenic_source_isoprene
+  MEGAN_MBO          |  mg C m-2 h-1   | xy  |   |    |   |   |     |      |  x | biogenic_source_mbo
+  MEGAN_MPE          |  mg C m-2 h-1   | xy  |   |    |   |   |     |      |  x | biogenic_source_monoterpene
+  MEGAN_OVOC         |  mg C m-2 h-1   | xy  |   |    |   |   |     |      |  x | biogenic_source_other_VOC
+  MEGAN_LAI_001      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_jan_2000
+  MEGAN_LAI_002      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_feb_2000
+  MEGAN_LAI_003      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_mar_2000
+  MEGAN_LAI_004      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_apr_2000
+  MEGAN_LAI_005      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_may_2000
+  MEGAN_LAI_006      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_jun_2000
+  MEGAN_LAI_007      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_jul_2000
+  MEGAN_LAI_008      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_aug_2000
+  MEGAN_LAI_009      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_sep_2000
+  MEGAN_LAI_010      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_oct_2000
+  MEGAN_LAI_011      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_nov_2000
+  MEGAN_LAI_012      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_dec_2000
+  BCphobic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophobic_black_carbon
+  BCphilic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophilic_black_carbon
+  OCphobic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophobic_organic_carbon
+  OCphilic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophilic_organic_carbon
+  ss001              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss002              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss003              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss004              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss005              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
+  SO4                |  kg m-3         | xyz | C |    |   |   |     |      |  x | sulfate
+  SO4v               |  kg m-3         | xyz | C |    |   |   |     |      |  x | sulfate_from_volcanos
+  du001              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  du002              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  du003              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  du004              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  du005              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+# -------------------|-----------------|-----|---|----|---|---|-----|------|----|---------------------
+</ImportSpec>
+
+#                               ------------
+#                               Export State
+#                               ------------
+
+<ExportSpec name="GMICHEM", cols="short_name,units,dims,vlocation,stat,refresh_interval,averaging_interval,num_subtiles,long_name">
+# ------------------|----------------|-----|---|----|---|---|-----|---------------------------------
+#    Short          |                |     | V |Item|Intervl| Sub |             Long
+#    Name           |     Units      | Dim |Loc|Type| R | A |Tiles|             Name
+# ------------------|----------------|-----|---|----|---|---|-----|---------------------------------
+  BCphobic          | kg kg-1        | xyz | C |    |   |   |     | prescribed_hydrophobic_black_carbon_from_GMICHEM
+  BCphilic          | kg kg-1        | xyz | C |    |   |   |     | prescribed_hydrophylic_black_carbon_from_GMICHEM
+  du001             | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_1_from_GMICHEM
+  du002             | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_2_from_GMICHEM
+  du003             | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_3_from_GMICHEM
+  du004             | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_4_from_GMICHEM
+  du005             | kg kg-1        | xyz | C |    |   |   |     | prescribed_dust_bin_5_from_GMICHEM
+  OCphobic          | kg kg-1        | xyz | C |    |   |   |     | prescribed_hydrophobic_organic_carbon_from_GMICHEM
+  OCphilic          | kg kg-1        | xyz | C |    |   |   |     | prescribed_hydrophylic_organic_carbon_from_GMICHEM
+  ss001             | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_1_from_GMICHEM
+  ss002             | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_2_from_GMICHEM
+  ss003             | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_3_from_GMICHEM
+  ss004             | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_4_from_GMICHEM
+  ss005             | kg kg-1        | xyz | C |    |   |   |     | prescribed_sea_salt_bin_5_from_GMICHEM
+  SO4               | kg kg-1        | xyz | C |    |   |   |     | prescribed_sulfate_from_GMICHEM
+  REFFICE           | cm             | xyz | C |    |   |   |     | ice_aerosol_effective_radius
+  REFFSTS           | cm             | xyz | C |    |   |   |     | STS_aerosol_effective_radius
+  VFALL             | cm s-1         | xyz | C |    |   |   |     | effective_aerosol_fall_velocity
+  HO2PBLFLAG        | 0-1            | xyz | C |    |   |   |     | PBL_flag_for_HO2_loss_in_aerosols
+  EMISOPSFC         | kg m-2 s-1     | xy  |   |    |   |   |     | surface_emission_of_isoprene
+  EMNOX             | kg m-2 s-1     | xy  |   |    |   |   |     | surface_emission_of_odd_nitrogen
+  EMMONOT           | kg m-2 s-1     | xy  |   |    |   |   |     | surface_emission_of_monoterpenes
+  EMBIOCOMETH       | kg m-2 s-1     | xy  |   |    |   |   |     | biogenic_source_of_CO_from_oxidation_of_methanol
+  EMBIOCOMONOT      | kg m-2 s-1     | xy  |   |    |   |   |     | biogenic_source_of_CO_from_oxidation_of_monoterpenes
+  EMBIOPROPENE      | kg m-2 s-1     | xy  |   |    |   |   |     | biogenic_source_of_propene
+  EMSOILNOX         | kg m-2 s-1     | xy  |   |    |   |   |     | soil_source_of_odd_nitrogen
+  EMSHIPHNO3        | kg m-2 s-1     | xy  |   |    |   |   |     | surface_ship_source_of_nitric_acid
+  EMSHIPO3          | kg m-2 s-1     | xy  |   |    |   |   |     | surface_ship_source_of_ozone
+  EM_NO             | mol mol-1 s-1  | xyz | C |    |   |   |     | nitric_oxide_emissions
+  EM_CO             | mol mol-1 s-1  | xyz | C |    |   |   |     | carbon_monoxide_emissions
+  EM_MEK            | mol mol-1 s-1  | xyz | C |    |   |   |     | methyl_ethyl_ketone_(C4H8O)_emissions
+  EM_MOH            | mol mol-1 s-1  | xyz | C |    |   |   |     | methynol_(CH3OH)_emissions
+  EM_H2O            | mol mol-1 s-1  | xyz | C |    |   |   |     | water_emissions
+  EM_PRPE           | mol mol-1 s-1  | xyz | C |    |   |   |     | propene_(C3H6)_emissions
+  EM_C2H6           | mol mol-1 s-1  | xyz | C |    |   |   |     | ethane_emissions
+  EM_C3H8           | mol mol-1 s-1  | xyz | C |    |   |   |     | propane_emissions
+  EM_ALK4           | mol mol-1 s-1  | xyz | C |    |   |   |     | C4,5 alkanes_(C4H10)_emissions
+  EM_ALD2           | mol mol-1 s-1  | xyz | C |    |   |   |     | acetaldehyde_(C2H4O)_emissions
+  EM_CH2O           | mol mol-1 s-1  | xyz | C |    |   |   |     | formaldehyde_emissions
+  EM_ACET           | mol mol-1 s-1  | xyz | C |    |   |   |     | acetone_emissions
+  EM_CH4            | mol mol-1 s-1  | xyz | C |    |   |   |     | methane_emissions
+  EM_CFC11          | mol mol-1 s-1  | xyz | C |    |   |   |     | CFC11_emissions
+  EM_CFC12          | mol mol-1 s-1  | xyz | C |    |   |   |     | CFC12_emissions
+  EM_CFC113         | mol mol-1 s-1  | xyz | C |    |   |   |     | CFC113_emissions
+  EM_HCFC22         | mol mol-1 s-1  | xyz | C |    |   |   |     | HCFC22_emissions
+  EM_HFC125         | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC125_emissions
+  EM_HFC134a        | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC134a_emissions
+  EM_HFC143a        | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC143a_emissions
+  EM_HFC152a        | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC152a_emissions
+  EM_HFC23          | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC23_emissions
+  EM_HFC32          | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC32_emissions
+  EM_CH3CCL3        | mol mol-1 s-1  | xyz | C |    |   |   |     | CH3CCL3_emissions
+  EM_CCL4           | mol mol-1 s-1  | xyz | C |    |   |   |     | CCL4_emissions
+  EM_CHBR3          | mol mol-1 s-1  | xyz | C |    |   |   |     | methylbromoform_emissions
+  EM_CH2BR2         | mol mol-1 s-1  | xyz | C |    |   |   |     | dibromomethane_emissions
+  EM_N2O            | mol mol-1 s-1  | xyz | C |    |   |   |     | N2O_emissions
+  EM_DMS            | mol mol-1 s-1  | xyz | C |    |   |   |     | DMS_emissions
+  EM_SO2            | mol mol-1 s-1  | xyz | C |    |   |   |     | SO2_emissions
+  EM_H2SO4          | mol mol-1 s-1  | xyz | C |    |   |   |     | H2SO4_emissions
+  EM_OCSg           | mol mol-1 s-1  | xyz | C |    |   |   |     | OCSg_emissions
+  EM_LGTNO          | mol mol-1 s-1  | xyz | C |    |   |   |     | NO_emissions_from_lightning
+  EM_GCR_NO         | molec cm-3 s-1 | xyz | C |    |   |   |     | NO_emissions_from_galactic_cosmic_rays
+  SZAPHOT           | deg            | xy  |   |    |   |   |     | solar_zenith_angle_for_GMIchem_photolysis
+  FJXCLDOD          | 1              | xyz | C |    |   |   |     | FastJX_cloud_optical_depth_(400_nm - daylight only)
+  FJXFCLD           | 1              | xyz | C |    |   |   |     | FastJX_cloud_fraction
+  DUSTOD            | 1              | xyz | C |    |   |   |     | dust_optical_depth_(400_nm)
+  DUSTSA            | cm+2 cm-3      | xyz | C |    |   |   |     | dust_surface_area
+  SO4OD             | 1              | xyz | C |    |   |   |     | sulfate_optical_depth_(400_nm)
+  SO4HYGRO          | 1              | xyz | C |    |   |   |     | hygroscopic_growth_of_sulfate
+  SO4SA             | cm+2 cm-3      | xyz | C |    |   |   |     | sulfate_surface_area
+  BCOD              | 1              | xyz | C |    |   |   |     | black_carbon_optical_depth_(400_nm)
+  BCHYGRO           | 1              | xyz | C |    |   |   |     | hygroscopic_growth_of_black_carbon
+  BCSA              | cm+2 cm-3      | xyz | C |    |   |   |     | black_carbon_surface_area
+  OCOD              | 1              | xyz | C |    |   |   |     | organic_carbon_optical_depth_(400_nm)
+  OCHYGRO           | 1              | xyz | C |    |   |   |     | hygroscopic_growth_of_organic_carbon
+  OCSA              | cm+2 cm-3      | xyz | C |    |   |   |     | organic_carbon_surface_area
+  SSAOD             | 1              | xyz | C |    |   |   |     | accumulated_sea_salt_optical_depth_(400_nm)
+  SSAHYGRO          | 1              | xyz | C |    |   |   |     | hygroscopic_growth_of_accumulated_sea_salt
+  SSASA             | cm+2 cm-3      | xyz | C |    |   |   |     | accumulated_sea_salt_surface_area
+  SSCOD             | 1              | xyz | C |    |   |   |     | coarse_sea_salt_optical_depth_(400_nm)
+  SSCHYGRO          | 1              | xyz | C |    |   |   |     | hygroscopic_growth_of_coarse_sea_salt
+  SSCSA             | cm+2 cm-3      | xyz | C |    |   |   |     | coarse_sea_salt_surface_area
+  SO4vOD   	 | 1              | xyz | C |    |   |   |     | volc_sulfate_optical_depth_(400_nm)
+  SO4vHYGRO   	 | 1              | xyz | C |    |   |   |     | hygroscopic_growth_of_volc_sulfate
+  SO4vSA   	 | cm+2 cm-3      | xyz | C |    |   |   |     | volc_sulfate_surface_area
+  O3                | kg kg-1        | xyz | C |    |   |   |     | ozone_mass_mixing_ratio
+  O3PPMV            | ppmv           | xyz | C |    |   |   |     | ozone_mass_mixing_ratio_in_ppm
+  OX_TEND           | kg kg-1 s-1    | xyz | C |    |   |   |     | tendency_of_odd_oxygen_mixing_ratio_due_to_chemistry
+  H2O_TEND          | kg kg-1 s-1    | xyz | C |    |   |   |     | tendency_of_water_vapor_mixing_ratio_due_to_chemistry
+  GMITO3            | dobsons        | xy  |   |    |   |   |     | total_ozone
+  GMITTO3           | dobsons        | xy  |   |    |   |   |     | total_tropospheric_ozone
+  GMITROPP          | Pa             | xy  |   |    |   |   |     | tropopause_pressure_used_in_GMICHEM
+  AGCMTROPP         | Pa             | xy  |   |    |   |   |     | tropopause_pressure_imported_into_GMICHEM
+  GMIH2O            | mol mol-1      | xyz | C |    |   |   |     | gas_phase_water_from_GMICHEM
+  BOX_HEIGHT        | m              | xyz | C |    |   |   |     | Height of GridBox
+  NATSAD            | cm+2 cm-3      | xyz | C |    |   |   |     | NAT_surface_area_density
+  ICESAD            | cm+2 cm-3      | xyz | C |    |   |   |     | ice_surface_area_density
+  LBSSAD            | cm+2 cm-3      | xyz | C |    |   |   |     | LBS_surface_area_density
+  STSSAD            | cm+2 cm-3      | xyz | C |    |   |   |     | STS_surface_area_density
+  SOOTSAD           | cm+2 cm-3      | xyz | C |    |   |   |     | Soot_surface_area_density
+  AIRMASS           | kg m-2         | xyz | C |    |   |   |     | mass_of_air_in_layer
+  OCS_JRATE         | s-1            | xyz | C |    |   |   |     | Jrate_for_OCS    
+# ------------------|----------------|-----|---|----|---|---|-----|---------------------------------
+</ExportSpec>
+
+#                               --------------
+#                               Internal State
+#                               --------------
+
+#
+# Note: 1) For friendlies, use "D" for dynamics, "T" for turbulence and "C" for convection; leave blank otherwise
+#       2) If quantity requires no restart, put an 'x' in the No Rst column
+#       3) RO = Alkoxy radical, RO2 = Organic peroxy radical
+
+<InternalSpec name="GMICHEM", cols="short_name,units,dims,vlocation,stat,refresh_interval,averaging_interval,num_subtiles,default,norestart,halowidth,friendlyto,long_name">
+# --------------|------------|-----|---|----|---|---|-----|------|----|----|---------|---------------------------------
+#    Short      |            |     | V |Item|Intervl| Sub | Def  | No | Ha | Friends |                        Long
+#    Name       |     Units  | Dim |Loc|Type| R | A |Tiles| ault | Rst| lo |         |                        Name
+# --------------|------------|-----|---|----|---|---|-----|------|----|----|---------|---------------------------------
+  AOADAYS       | days       | xyz | C |    |   |   |     |      |    |    | D,T,C   | Age-of-air                                        
+  ACTA          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3C(O)OH; Acetic acid}                          
+  ALD2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3CHO; Acetaldehyde}                            
+  ALK4          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | C4+ alkanes (C4H10, C5H12)                        
+  Br            | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Atomic Bromine ground state (2P3/2)               
+  BrCl          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Bromine chloride                                  
+  BrO           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Bromine monoxide radical                          
+  BrONO2        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Bromine nitrate                                   
+  C2Cl4         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Tetrachloroethylene                               
+  C2H4Cl2       | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Ethylene dichloride, 1-2 Dichloroethane           
+  C2H6          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Ethane                                            
+  C3H8          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Propane                                           
+  CCl4          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Carbon tetrachloride                              
+  CF2Br2        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Halon 1202, Dibromodifluoromethane                
+  CF2ClBr       | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Halon-1211, Bromochlorodifluoromethane            
+  CF3Br         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Halon-1301, Bromotrifluoromethane                 
+  CFC113        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | CFC113, Trichlorotrifluoroethane                  
+  CFC114        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | CFC114, Dichlorotetrafluoroethane                 
+  CFC115        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | CFC115, Chloropentafluoroethane,                  
+  CFC11         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Freon-11, Trichlorofluoromethane                  
+  CFC12         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Freon-12, Dichlorodifluoromethane                 
+  CHCl3         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Chloroform, Trichloromethane                      
+  CH2Br2        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Dibromomethane                                    
+  CH2Cl2        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Dichloromethane                                   
+  CH2O          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Formalydehyde                                     
+  CH3Br         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methyl bromide                                    
+  CH3CCl3       | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methyl chloroform, 1-1-1-trichloroethane          
+  CH3Cl         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methyl chloride                                   
+  CH4           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methane                                           
+  CHBr3         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Bromoform                                         
+  Cl2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Molecular chlorine                                
+  Cl2O2         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Chlorine peroxide                                 
+  Cl            | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Atomic Chlorine ground state (2P3/2)              
+  ClO           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Chlorine monoxide radical                         
+  ClONO2        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Chlorine nitrate                                  
+  CO            | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Carbon monoxide                                   
+  DMS           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Dimethylsulfide (CH3SCH3)                         
+  ETP           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3CH2OOH; Ethylhydroperoxide}                   
+  H2            | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Molecular hydrogen                                
+  H2402         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Halon 2402 (CF2BrCF2Br)                           
+  H2O2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydrogen peroxide                                 
+  HAC           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {HOCH2C(O)CH3; Hydroxyacetone}                    
+  HBr           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydrogen bromide                                  
+  HCFC141b      | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HCFC-141b (C2Cl2FH3)                              
+  HCFC142b      | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HCFC-142b (C2ClF2H3)                              
+  HCFC22        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HCFC-22 (CClF2H)                                  
+  HCl           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydrochloric Acid                                 
+  HCOOH         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Formic acid, HC(=O)OH                             
+  HFC125        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HFC-125, Pentafluoroethane                        
+  HFC134a       | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HFC-134a, CH2FCF3, 1,1,1,2-Tetrafluoroethane      
+  HFC143a       | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HFC-143a, 1,1,1-Trifluoroethane                   
+  HFC152a       | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HFC-152a, 1,1-Difluoroethane                      
+  HFC23         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HFC-23, Fluoroform                                
+  HFC32         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HFC-32, Difluoromethane                           
+  HNO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Nitrous acid                                      
+  HNO3          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Nitric acid                                       
+  HNO4          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Pernitric acid                                    
+  HO2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Perhydroxyl radical                               
+  HOBr          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydrobromous acid                                 
+  HOCl          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydrochlorous acid                                
+  IALD          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydroxy carbonyl alkenes (C5H8O2) from isoprene   
+  ISOP          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH2=C(CH3)CH=CH2; Isoprene CH3C(O)CH=CH2 or CH2=C
+  MACR          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH2=C(CH3)CHO; Methacrolein}                     
+  MEK           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3C(O)CH3; Methyl ethyl ketone}                 
+  MOH           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3OH; Methanol}                                 
+  MP            | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3OOH; Methylhydroperoxide}                     
+  MVK           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3C(O)CH=CH2 or CH2=CHC(O)CH3 Methyl vinyl keton
+  N2O           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Nitrous oxide                                     
+  N2O5          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Dinitrogen pentoxide                              
+  NO            | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Nitric oxide                                      
+  NO2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Nitrogen dioxide                                  
+  NO3           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Nitrogen trioxide                                 
+  OX            | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Ozone                                             
+  OClO          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Symmetrical chlorine dioxide                      
+  OCSg          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Carbonyl Sulfide in GMI (gas)                     
+  OH            | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydroxyl radical                                  
+  PAN           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3C(O)OONO2; Peroxyacetylnitrate}               
+  PMN           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Peroxymethacryloyl nitrate (C4H5O5N) (now MPAN)   
+  PPN           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3CH2C(O)OONO2; Peroxypropionylnitrate}         
+  PRPE          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Propene (CH2=CHCH3)                               
+  R4N2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {RO2NO; >= C4 alkylnitrates}                      
+  RCHO          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3CH2CHO; >= C3 aldehydes}                      
+  RCOOH         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | C2 organic acids                                  
+  SO2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Sulfur dioxide                                    
+  H2SO4         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Sulfuric acid                                     
+  HNO3COND      | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Condensed Nitric Acid                             
+  A3O2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3CH2CH2OO; Primary RO2 from C3H8}              
+  ATO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3C(O)CH2O2; RO2 from acetone}                  
+  B3O2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3CH(OO)CH3; Secondary RO2 from C3H8}           
+  EOH           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Ethanol (C2H5OH)                                  
+  ETO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {C2H5O2 or CH3CH2OO; Ethylperoxy radical}         
+  GLYC          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {HOCH2CHO; Glycoaldehyde}                         
+  GLYX          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CHOCHO; Glyoxal}                                 
+  H             | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Atomic Hydrogen ground state (2S)                 
+  IAO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C5H9O5) from isoprene oxidation products (now
+  INO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | peroxy radicals from isoprene + NO3}              
+  INPN          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Peroxide (C5H8O6N2) from INO2                     
+  KO2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C4H7O3) from C3 ketones maybe:CH3C(O)CH2     
+  MAO3          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Peroxyacyl (C4H5O3) from MACR and MVK [now MACR1OO
+  MAOP          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Peroxide (C4H6O3) from MAO3 [now MACR1OOH]        
+  MAP           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3C(O)OOH; Peroxyacetic acid}                   
+  MCO3          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3C(O)O2; Peroxyacetyl radical}                 
+  MGLY          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3COCHO; Methylglyoxal}                         
+  MO2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3O2; Methylperoxy radical}                     
+  MRP           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Peroxide (C4H8O4) from MRO2 (now MVKHP in geoschem
+  N             | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Atomic nitrogen ground state                      
+  O             | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Atomic Oxygen ground state (3P)                   
+  O1D           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Atomic Oxygen first excited singlet state (1D)    
+  PO2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {HOCH2CH(OO)CH3; RO2 from propene}                
+  PP            | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {HOCH2CH(OOH)CH3; Peroxide from PO2}              
+  PRN1          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {O2NOCH2CH(OO)CH3; RO2 from propene + NO3}        
+  PRPN          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {O2NOCH2CH(OOH)CH3; Peroxide from PRN1}           
+  R4N1          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C4H9O3N) from R4N2                           
+  R4O2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C4H9O2) from ALK4                            
+  R4P           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3CH2CH2CH2OOH; Peroxide from R4O2}             
+  RA3P          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3CH2CH2OOH; Peroxide from A3O2}                
+  RB3P          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3CH(OOH)CH3; Peroxide from B3O2}               
+  RCO3          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3CH2C(O)OO; Peroxypropionyl radical}           
+  RIO1          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C5H9O3) from isoprene oxydation products (now
+  RIO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C5H9O3) from isoprene (now IHOO4)            
+  RIPA          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {HOCH2C(OOH)(CH3)CH=CH2; 1,2-ISOPOOH}             
+  RIPB          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {HOCH2C(OOH)(CH3)CH=CH2; 4,3-ISOPOOH}             
+  ROH           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | C2 alcohols (CH3CH2CH2OH)                         
+  RP            | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3CH2C(O)OOH; Peroxide from RCO3}               
+  VRO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C4H7O4) from MVK+OH now MVKOHOO?             
+  VRP           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {C4H8O4; MVK hydroxy-hydroperoxide}               
+  ACET          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3C(O)CH3; Acetone}                             
+  N2            | cm^-3      | xyz | C |    |   |   |     |      |    |    |         | Molecular nitrogen                                
+  O2            | cm^-3      | xyz | C |    |   |   |     |      |    |    |         | Molecular oxygen                                  
+  NUMDENS       | cm^-3      | xyz | C |    |   |   |     |      |    |    |         | Total number density                              
+  T2M15d        | K          | xyz | C |    |   |   |     |      |    |    |         | Daily T2M time average                            
+# --------------|------------|-----|---|----|---|---|-----|------|----|----|---------|---------------------------------
+</InternalSpec>

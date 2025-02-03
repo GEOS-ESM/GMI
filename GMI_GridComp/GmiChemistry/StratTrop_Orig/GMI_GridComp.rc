@@ -259,7 +259,6 @@ do_chem_grp: T
 synoz_threshold: 150.0d-9
 chem_cycle: 1.0d0
 do_smv_reord: F
-do_wetchem: F
 loss_opt: 0
 do_AerDust_Calc: T
 AerDust_Effect_opt: 0
