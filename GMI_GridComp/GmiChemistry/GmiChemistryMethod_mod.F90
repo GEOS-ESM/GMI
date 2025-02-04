@@ -97,7 +97,6 @@
 !
     logical             :: do_chem_grp
     logical             :: do_smv_reord
-    logical             :: do_wetchem
 !
 !
     integer             :: sad_opt
@@ -273,9 +272,6 @@
                              default=.false., __RC__ )
      
       call ESMF_ConfigGetAttribute(config, value=self%do_smv_reord, label="do_smv_reord:", &
-                             default=.false., __RC__ )
-
-      call ESMF_ConfigGetAttribute(config, value=self%do_wetchem,   label="do_wetchem:",   &
                              default=.false., __RC__ )
 
 !     ---------------------------
@@ -747,7 +743,7 @@
                  gmiQJ, gmiQK, kel, humidity, pctm2, gmiQQJ, gmiQQK,           &
                  self%yda, self%qqkda, self%qqjda,                             &
                  self%do_smv_reord, self%do_synoz,                             &
-                 do_semiss_inchem, self%do_wetchem, nymd, nhms,                &
+                 do_semiss_inchem, nymd, nhms,                                 &
                  gmi_sec, tdt8, pr_diag, loc_proc, self%synoz_threshold,       &
                  self%chem_cycle, self%chem_mask_klo, self%chem_mask_khi,      &
                  self%imgas_num, self%initrogen_num, self%ioxygen_num,         &

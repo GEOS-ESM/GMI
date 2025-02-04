@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 
+## [1.4.0] - 2025-02-03 
+
+### Added
+
+- StratTrop_JPL19 mechanism
+
+### Removed
+
+- got rid of do_wetchem switch
+
+
 ## [1.3.1] - 2025-01-21
 
 ### Added
