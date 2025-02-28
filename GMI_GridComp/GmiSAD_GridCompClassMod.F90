@@ -385,6 +385,7 @@ CONTAINS
 !       3: (OBSOLETE)  read in lbssad zonal average fields
 !       4:  lbssad provided by AGCM (ExtData)
 !       5:  lbssad provided by CARMA SO4SAREA
+!       6:  lbssad provided by GOCART2G AERO bundle
 !     ----------------------------------------------
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%lbssad_opt, &
      &                label   = "lbssad_opt:", &
@@ -400,9 +401,9 @@ CONTAINS
      &                default = 0.0d0, rc=STATUS )
       VERIFY_(STATUS)
 
-!.sds... only allow lbssad_opt == "1" or "4" or "5"
+!.sds... only allow lbssad_opt == "1" or "4" or "5" or "6"
       if (self%lbssad_opt /= 1) then
-        call CheckNamelistOptionRange ('lbssad_opt', self%lbssad_opt, 4, 5)
+        call CheckNamelistOptionRange ('lbssad_opt', self%lbssad_opt, 4, 6)
       endif
 
       call CheckNamelistOptionRange ('sad_opt', self%sad_opt, 0, 3)
@@ -754,6 +755,40 @@ CONTAINS
 
    REAL*8                      :: tdt8
 
+! Adding GOCART2G fields from AERO BUNDLE
+! ---------------------------------------
+! Implementing for now only to fill lbssad (i.e., sulfate)
+   type(ESMF_State)   :: aero_state
+!   type(ESMF_State)   :: bc_state
+!   type(ESMF_State)   :: oc_state
+!   type(ESMF_State)   :: br_state
+   type(ESMF_State)   :: su_state, suv_state
+!   type(ESMF_State)   :: du_state
+!   type(ESMF_State)   :: ss_state
+
+!   type(ESMF_Field)   :: bc_phobic_3d_field
+!   type(ESMF_Field)   :: bc_philic_3d_field
+!   type(ESMF_Field)   :: oc_phobic_3d_field
+!   type(ESMF_Field)   :: oc_philic_3d_field
+!   type(ESMF_Field)   :: br_phobic_3d_field
+!   type(ESMF_Field)   :: br_philic_3d_field
+   type(ESMF_Field)   ::       so4_3d_field
+!   type(ESMF_Field)   ::        du_4d_field
+!   type(ESMF_Field)   ::        ss_4d_field
+
+!   real, pointer, dimension(:,:,:)   :: bc_phobic_3d_array
+!   real, pointer, dimension(:,:,:)   :: bc_philic_3d_array
+!   real, pointer, dimension(:,:,:)   :: oc_phobic_3d_array
+!   real, pointer, dimension(:,:,:)   :: oc_philic_3d_array
+!   real, pointer, dimension(:,:,:)   :: br_phobic_3d_array
+!   real, pointer, dimension(:,:,:)   :: br_philic_3d_array
+   real, pointer, dimension(:,:,:)   ::       so4_3d_array
+!   real, pointer, dimension(:,:,:,:) ::        du_4d_array
+!   real, pointer, dimension(:,:,:,:) ::        ss_4d_array
+
+   integer                           :: rcvolc
+!  End GOCART2G
+
    tdt8 = tdt
 
    loc_proc = -99
@@ -1072,6 +1107,7 @@ CONTAINS
       self%lbssad(:,:,1:km) = PTR3D(:,:,km:1:-1)
       NULLIFY(PTR3D)
     ELSEIF(self%lbssad_opt == 5) THEN
+!     CARMA case comes from impChem
       importName = 'SO4SAREA'
       CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
       VERIFY_(STATUS)
@@ -1083,6 +1119,29 @@ CONTAINS
       VERIFY_(STATUS)
       self%refflbs(:,:,1:km) = PTR3d(:,:,km:1:-1) * 100.0 ! convert from m to cm
       NULLIFY(PTR3D)
+    ELSEIF(self%lbssad_opt == 6) THEN
+!     GOCART2G case comes from Aero bundle
+      call ESMF_StateGet(impChem, 'AERO', aero_state, __RC__)
+!      call ESMF_StateGet(aero_state,   'CA.bc_AERO', bc_state,  __RC__)
+!      call ESMF_StateGet(aero_state,   'CA.oc_AERO', oc_state,  __RC__)
+!      call ESMF_StateGet(aero_state,   'CA.br_AERO', br_state,  __RC__)
+      call ESMF_StateGet(aero_state,      'SU_AERO', su_state,  __RC__)
+      call ESMF_StateGet(aero_state, 'SU.volc_AERO', suv_state,  rc=rcvolc)
+!      call ESMF_StateGet(aero_state,      'DU_AERO', du_state,  __RC__)
+!      call ESMF_StateGet(aero_state,      'SS_AERO', ss_state,  __RC__)
+
+      call ESMF_StateGet(su_state,    'SO4SAREA',      so4_3d_field, __RC__)
+      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
+      self%lbssad(:,:,1:km) = so4_3d_array(:,:,km:1:-1) * 0.01 ! convert from m2/m3 to cm2/cm3
+      NULLIFY(so4_3d_array)
+
+      if(rcvolc .eq. ESMF_SUCCESS) then
+       call ESMF_StateGet(suv_state,    'SO4SAREA',     so4_3d_field, __RC__)
+       call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
+       self%lbssad(:,:,1:km) = self%lbssad(:,:,1:km) &
+                             + so4_3d_array(:,:,km:1:-1) * 0.01 ! convert from m2/m3 to cm2/cm3
+       NULLIFY(so4_3d_array)
+      endif
     END IF
   end if
 
