@@ -101,6 +101,12 @@
 !     lbssad     : liquid binary sulfate background surface area density
 !                  (cm^-1)
 !     dehyd_opt  : 0=Disabled. 1=Enabled.
+!     pr_diag    : (unused)
+!     loc_proc   : (unused)
+!     londeg     : (unused)
+!     latdeg     : latitude (degrees)
+!     NoPSCZone  : latitude (degrees) - from here to pole processing is not done
+!     PSCMaxP    : pressure (hPa) - along w/ tropp, used to determine PMAX
 !
 !   OUTPUT:
 !     denssts    : density of sts aerosol calculated by Ternary routine
@@ -120,8 +126,8 @@
 ! PARAMETERS CONTROLLING SUBROUTINE CALCULATIONS
 !   CALCSTS      : if true, calculate STS and not NAT, otherwise NAT only
 !   DOSEDIMENT   : if true, do denitrification step
-!   PMAX         : maximum pressure
-!   PMIN         : minimum pressure
+!   PMAX         : maximum pressure  (hPa)
+!   PMIN         : minimum pressure  (hPa)
 !   TMAX         : maximum local temperature -> only calculate if below tmax
 !
 !   CONSTANTNICE : if true, use NICE and SIGICE; if false, use RICE and SIGICE
@@ -153,7 +159,7 @@
      &   h2oback, hno3cond, hno3gas, lbssad,  &
      &   denssts, h2ocond, h2so4gas, icesad, natsad, stssad,  &
      &   reffice, reffnat, reffsts, vfall, &
-     &   pr_diag, loc_proc, londeg, latdeg, NoPSCZone, PMAX, &
+     &   pr_diag, loc_proc, londeg, latdeg, NoPSCZone, PSCMaxP, &
      &   ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
 
       implicit none
@@ -170,7 +176,7 @@
       real*8,  intent(in) :: tropp(i1:i2, ju1:j2)
 
       integer, intent(in) :: NoPSCZone
-      integer, intent(in) :: PMAX         ! hPa, replaces PARAMETER PMAX
+      integer, intent(in) :: PSCMaxP         ! hPa
       real*8,  intent(in) :: londeg(i1:i2, ju1:j2), latdeg(i1:i2, ju1:j2)
 
       real*8  :: dt
@@ -205,7 +211,7 @@
       logical, parameter :: DOSEDIMENT = .true.
 
 !     ------------------------------------------------------
-!     If PSCMaxP <= 0, the tropopuase pressure is the upper
+!     If PSCMaxP <= 0, the tropopause pressure is the upper
 !     limit to the range of application. Otherwise, the
 !     lesser of PSCMaxP and the tropopause pressure is used.
 !     ------------------------------------------------------
@@ -264,7 +270,7 @@
       integer :: il, ij, ik
 
       real*8  :: h2ogas
-      real*8  :: pscPMAX
+      real*8  :: PMAX     ! derived from tropopause pressure and PSCMaxP
       real*8  :: templat
 
 !     ----------------
@@ -281,10 +287,10 @@
 !           Range check.  Use tropopause pressure if PSCMaxP <= 0.
 !              Otherwise, choose the MIN of PSCMaxP and tropp.
 !           ------------------------------------------------------
-            IF(PMAX <= 0) THEN
-             pscPMAX = tropp(il,ij)
+            IF(PSCMaxP <= 0) THEN
+             PMAX = tropp(il,ij)
             ELSE
-             pscPMAX = MIN(PMAX*1.0,tropp(il,ij))
+             PMAX = MIN(PSCMaxP*1.0,tropp(il,ij))
             END IF
 
 !           ---------------------------------------------------------
@@ -296,7 +302,7 @@
 !           ---------------------------------------------------------
 
             if ((temp3 (il,ij,ik) <= TMAX)    .and.  &
-     &          (pres3c(il,ij,ik) <= pscPMAX) .and.  &
+     &          (pres3c(il,ij,ik) <= PMAX)    .and.  &
      &          (pres3c(il,ij,ik) >= PMIN)    .and. ABS(latdeg(il,ij)) >= NoPSCZone) then
 
 !              ===========
