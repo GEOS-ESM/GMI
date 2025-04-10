@@ -2075,12 +2075,12 @@ CONTAINS
          END IF
        END DO
      ENDIF
-
-     IF(iOCS < 1) THEN
-       PRINT *,TRIM(Iam)//": Cannot find species OCSg in GMI"
-       STATUS = 1
-       VERIFY_(STATUS)
-     END IF
+!... why is OCSg required in all mechanisms
+!     IF(iOCS < 1) THEN
+!       PRINT *,TRIM(Iam)//": Cannot find species OCSg in GMI"
+!       STATUS = 1
+!       VERIFY_(STATUS)
+!     END IF
 
    END IF OCS
 

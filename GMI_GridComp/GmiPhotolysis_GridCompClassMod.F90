@@ -207,6 +207,13 @@
     real*8, pointer     :: so4v_sa    (:,:,:) => null()
     real*8              :: so4v_sareff
     logical             :: so4v_saexist
+!... tying in G2G pyrocb aerosols
+    logical             :: do_StratPyroHetChem
+    real*8, pointer     :: pyro_nden    (:,:,:) => null()
+    real*8, pointer     :: pyro_sa      (:,:,:) => null()
+    real*8, pointer     :: pyro_OptDepth(:,:,:) => null()
+    real*8              :: pyro_sareff
+    logical             :: pyro_saexist
 
 
 ! Component derived type declarations
@@ -673,6 +680,10 @@ CONTAINS
       call CheckNamelistOptionRange ('fastj_opt', self%fastj_opt, 4, 5)
       call CheckNamelistOptionRange ('AerDust_Effect_opt', self%AerDust_Effect_opt, 0, 3)
 
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_StratPyroHetChem, &
+     &           label="do_StratPyroHetChem:", default=.false., rc=STATUS)
+      VERIFY_(STATUS)
+
       self%num_qjs       = NUM_J
       self%num_qjo       = NUM_J
 
@@ -971,6 +982,16 @@ CONTAINS
          self%so4v_sareff = 0.0d0
          self%so4v_saexist = .FALSE.
 
+!... G2G PyroCb aerosols
+         Allocate(self%pyro_nden(i1:i2, ju1:j2, k1:k2))
+         self%pyro_nden = 0.0d0
+         Allocate(self%pyro_sa(i1:i2, ju1:j2, k1:k2))
+         self%pyro_sa(:,:,:) = 0.0d0
+         Allocate(self%pyro_optDepth(i1:i2, ju1:j2, k1:k2))
+         self%pyro_optDepth(:,:,:) = 0.0d0
+         self%pyro_sareff = 0.0d0
+         self%pyro_saexist = .FALSE.
+
          Allocate(self%optDepth(i1:i2, ju1:j2, k1:k2, num_AerDust))
          self%optDepth = 0.0d0
 
@@ -1179,6 +1200,7 @@ CONTAINS
    type(ESMF_State)   :: bc_state
    type(ESMF_State)   :: oc_state
    type(ESMF_State)   :: br_state
+   type(ESMF_State)   :: pyro_state
    type(ESMF_State)   :: su_state, suv_state
    type(ESMF_State)   :: du_state
    type(ESMF_State)   :: ss_state
@@ -1189,6 +1211,8 @@ CONTAINS
    type(ESMF_Field)   :: oc_philic_3d_field
    type(ESMF_Field)   :: br_phobic_3d_field
    type(ESMF_Field)   :: br_philic_3d_field
+   type(ESMF_Field)   :: bc_pyro_3d_field
+   type(ESMF_Field)   :: br_pyro_3d_field
    type(ESMF_Field)   ::       so4_3d_field
    type(ESMF_Field)   ::        du_4d_field
    type(ESMF_Field)   ::        ss_4d_field
@@ -1200,6 +1224,7 @@ CONTAINS
    real, pointer, dimension(:,:,:)   :: br_phobic_3d_array
    real, pointer, dimension(:,:,:)   :: br_philic_3d_array
    real, pointer, dimension(:,:,:)   ::       so4_3d_array
+   real, pointer, dimension(:,:,:)   ::      pyro_3d_array
    real, pointer, dimension(:,:,:,:) ::        du_4d_array
    real, pointer, dimension(:,:,:,:) ::        ss_4d_array
 
@@ -1299,7 +1324,7 @@ CONTAINS
 
    REAL(KIND=DBL), ALLOCATABLE :: solarZenithAngle(:,:)
 
-   INTEGER                     :: rcvolc
+   INTEGER                     :: rcvolc, rcpyro
 
    loc_proc = -99
 
@@ -1414,6 +1439,9 @@ CONTAINS
        call ESMF_StateGet(aero_state, 'SU.volc.data_AERO', suv_state,  rc=rcvolc)
        call ESMF_StateGet(aero_state,      'DU.data_AERO', du_state, __RC__)
        call ESMF_StateGet(aero_state,      'SS.data_AERO', ss_state, __RC__)
+
+!.pyro       call ESMF_StateGet(aero_state, 'BC.pyro.data_AERO', pyro_state, rc=rcpyro)
+
      ELSE
        call ESMF_StateGet(aero_state,        'CA.bc_AERO', bc_state, __RC__)
        call ESMF_StateGet(aero_state,        'CA.oc_AERO', oc_state, __RC__)
@@ -1422,6 +1450,10 @@ CONTAINS
        call ESMF_StateGet(aero_state,      'SU.volc_AERO', suv_state,  rc=rcvolc)
        call ESMF_StateGet(aero_state,           'DU_AERO', du_state, __RC__)
        call ESMF_StateGet(aero_state,           'SS_AERO', ss_state, __RC__)
+
+!.pyro       call ESMF_StateGet(aero_state,      'BC.pyro_AERO', pyro_state, rc=rcpyro)
+       call ESMF_StateGet(aero_state,        'CA.bc_AERO', pyro_state, rc=rcpyro) ! temp line
+
      END IF
 
    END IF
@@ -1452,7 +1484,9 @@ CONTAINS
 ! -------------------------------------
    CALL SatisfyImports(STATUS)
    VERIFY_(STATUS)
-
+   if(self%do_StratPyroHetChem) CALL Acquire_Pyro(STATUS)
+   VERIFY_(STATUS)
+!
 ! Hand the species concentrations to GMI's bundle
 ! -----------------------------------------------
    IF (self%gotImportRst) then
@@ -1499,8 +1533,8 @@ CONTAINS
                  self%do_synoz, self%qj_timpyr, IO3, IH2O, ISYNOZ,         &
                  self%chem_mask_khi, nymd, nhms, self%pr_diag, loc_proc,   &
                  self%synoz_threshold, self%AerDust_Effect_opt, NSP,       &
-                 self%so4v_nden, self%so4v_sa,                             &
-                 self%so4v_sareff, self%so4v_saexist,                      &
+                 self%so4v_nden, self%so4v_sa, self%so4v_sareff, self%so4v_saexist, &
+                 self%pyro_nden, self%pyro_sa, self%pyro_sareff, self%pyro_saexist, self%pyro_optDepth, &
                  NUM_J, self%num_qjo, ilo, ihi, julo, jhi,                 &
                  i1, i2, ju1, j2, k1, k2, self%jNOindex, self%jNOamp,      &
                  self%cldflag)
@@ -2287,6 +2321,118 @@ CONTAINS
 
   RETURN
  END SUBROUTINE Acquire_SU
+
+!---------------------------------------------------------------------------
+! NASA/GSFC, Global Modeling and Assimilation Office, Code 610.1, GEOS/DAS !
+!---------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE:  	
+!
+! !INTERFACE:
+
+  SUBROUTINE Acquire_Pyro(rc)
+!
+use fastJX65_mod             , only : getQAA_RAAinFastJX65
+  
+  IMPLICIT NONE
+
+!  REAL(KIND=DBL), INTENT(IN) :: tropopausePress(i1:i2,j1:j2)
+!  REAL(KIND=DBL), INTENT(IN) :: press3c(i1:i2,j1:j2,1:km)
+
+  INTEGER, INTENT(OUT) :: rc
+!
+! !DESCRIPTION:
+!
+!  Obtain PyroCb aerosols from GOCART2G, set =0.0 otherwise
+!
+!!
+!EOP
+!---------------------------------------------------------------------------
+
+# include "gmi_AerDust_const.h"
+  integer, parameter :: four = 4
+  REAL*8 :: raa_b(4, NP_b), qaa_b(4, NP_b)
+!
+  CHARACTER(LEN=255) :: IAm
+  REAL, POINTER, DIMENSION(:,:,:) :: PTR3D
+  REAL :: qmin,qmax
+  
+  rc = 0
+  IAm = "Acquire_Pyro"
+
+  SELECT CASE (TRIM(self%aeroProviderName))
+
+   CASE("GOCART2G")
+
+    IF ( data_driven ) THEN
+      call ESMF_StateGet(bc_state, 'CA.bc.dataphobic', bc_pyro_3d_field, __RC__)
+      call ESMF_StateGet(br_state, 'CA.br.dataphobic', br_pyro_3d_field, __RC__)
+    ELSE
+      call ESMF_StateGet(bc_state, 'CA.bcphobic', bc_pyro_3d_field, __RC__)
+      call ESMF_StateGet(br_state, 'CA.brphobic', br_pyro_3d_field, __RC__)
+    ENDIF
+!
+! PyroCb aerosols
+! ---------------
+    if(rcpyro .eq. ESMF_SUCCESS .and. self%do_StratPyroHetChem) then
+!
+!... PyroCb number density, part I
+     call ESMF_FieldGet(field=bc_pyro_3d_field, farrayPtr=pyro_3d_array, __RC__)
+!
+     self%pyro_nden(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)
+!... PyroCb number density, part II
+     call ESMF_FieldGet(field=br_pyro_3d_field, farrayPtr=pyro_3d_array, __RC__)
+     self%pyro_nden(:,:,km:1:-1) = (self%pyro_nden(:,:,km:1:-1)+pyro_3d_array(:,:,1:km)) &
+                                    *airdens(:,:,1:km)
+!
+!!... PyroCb SAD, part I
+!     call ESMF_StateGet(bc_state, 'BCSAREA',        bc_pyro_3d_field, __RC__)
+!     call ESMF_FieldGet(field=bc_pyro_3d_field, farrayPtr=pyro_3d_array, __RC__)
+!     self%pyro_sa(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)
+!!... PyroCb SAD, part II
+!     call ESMF_StateGet(br_state, 'BrSAREA',        br_pyro_3d_field, __RC__)
+!     call ESMF_FieldGet(field=br_pyro_3d_field, farrayPtr=pyro_3d_array, __RC__)
+!
+!     call ESMF_AttributeGet(pyro_state, NAME='effective_radius_in_microns', VALUE=self%pyro_sareff, __RC__)
+!     self%pyro_sareff = self%pyro_sareff * 1.0d-4
+!     self%pyro_sa(:,:,km:1:-1) = (self%pyro_sa(:,:,km:1:-1)+pyro_3d_array(:,:,1:km)) &
+!                                    *1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3 
+!     CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
+!... temp code to calc SAD of pyro aerosol (no moisture effect on aerosol size)
+     self%pyro_sareff = 0.22d-4
+!... crude calc of pyro SAD
+     self%pyro_sa(:,:,:) = 3.D0 * self%pyro_nden(:,:,:) / ( self%pyro_sareff * 1000.0 )
+!... place holder for when optical depth is available    
+     call  GetQAA_RAAinFastJX65 (RAA_b, QAA_b, four, NP_b)
+     self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
+                           self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
+                          ( 1000.0d0 * raa_b(4,14+2) * 1.0D-6 )
+!... code
+     where (pl(i1:i2,ju1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
+        self%pyro_sa(:,:,:) = 0.0d0
+        self%pyro_optDepth(:,:,:) = 0.0d0
+      end where
+     CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
+     CALL MAPL_MaxMin('GMI: PyroCb_optDepth:', self%pyro_optDepth)
+!
+     self%pyro_saexist = .TRUE.
+!
+    endif
+
+   CASE DEFAULT
+
+     self%pyro_nden(:,:,:) = 0.0d0
+     self%pyro_sa(:,:,:) = 0.0d0
+     self%pyro_optDepth(:,:,:) = 0.0d0
+     self%pyro_sareff = 0.0d0
+     self%pyro_saexist = .FALSE.
+
+  END SELECT
+
+  RETURN
+ END SUBROUTINE Acquire_Pyro
+
 
 !---------------------------------------------------------------------------
 ! NASA/GSFC, Global Modeling and Assimilation Office, Code 610.1, GEOS/DAS !

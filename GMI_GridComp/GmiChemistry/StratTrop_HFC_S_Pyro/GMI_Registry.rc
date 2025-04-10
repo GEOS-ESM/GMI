@@ -1,5 +1,5 @@
 # 
-# Input mechanism: GeosCCM_Combo_2020_HFC_S_VSLCL_JPL19.txt
+# For the mechanism: StratTrop_HFC_S
 # 
 # This the GMI Grid Component Registry. It defines Import,
 # Internal and Export states for this component as well as
@@ -201,17 +201,17 @@
   EM_ACET           | mol mol-1 s-1  | xyz | C |    |   |   |     | {CH3C(O)CH3;_Acetone}_emissions
   EM_ALD2           | mol mol-1 s-1  | xyz | C |    |   |   |     | {CH3CHO;_Acetaldehyde}_emissions
   EM_ALK4           | mol mol-1 s-1  | xyz | C |    |   |   |     | C4+_alkanes_(C4H10,_C5H12)_emissions
-  EM_C2Cl4          | mol mol-1 s-1  | xyz | C |    |   |   |     | Tetrachloroethylene_emissions
-  EM_C2H4Cl2        | mol mol-1 s-1  | xyz | C |    |   |   |     | Ethylene_dichloride,_1-2_Dichloroethane_emissions
   EM_C2H6           | mol mol-1 s-1  | xyz | C |    |   |   |     | Ethane_emissions
   EM_C3H8           | mol mol-1 s-1  | xyz | C |    |   |   |     | Propane_emissions
+  EM_CCl4           | mol mol-1 s-1  | xyz | C |    |   |   |     | Carbon_tetrachloride_emissions
   EM_CFC11          | mol mol-1 s-1  | xyz | C |    |   |   |     | Freon-11,_Trichlorofluoromethane_emissions
   EM_CFC113         | mol mol-1 s-1  | xyz | C |    |   |   |     | CFC113,_Trichlorotrifluoroethane_emissions
   EM_CFC12          | mol mol-1 s-1  | xyz | C |    |   |   |     | Freon-12,_Dichlorodifluoromethane_emissions
-  EM_CH2Cl2         | mol mol-1 s-1  | xyz | C |    |   |   |     | Dichloromethane_emissions
+  EM_CH2Br2         | mol mol-1 s-1  | xyz | C |    |   |   |     | Dibromomethane_emissions
   EM_CH2O           | mol mol-1 s-1  | xyz | C |    |   |   |     | Formalydehyde_emissions
+  EM_CH3CCl3        | mol mol-1 s-1  | xyz | C |    |   |   |     | Methyl_chloroform,_1-1-1-trichloroethane_emissions
   EM_CH4            | mol mol-1 s-1  | xyz | C |    |   |   |     | Methane_emissions
-  EM_CHCl3          | mol mol-1 s-1  | xyz | C |    |   |   |     | Chloroform,_Trichloromethane_emissions
+  EM_CHBr3          | mol mol-1 s-1  | xyz | C |    |   |   |     | Bromoform_emissions
   EM_CO             | mol mol-1 s-1  | xyz | C |    |   |   |     | Carbon_monoxide_emissions
   EM_DMS            | mol mol-1 s-1  | xyz | C |    |   |   |     | Dimethylsulfide_(CH3SCH3)_emissions
   EM_H2O            | mol mol-1 s-1  | xyz | C |    |   |   |     | Water_emissions
@@ -297,8 +297,6 @@
   BrCl          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Bromine chloride                                  
   BrO           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Bromine monoxide radical                          
   BrONO2        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Bromine nitrate                                   
-  C2Cl4         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Tetrachloroethylene                               
-  C2H4Cl2       | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Ethylene dichloride, 1-2 Dichloroethane           
   C2H6          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Ethane                                            
   C3H8          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Propane                                           
   CCl4          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Carbon tetrachloride                              
@@ -310,9 +308,7 @@
   CFC115        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | CFC115, Chloropentafluoroethane,                  
   CFC11         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Freon-11, Trichlorofluoromethane                  
   CFC12         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Freon-12, Dichlorodifluoromethane                 
-  CHCl3         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Chloroform, Trichloromethane                      
   CH2Br2        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Dibromomethane                                    
-  CH2Cl2        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Dichloromethane                                   
   CH2O          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Formalydehyde                                     
   CH3Br         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methyl bromide                                    
   CH3CCl3       | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methyl chloroform, 1-1-1-trichloroethane          
@@ -350,6 +346,7 @@
   HOBr          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydrobromous acid                                 
   HOCl          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydrochlorous acid                                
   IALD          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydroxy carbonyl alkenes (C5H8O2) from isoprene   
+  IAP           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Peroxide (C5H10O5) from IAO2                      
   ISOP          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH2=C(CH3)CH=CH2; Isoprene CH3C(O)CH=CH2 or CH2=C
   MACR          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH2=C(CH3)CHO; Methacrolein}                     
   MEK           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | {CH3C(O)CH3; Methyl ethyl ketone}                 
@@ -386,13 +383,17 @@
   IAO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C5H9O5) from isoprene oxidation products (now
   INO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | peroxy radicals from isoprene + NO3}              
   INPN          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Peroxide (C5H8O6N2) from INO2                     
+  ISN1          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C4H7O4N) from ISN2                           
+  ISNP          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Peroxide (C4H7O4N) from ISN1                      
   KO2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C4H7O3) from C3 ketones maybe:CH3C(O)CH2     
+  MAN2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C4H6O6N) from MACR+NO3                       
   MAO3          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Peroxyacyl (C4H5O3) from MACR and MVK [now MACR1OO
   MAOP          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Peroxide (C4H6O3) from MAO3 [now MACR1OOH]        
   MAP           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3C(O)OOH; Peroxyacetic acid}                   
   MCO3          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3C(O)O2; Peroxyacetyl radical}                 
   MGLY          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3COCHO; Methylglyoxal}                         
   MO2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3O2; Methylperoxy radical}                     
+  MRO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C4H7O4) from MACR+OH                         
   MRP           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Peroxide (C4H8O4) from MRO2 (now MVKHP in geoschem
   N             | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Atomic nitrogen ground state                      
   O             | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | Atomic Oxygen ground state (3P)                   
@@ -409,8 +410,7 @@
   RCO3          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3CH2C(O)OO; Peroxypropionyl radical}           
   RIO1          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C5H9O3) from isoprene oxydation products (now
   RIO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C5H9O3) from isoprene (now IHOO4)            
-  RIPA          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {HOCH2C(OOH)(CH3)CH=CH2; 1,2-ISOPOOH}             
-  RIPB          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {HOCH2C(OOH)(CH3)CH=CH2; 4,3-ISOPOOH}             
+  RIP           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {HOCH2C(OOH)(CH3)CH=CH2; 1,2-ISOPOOH}             
   ROH           | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | C2 alcohols (CH3CH2CH2OH)                         
   RP            | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | {CH3CH2C(O)OOH; Peroxide from RCO3}               
   VRO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    |         | RO2 (C4H7O4) from MVK+OH now MVKOHOO?             

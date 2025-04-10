@@ -303,7 +303,7 @@
 
         CALL GmiPhotolysis_GridCompRun(gcGMI%gcPhot,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
 
-        CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, gcGMI%gcSAD,  __RC__)
+        CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, gcGMI%gcSAD, gcGMI%gcPhot,  __RC__)
 
         CALL GmiChemistry_GridCompRun (gcGMI%gcChem,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
 
@@ -389,7 +389,7 @@
 
       CALL GmiForcingBC_GridCompRun (gcGMI%gcFBC,       bgg, bxx, impChem, expChem, nymd, nhms, cdt,                    __RC__)
 
-      CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, gcGMI%gcSAD,       __RC__)
+      CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, gcGMI%gcSAD, gcGMI%gcPhot,       __RC__)
 
       CALL GmiChemistry_GridCompRun (gcGMI%gcChem,      bgg, bxx, impChem, expChem, nymd, nhms, cdt,                    __RC__)
 

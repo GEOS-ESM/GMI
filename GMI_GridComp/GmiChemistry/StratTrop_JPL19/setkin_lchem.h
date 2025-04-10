@@ -149,12 +149,12 @@
       data lchemvar(122) /"VRO2"/
       data lchemvar(123) /"VRP"/
       data lchemvar(124) /"SO2"/
-      data lchemvar(125) /"H2SO4"/     ! NACT
-      data lchemvar(126) /"ACET"/      ! NMF
+      data lchemvar(125) /"H2SO4"/
+      data lchemvar(126) /"ACET"/
       data lchemvar(127) /"N2"/
       data lchemvar(128) /"O2"/
-      data lchemvar(129) /"NUMDENS"/   ! NCHEM
-      data lchemvar(130) /"HNO3COND"/  ! NSP
+      data lchemvar(129) /"NUMDENS"/
+      data lchemvar(130) /"HNO3COND"/
 !
 !.... Thermal reaction labels
 !
