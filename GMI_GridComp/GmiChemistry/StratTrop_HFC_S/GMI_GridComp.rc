@@ -393,6 +393,7 @@ sad_opt: 2
 #       3: (OBSOLETE)  read in lbssad zonal average fields
 #       4:  lbssad provided by AGCM (ExtData)
 #       5:  lbssad provided by CARMA SO4SAREA
+#       6:  lbssad provided by GOCART2G SO4SAREA (bundle)
 #     ----------------------------------------------
 #     (as listed in GmiSAD_GridCompClassMod.F90)
 
