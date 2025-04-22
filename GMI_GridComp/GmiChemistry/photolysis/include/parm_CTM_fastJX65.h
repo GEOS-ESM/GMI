@@ -26,7 +26,7 @@
       real*8,  parameter :: SZAMAX=98.0d0
       integer, parameter :: MAX_JVL_ = 70
       integer, parameter :: MAX_JVN_ = 82
-      integer, parameter :: MAX_L_   = 132
+      integer, parameter :: MAX_L_   = 181
       integer, parameter :: MAX_L1_  = MAX_L_ + 1
       integer, parameter :: MAX_L2_  = 2*MAX_L_ + 2
 
