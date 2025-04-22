@@ -7,9 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+
+- Fixed a memory leak in GmiSAD
+
 ### Added
+
+- Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
+
 ### Changed
+
+- Changed SO2 Fire emissions to be diurnal (non-zero-diff)
+- Now accomodate up to 181 vertical levels in FastJX65 photolysis
+- Small clean-up of condense.F90 (zero-diff)
+
 ### Removed
+
+- Removed references to Chem_Bundle (w_c), Chem_Array and Chem_Registry
+- Removed support for Aerosols coming from old GOCART
+
 ### Deprecated
 
 
