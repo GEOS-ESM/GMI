@@ -173,7 +173,7 @@ Exports:
   PRPE_biof:                   {                                 collection: /dev/null                                                                                              }
 
   NO_lgt:                      {                                 collection: /dev/null                                                                                              }
-! NO_lgt:                      { variable: NO_lgt,               collection: GMI_CCMI_emisb.monthly.1960-2012,                     regrid: CONSERVE,  sample: GMI.daily             }
+# NO_lgt:                      { variable: NO_lgt,               collection: GMI_CCMI_emisb.monthly.1960-2012,                     regrid: CONSERVE,  sample: GMI.daily             }
 
   PRPE_biom:
     - { starting: "1950-01-01",  variable: PRPE_bb,              collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
