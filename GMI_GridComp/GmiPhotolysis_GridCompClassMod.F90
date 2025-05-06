@@ -2352,7 +2352,7 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
 
 # include "gmi_AerDust_const.h"
   integer, parameter :: four = 4
-  REAL*8 :: raa_b(4, NP_b), qaa_b(4, NP_b)
+  REAL*8 :: raa_b(4, NP_b), qaa_b(4, NP_b), paramod
 !
   CHARACTER(LEN=255) :: IAm
   REAL, POINTER, DIMENSION(:,:,:) :: PTR3D
@@ -2404,15 +2404,19 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
 !... crude calc of pyro SAD
      self%pyro_sa(:,:,:) = 3.D0 * self%pyro_nden(:,:,:) / ( self%pyro_sareff * 1000.0 )
 !... place holder for when optical depth is available    
-     call  GetQAA_RAAinFastJX65 (RAA_b, QAA_b, four, NP_b)
+     if(self%fastj_opt.eq.4) then
+       call  GetQAA_RAAinFastJX65 (RAA_b, QAA_b, four, NP_b)
+       paramod = qaa_b(4,14+2) / (1000.0d0*raa_b(4,14+2)*1.0D-6)
+      else           ! 1.2426  0.250 
+       paramod = 1.2426d0 / (1000.0d0*0.250d0*1.0d-6)
+      endif
      self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
-                           self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
-                          ( 1000.0d0 * raa_b(4,14+2) * 1.0D-6 )
-!... code
-     where (pl(i1:i2,ju1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
-        self%pyro_sa(:,:,:) = 0.0d0
-        self%pyro_optDepth(:,:,:) = 0.0d0
-      end where
+                           self%pyro_nden(:,:,:) * paramod
+!... code to zero out tropospheric PyroCb aerosol
+!.tmp     where (pl(i1:i2,ju1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
+!.tmp        self%pyro_sa(:,:,:) = 0.0d0
+!.tmp        self%pyro_optDepth(:,:,:) = 0.0d0
+!.tmp      end where
      CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
      CALL MAPL_MaxMin('GMI: PyroCb_optDepth:', self%pyro_optDepth)
 !
@@ -2425,7 +2429,7 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
      self%pyro_nden(:,:,:) = 0.0d0
      self%pyro_sa(:,:,:) = 0.0d0
      self%pyro_optDepth(:,:,:) = 0.0d0
-     self%pyro_sareff = 0.0d0
+     self%pyro_sareff = 1.0d0
      self%pyro_saexist = .FALSE.
 
   END SELECT

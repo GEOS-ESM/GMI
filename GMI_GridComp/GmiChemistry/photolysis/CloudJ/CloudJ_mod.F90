@@ -198,10 +198,6 @@
 !             AERSP, IDXAER, L_+1, AN_, VALJXX, num_qjs,  &
 !             TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT)
 !
-! PPP     = gridbox edge pressures (hPa)
-! TTT     = gridbox temperatures (K)
-! RRR     = Relative humidity (%)
-! ZZZ     = gridbox bottom height [edge] (cm)
 ! U0      = cos(SZA)
 ! SZA     = solar zenith angle (degrees) - PASS IN
 ! RFL     = Lambertian albedo of surface for angles 1:4 & U0 (#5)
@@ -222,10 +218,10 @@
 ! CLDIW   = integer flag: 1 = water cld, 2 = ice cloud, 3 = both
 ! AERSP   = aerosol species array - path (g/m2) of aerosol
 ! IDXAER  = aerosol index for assigning optical characteristics
-! L1_     = 
+! L1_     = number of layers + 1
 ! AN_     = number of aerosol types
 ! VALJXX  = 
-! JVN_    = 
+! num_qjs = number of phot rates
 ! CLDFLAG = type of cloud handling
 ! NRANDO  = parameter for CLDFLAG = 5
 ! IRAN    = parameter for CLDFLAG = 5

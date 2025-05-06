@@ -151,7 +151,7 @@
 !... PyroCb 
       real*8 , intent(in) :: pyro_nden          (i1:i2, ju1:j2, k1:k2) ! PyroCb part dens calc'd in G2G
       real*8 , intent(in) :: pyro_sa            (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area calc'd in G2G
-      real*8 , intent(in) :: pyro_optDepth      (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area calc'd in G2G
+      real*8 , intent(in) :: pyro_optDepth      (i1:i2, ju1:j2, k1:k2) ! PyroCb Opt Depth calc'd in G2G
       real*8 , intent(in) :: pyro_sareff                               ! PyroCb Surf Area Reff calc'd in G2G
       logical, intent(in) :: pyro_saexist                              ! PyroCb Surf Area flag
 !
