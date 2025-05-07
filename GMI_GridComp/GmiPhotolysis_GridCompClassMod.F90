@@ -2222,31 +2222,14 @@ CONTAINS
 !
      call ESMF_StateGet(suv_state, 'SO4SAREA',        so4_3d_field, __RC__)
      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
-     CALL MAPL_MaxMin('GMI: SO4v_SArea(m^2/m^3?):', so4_3d_array)
-     call ESMF_AttributeGet(suv_state, NAME='effective_radius_in_microns', VALUE=self%so4v_sareff, __RC__)
-     self%so4v_sareff = self%so4v_sareff * 1.0d-4
-     if(MAPL_AM_I_ROOT()) print *, 'GMI:SO4vSA Reff(cm): ', self%so4v_sareff
-!
      self%so4v_saexist = .TRUE.
      self%so4v_sa(:,:,km:1:-1) = so4_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3 
+     CALL MAPL_MaxMin('GMI: SO4v_SArea(m^2/m^3?):', so4_3d_array)
+     call ESMF_AttributeGet(suv_state, NAME='effective_radius_in_microns', VALUE=self%so4v_sareff, __RC__)
+     if(MAPL_AM_I_ROOT()) print *, 'GMI:SO4vSA Reff(um): ', self%so4v_sareff
+!
 !
     endif
-
-
-!     CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
-!     VERIFY_(STATUS)
-  
-!     IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
-!       CALL MAPL_GetPointer(impChem, SO4, 'SO4v', RC=STATUS)
-!       VERIFY_(STATUS)
-
-!       self%wAersl(:,:,km:1:-1,1) = &
-!       self%wAersl(:,:,km:1:-1,1) + SO4(:,:,1:km)*airdens(:,:,1:km)
-
-!       IF(self%verbose) THEN
-!         CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
-!       END IF
-!     END IF
 
    CASE("GMICHEM")
 
@@ -2284,23 +2267,6 @@ CONTAINS
      IF(self%verbose) THEN
       CALL pmaxmin('SO4:', SO4, qmin, qmax, iXj, km, 1. )
      END IF
-
-     ! If volcanic SU exists, use it too:
-     CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
-     VERIFY_(STATUS)
-
-     IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
-       CALL MAPL_GetPointer(impChem, SO4, 'SO4v', RC=STATUS)
-       VERIFY_(STATUS)
-
-       self%wAersl(:,:,km:1:-1,1) = &
-       self%wAersl(:,:,km:1:-1,1) + SO4(:,:,1:km)*airdens(:,:,1:km)
-
-       IF(self%verbose) THEN
-         CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
-       END IF
-     END IF
-
 
    CASE("none")
 
