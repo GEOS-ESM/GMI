@@ -1129,18 +1129,19 @@ CONTAINS
 !      call ESMF_StateGet(aero_state,      'DU_AERO', du_state,  __RC__)
 !      call ESMF_StateGet(aero_state,      'SS_AERO', ss_state,  __RC__)
 
-      call ESMF_StateGet(su_state,    'SO4SAREA',      so4_3d_field, __RC__)
+      call ESMF_StateGet(su_state,    'SAREA',      so4_3d_field, __RC__)
       call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
       self%lbssad(:,:,1:km) = so4_3d_array(:,:,km:1:-1) * 0.01 ! convert from m2/m3 to cm2/cm3
       NULLIFY(so4_3d_array)
 
       if(rcvolc .eq. ESMF_SUCCESS) then
-       call ESMF_StateGet(suv_state,    'SO4SAREA',     so4_3d_field, __RC__)
+       call ESMF_StateGet(suv_state,    'SAREA',     so4_3d_field, __RC__)
        call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
        self%lbssad(:,:,1:km) = self%lbssad(:,:,1:km) &
                              + so4_3d_array(:,:,km:1:-1) * 0.01 ! convert from m2/m3 to cm2/cm3
        NULLIFY(so4_3d_array)
       endif
+      CALL MAPL_MaxMin('GMI: SO4v_SArea(m^2/m^3?):', self%lbssad)
     END IF
   end if
 

@@ -1211,8 +1211,8 @@ CONTAINS
    type(ESMF_Field)   :: oc_philic_3d_field
    type(ESMF_Field)   :: br_phobic_3d_field
    type(ESMF_Field)   :: br_philic_3d_field
-   type(ESMF_Field)   :: bc_pyro_3d_field
-   type(ESMF_Field)   :: br_pyro_3d_field
+   type(ESMF_Field)   :: pyro_philic_3d_field
+   type(ESMF_Field)   :: pyro_phobic_3d_field
    type(ESMF_Field)   ::       so4_3d_field
    type(ESMF_Field)   ::        du_4d_field
    type(ESMF_Field)   ::        ss_4d_field
@@ -1440,7 +1440,9 @@ CONTAINS
        call ESMF_StateGet(aero_state,      'DU.data_AERO', du_state, __RC__)
        call ESMF_StateGet(aero_state,      'SS.data_AERO', ss_state, __RC__)
 
-!.pyro       call ESMF_StateGet(aero_state, 'BC.pyro.data_AERO', pyro_state, rc=rcpyro)
+!+++PRC Place holder for a dedicated pyro state
+       call ESMF_StateGet(aero_state,        'CA.br.data_AERO', pyro_state, rc=rcpyro)
+!---PRC
 
      ELSE
        call ESMF_StateGet(aero_state,        'CA.bc_AERO', bc_state, __RC__)
@@ -1450,10 +1452,9 @@ CONTAINS
        call ESMF_StateGet(aero_state,      'SU.volc_AERO', suv_state,  rc=rcvolc)
        call ESMF_StateGet(aero_state,           'DU_AERO', du_state, __RC__)
        call ESMF_StateGet(aero_state,           'SS_AERO', ss_state, __RC__)
-
-!.pyro       call ESMF_StateGet(aero_state,      'BC.pyro_AERO', pyro_state, rc=rcpyro)
-       call ESMF_StateGet(aero_state,        'CA.bc_AERO', pyro_state, rc=rcpyro) ! temp line
-
+!+++PRC Place holder for a dedicated pyro state
+       call ESMF_StateGet(aero_state,        'CA.br_AERO', pyro_state, rc=rcpyro)
+!---PRC
      END IF
 
    END IF
@@ -2217,10 +2218,10 @@ CONTAINS
      call ESMF_StateGet(suv_state,    'SO4',          so4_3d_field, __RC__)
      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
      CALL MAPL_MaxMin('GMI: SO4v:      ', so4_3d_array)
-!... volc SO4 number density
+!... volc SO4 mass density
      self%so4v_nden(:,:,km:1:-1) = so4_3d_array(:,:,1:km)*airdens(:,:,1:km)
 !
-     call ESMF_StateGet(suv_state, 'SO4SAREA',        so4_3d_field, __RC__)
+     call ESMF_StateGet(suv_state, 'SAREA',        so4_3d_field, __RC__)
      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
      self%so4v_saexist = .TRUE.
      self%so4v_sa(:,:,km:1:-1) = so4_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3 
@@ -2331,44 +2332,34 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
 
    CASE("GOCART2G")
 
-    IF ( data_driven ) THEN
-      call ESMF_StateGet(bc_state, 'CA.bc.dataphobic', bc_pyro_3d_field, __RC__)
-      call ESMF_StateGet(br_state, 'CA.br.dataphobic', br_pyro_3d_field, __RC__)
-    ELSE
-      call ESMF_StateGet(bc_state, 'CA.bcphobic', bc_pyro_3d_field, __RC__)
-      call ESMF_StateGet(br_state, 'CA.brphobic', br_pyro_3d_field, __RC__)
-    ENDIF
 !
 ! PyroCb aerosols
 ! ---------------
-    if(rcpyro .eq. ESMF_SUCCESS .and. self%do_StratPyroHetChem) then
+  if(rcpyro .eq. ESMF_SUCCESS .and. self%do_StratPyroHetChem) then
+    IF ( data_driven ) THEN
+      call ESMF_StateGet(pyro_state, 'CA.br.dataphilic', pyro_philic_3d_field, __RC__)
+      call ESMF_StateGet(pyro_state, 'CA.br.dataphobic', pyro_phobic_3d_field, __RC__)
+    ELSE
+      call ESMF_StateGet(pyro_state, 'CA.brphilic', pyro_philic_3d_field, __RC__)
+      call ESMF_StateGet(pyro_state, 'CA.brphobic', pyro_phobic_3d_field, __RC__)
+    ENDIF
 !
 !... PyroCb number density, part I
-     call ESMF_FieldGet(field=bc_pyro_3d_field, farrayPtr=pyro_3d_array, __RC__)
+     call ESMF_FieldGet(field=pyro_phobic_3d_field, farrayPtr=pyro_3d_array, __RC__)
 !
      self%pyro_nden(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)
 !... PyroCb number density, part II
-     call ESMF_FieldGet(field=br_pyro_3d_field, farrayPtr=pyro_3d_array, __RC__)
+     call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
      self%pyro_nden(:,:,km:1:-1) = (self%pyro_nden(:,:,km:1:-1)+pyro_3d_array(:,:,1:km)) &
                                     *airdens(:,:,1:km)
 !
-!!... PyroCb SAD, part I
-!     call ESMF_StateGet(bc_state, 'BCSAREA',        bc_pyro_3d_field, __RC__)
-!     call ESMF_FieldGet(field=bc_pyro_3d_field, farrayPtr=pyro_3d_array, __RC__)
-!     self%pyro_sa(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)
-!!... PyroCb SAD, part II
-!     call ESMF_StateGet(br_state, 'BrSAREA',        br_pyro_3d_field, __RC__)
-!     call ESMF_FieldGet(field=br_pyro_3d_field, farrayPtr=pyro_3d_array, __RC__)
-!
-!     call ESMF_AttributeGet(pyro_state, NAME='effective_radius_in_microns', VALUE=self%pyro_sareff, __RC__)
-!     self%pyro_sareff = self%pyro_sareff * 1.0d-4
-!     self%pyro_sa(:,:,km:1:-1) = (self%pyro_sa(:,:,km:1:-1)+pyro_3d_array(:,:,1:km)) &
-!                                    *1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3 
-!     CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
-!... temp code to calc SAD of pyro aerosol (no moisture effect on aerosol size)
-     self%pyro_sareff = 0.22d-4
-!... crude calc of pyro SAD
-     self%pyro_sa(:,:,:) = 3.D0 * self%pyro_nden(:,:,:) / ( self%pyro_sareff * 1000.0 )
+!... PyroCb SAD
+     call ESMF_StateGet(pyro_state, 'SAREA',        pyro_philic_3d_field, __RC__)
+     call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
+     self%pyro_sa(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3
+     call ESMF_AttributeGet(pyro_state, NAME='effective_radius_in_microns', VALUE=self%pyro_sareff, __RC__)
+     CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
+
 !... place holder for when optical depth is available    
      call  GetQAA_RAAinFastJX65 (RAA_b, QAA_b, four, NP_b)
      self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
