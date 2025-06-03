@@ -985,7 +985,7 @@ CONTAINS
 
 !... G2G PyroCb aerosols
          Allocate(self%pyro_nden(i1:i2, ju1:j2, k1:k2), &
-                  self%pyro_sa(i1:i2, ju1:j2, k1:k2)), &
+                  self%pyro_sa(i1:i2, ju1:j2, k1:k2), &
                   self%pyro_optDepth(i1:i2, ju1:j2, k1:k2), &
                   self%pyro_sareff(i1:i2, ju1:j2, k1:k2))
          self%pyro_nden      = 0.0d0
