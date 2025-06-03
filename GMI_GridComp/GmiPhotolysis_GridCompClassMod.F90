@@ -205,14 +205,14 @@
 !... tying in G2G volc sulfate
     real*8, pointer     :: so4v_nden  (:,:,:) => null()
     real*8, pointer     :: so4v_sa    (:,:,:) => null()
-    real*8              :: so4v_sareff
+    real*8, pointer     :: so4v_sareff(:,:,:) => null()
     logical             :: so4v_saexist
 !... tying in G2G pyrocb aerosols
     logical             :: do_StratPyroHetChem
     real*8, pointer     :: pyro_nden    (:,:,:) => null()
     real*8, pointer     :: pyro_sa      (:,:,:) => null()
     real*8, pointer     :: pyro_OptDepth(:,:,:) => null()
-    real*8              :: pyro_sareff
+    real*8, pointer     :: pyro_sareff  (:,:,:) => null()
     logical             :: pyro_saexist
 
 
@@ -975,21 +975,23 @@ CONTAINS
          self%tArea = 0.0d0
 
 !... G2G SO4volc
-         Allocate(self%so4v_nden(i1:i2, ju1:j2, k1:k2))
-         self%so4v_nden = 0.0d0
-         Allocate(self%so4v_sa(i1:i2, ju1:j2, k1:k2))
-         self%so4v_sa(:,:,:) = 0.0d0
+         Allocate(self%so4v_nden(i1:i2, ju1:j2, k1:k2), &
+                  self%so4v_sa(i1:i2, ju1:j2, k1:k2), &
+                  self%so4v_sareff(i1:i2, ju1:j2, k1:k2))
+         self%so4v_nden   = 0.0d0
+         self%so4v_sa     = 0.0d0
          self%so4v_sareff = 0.0d0
          self%so4v_saexist = .FALSE.
 
 !... G2G PyroCb aerosols
-         Allocate(self%pyro_nden(i1:i2, ju1:j2, k1:k2))
-         self%pyro_nden = 0.0d0
-         Allocate(self%pyro_sa(i1:i2, ju1:j2, k1:k2))
-         self%pyro_sa(:,:,:) = 0.0d0
-         Allocate(self%pyro_optDepth(i1:i2, ju1:j2, k1:k2))
-         self%pyro_optDepth(:,:,:) = 0.0d0
-         self%pyro_sareff = 0.0d0
+         Allocate(self%pyro_nden(i1:i2, ju1:j2, k1:k2), &
+                  self%pyro_sa(i1:i2, ju1:j2, k1:k2)), &
+                  self%pyro_optDepth(i1:i2, ju1:j2, k1:k2), &
+                  self%pyro_sareff(i1:i2, ju1:j2, k1:k2))
+         self%pyro_nden      = 0.0d0
+         self%pyro_sa        = 0.0d0
+         self%pyro_optDepth  = 0.0d0
+         self%pyro_sareff    = 0.0d0
          self%pyro_saexist = .FALSE.
 
          Allocate(self%optDepth(i1:i2, ju1:j2, k1:k2, num_AerDust))
@@ -2215,6 +2217,7 @@ CONTAINS
  ! Volcanic SU
  ! -----------
     if(rcvolc .eq. ESMF_SUCCESS) then
+     self%so4v_saexist = .TRUE.
      call ESMF_StateGet(suv_state,    'SO4',          so4_3d_field, __RC__)
      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
      CALL MAPL_MaxMin('GMI: SO4v:      ', so4_3d_array)
@@ -2223,11 +2226,14 @@ CONTAINS
 !
      call ESMF_StateGet(suv_state, 'SAREA',        so4_3d_field, __RC__)
      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
-     self%so4v_saexist = .TRUE.
      self%so4v_sa(:,:,km:1:-1) = so4_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3 
-     CALL MAPL_MaxMin('GMI: SO4v_SArea(m^2/m^3?):', so4_3d_array)
-     call ESMF_AttributeGet(suv_state, NAME='effective_radius_in_microns', VALUE=self%so4v_sareff, __RC__)
-     if(MAPL_AM_I_ROOT()) print *, 'GMI:SO4vSA Reff(um): ', self%so4v_sareff
+     CALL MAPL_MaxMin('GMI: SO4v_SArea(m^2/m^3):', so4_3d_array)
+
+     call ESMF_StateGet(suv_state, 'REFF' ,        so4_3d_field, __RC__)
+     call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
+     self%so4v_sareff(:,:,km:1:-1) = so4_3d_array(:,:,1:km)
+     CALL MAPL_MaxMin('GMI: SO4v_SAreff(um):    ', so4_3d_array)
+
 !
 !
     endif
@@ -2357,14 +2363,19 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
      call ESMF_StateGet(pyro_state, 'SAREA',        pyro_philic_3d_field, __RC__)
      call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
      self%pyro_sa(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3
-     call ESMF_AttributeGet(pyro_state, NAME='effective_radius_in_microns', VALUE=self%pyro_sareff, __RC__)
      CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
 
+     call ESMF_StateGet(pyro_state, 'REFF' ,        pyro_philic_3d_field, __RC__)
+     call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
+     self%pyro_sareff(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)
+     CALL MAPL_MaxMin('GMI: PyroCb_SAreff(um):    ', pyro_3d_array)
+
+     
 !... place holder for when optical depth is available    
      call  GetQAA_RAAinFastJX65 (RAA_b, QAA_b, four, NP_b)
      self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
                            self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
-                          ( 1000.0d0 * raa_b(4,14+2) * 1.0D-6 )
+                          ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
 !... code
      where (pl(i1:i2,ju1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
         self%pyro_sa(:,:,:) = 0.0d0

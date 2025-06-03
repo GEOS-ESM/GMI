@@ -146,13 +146,13 @@
 !... SO4 Volc
       real*8 , intent(in) :: so4v_nden          (i1:i2, ju1:j2, k1:k2) ! SO4 Volc part dens calc'd in G2G
       real*8 , intent(in) :: so4v_sa            (i1:i2, ju1:j2, k1:k2) ! SO4 Volc Surf Area calc'd in G2G
-      real*8 , intent(in) :: so4v_sareff                               ! SO4 Volc Surf Area Reff calc'd in G2G
+      real*8 , intent(in) :: so4v_sareff        (i1:i2, ju1:j2, k1:k2) ! SO4 Volc Surf Area Reff calc'd in G2G
       logical, intent(in) :: so4v_saexist                              ! SO4 Volc Surf Area flag
 !... PyroCb 
       real*8 , intent(in) :: pyro_nden          (i1:i2, ju1:j2, k1:k2) ! PyroCb part dens calc'd in G2G
       real*8 , intent(in) :: pyro_sa            (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area calc'd in G2G
       real*8 , intent(in) :: pyro_optDepth      (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area calc'd in G2G
-      real*8 , intent(in) :: pyro_sareff                               ! PyroCb Surf Area Reff calc'd in G2G
+      real*8 , intent(in) :: pyro_sareff        (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area Reff calc'd in G2G
       logical, intent(in) :: pyro_saexist                              ! PyroCb Surf Area flag
 !
 ! !INPUT/OUTPUT PARAMETERS:
