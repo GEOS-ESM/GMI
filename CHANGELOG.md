@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 ### Added
+- Added pyroCb chemistry mechanism as new choice (e.g., parallel_build-csh -mil -gmi_mechanism StratTrop_HFC_S_Pyro
+- Added coupling of GOCART provided SU and BR surface area density and effective radius to chemistry through aerosol state
+
 ### Changed
 ### Removed
 ### Deprecated
