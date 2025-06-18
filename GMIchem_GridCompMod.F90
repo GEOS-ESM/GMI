@@ -2171,7 +2171,7 @@ CONTAINS
        IF(ASSOCIATED( TO3)) TO3 = TO3+wrk
 
        IF(ASSOCIATED(TTO3)) THEN
-        wgt  = MAX(0.0,MIN(1.0,(PLE(:,:,k)-bgg%qa(iT2M)%data3d(:,:,km))/(PLE(:,:,k)-PLE(:,:,k-1))))
+        wgt  = MAX(0.0,MIN(1.0,(PLE(:,:,k)-bxx%qa(iT2M)%data3d(:,:,km))/(PLE(:,:,k)-PLE(:,:,k-1))))
         TTO3 = TTO3+wrk*wgt
        END IF
 
