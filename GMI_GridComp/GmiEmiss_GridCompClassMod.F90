@@ -1734,7 +1734,6 @@ CONTAINS
 !... emission in sub-domain?
           if (i.lt.1 .or. j.lt.1) cycle
 !... during emission period?
-!    print '(''sds01: '',6i8,2f12.2)',k , n, i, j, vStart(n), vEnd(n), vBase(n), vTop(n)
           if(nhms .ge. self%GmiPointEmiss(k)%vStart(n) &
             .and. nhms .lt. self%GmiPointEmiss(k)%vEnd(n)) then
 !... distribute in the vertical (m)
@@ -2070,7 +2069,7 @@ CONTAINS
 !!  IF(ASSOCIATED(EM_pointer)) EM_pointer(i1:i2,j1:j2,km:1:-1) = &
 !!                               (AIRDENS(i1:i2,j1:j2,km:1:-1) * gridBoxThickness(i1:i2,j1:j2,1:km)) / MAPL_AIRMW
 
-!! NATSAD, ICESAD, LBSSAD, SOOTSAD and STSSAD (really VOLCSAD for now)
+!! NATSAD, ICESAD, LBSSAD, PYROSAD and STSSAD (really VOLCSAD for now)
      call ESMF_StateGet (expChem, "gmiSAD", sadBundle, RC=STATUS )
      VERIFY_(STATUS)
 
@@ -2098,9 +2097,9 @@ CONTAINS
        EM_pointer(i1:i2,j1:j2,1:km) = ptr3D(i1:i2,j1:j2,1:km)
      END IF
 
-     CALL MAPL_GetPointer(expChem, EM_pointer, "SOOTSAD", __RC__)
+     CALL MAPL_GetPointer(expChem, EM_pointer, "PYROSAD", __RC__)
      IF(ASSOCIATED(EM_pointer)) THEN
-       CALL obtainTracerFromBundle(sadBundle, ptr3D, ISTSSAD)
+       CALL obtainTracerFromBundle(sadBundle, ptr3D, IPYROSAD)
        EM_pointer(i1:i2,j1:j2,1:km) = ptr3D(i1:i2,j1:j2,1:km)
      END IF
 

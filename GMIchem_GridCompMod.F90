@@ -239,6 +239,36 @@ CONTAINS
 
       STATUS = 0
 
+!!... This is for CARMA SO4 surface area
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4SAREA',  &
+!              LONG_NAME          = 'SO4 aerosol surface area (non-Volcanic)',  &
+!              UNITS              = 'm2 m-3', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+!!...
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4Reff',  &
+!              LONG_NAME          = 'SO4 aerosol effective radius (non-Volcanic)',  &
+!              UNITS              = 'm', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+!...
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4SAREAvolc',  &
+!              LONG_NAME          = 'SO4 aerosol surface area (Volcanic)',  &
+!              UNITS              = 'm2 m-3', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+!
+!       IF(MAPL_AM_I_ROOT()) PRINT *,"  using CARMA SO4SAREA and SO4Reff"
+!
 
      CASE("CARMA")
 
@@ -1945,12 +1975,12 @@ CONTAINS
          END IF
        END DO
      ENDIF
-
-     IF(iOCS < 1) THEN
-       PRINT *,TRIM(Iam)//": Cannot find species OCSg in GMI"
-       STATUS = 1
-       VERIFY_(STATUS)
-     END IF
+!... why is OCSg required in all mechanisms
+!     IF(iOCS < 1) THEN
+!       PRINT *,TRIM(Iam)//": Cannot find species OCSg in GMI"
+!       STATUS = 1
+!       VERIFY_(STATUS)
+!     END IF
 
    END IF OCS
 

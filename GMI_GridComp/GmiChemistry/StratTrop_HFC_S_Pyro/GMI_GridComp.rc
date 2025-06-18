@@ -1,7 +1,7 @@
 #==================================
 # Resource file for GMI parameters.
 #==================================
-# Mechanism: StratTrop_Orig
+# Mechanism: StratTrop_HFC_S
 #==================================
 
         #############################
@@ -156,6 +156,13 @@ CO_fosf
 CO_biof
 NO_fosf
 NO_biof
+SO2_FIRES-FLUX
+SO2_NONENERGY-FLUX
+SO2_ENERGY-FLUX
+SO2_SHIPPING-FLUX
+SO2_AIRCRAFT-FLUX
+CH2BR2_FLUX
+CHBR3_FLUX
 ::
 
 emissionSpeciesLayers::
@@ -185,13 +192,20 @@ emissionSpeciesLayers::
 1
 1
 1
+1
+1
+1
+1
+72
+1
+1
 ::
 
-#emissionPointFilenames::
-#SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
-##SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
-##H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
-#::
+emissionPointFilenames::
+SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
+#SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
+#H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
+::
 # NOTE: Units for the volcano point source files: kg(S)/s
 #       Units that GMI wants                    : kg(SO2)/s
 #       GMI does the conversion in Refresh_Daily within the Emission section
@@ -262,6 +276,8 @@ do_smv_reord: F
 loss_opt: 0
 do_AerDust_Calc: T
 AerDust_Effect_opt: 0
+do_StratPyroHetChem: T   # HISTORY must include CA.brSAREA and CA.brREFF from CA.br
+
 
         ###########################################################
         # GHG and ODS surface source gases
@@ -313,17 +329,17 @@ forcedBcSpeciesNames::
 #CH3Cl
 #CH4
 #N2O
-#xxx
-#xxx
-#xxx
-#xxx
-#xxx
-#xxx
+#HFC23
+#HFC32
+#HFC125
+#HFC134A
+#HFC143A
+#HFC152A
 #xxx
 #xxx
 ::
 
-# The xxx entries above are for HFC23 HFC32 HFC125 HFC134a HFC143a HFC152a SF6 and CO2
+# The xxx entries above are for SF6 and CO2
 
         ###########################################################
         # GHG and ODS surface source gases - read with ExtData
@@ -350,12 +366,12 @@ CH3Br
 CH3Cl
 CH4
 N2O
-# HFC23
-# HFC32
-# HFC125
-# HFC134a
-# HFC143a
-# HFC152a
+HFC23
+HFC32
+HFC125
+HFC134a
+HFC143a
+HFC152a
 # SF6
 # CO2
 ::
@@ -511,19 +527,21 @@ stOX_loss_reactions::
   QQK027  1.0   'O3 + OH = HO2 + O2'
   QQK028  1.0   'HO2 + O3 = 2 O2 + OH'
   QQK029  2.0   'NO2 + O3 = NO3 + O2'
-  QQK050  1.0   'NO2 + O = NO + O2'
-  QQK052  1.0   'NO2 + OH = HNO3'
-  QQK056  1.0   'HO2 + NO2 = HNO4'
-  QQK062  1.0   'NO2 + NO3 = N2O5'
-  QQK150  0.7   'IALD + O3 =  0.12 CH2O +  0.28 GLYC +  0.20 GLYX +  0.20 HAC +  0.20 HCOOH +  0.60 MGLY +  0.30 O3 +  0.10 OH'
-  QQK170  0.9   'ISOP + O3 =  0.90 CH2O +  0.05 CO +  0.06 HO2 +  0.39 MACR +  0.16 MVK +  0.10 O3 +  0.27 OH +  0.07 PRPE'
-  QQK179  0.8   'MACR + O3 =  0.70 CH2O +  0.20 CO +  0.28 HO2 +  0.80 MGLY +  0.20 O3 +  0.22 OH'
-  QQK190  1.0   'MAO3 + NO2 = PMN'
-  QQK200  1.0   'MCO3 + NO2 = PAN'
-  QQK216  0.8   'MVK + O3 =  0.04 ALD2 +  0.80 CH2O +  0.05 CO +  0.06 HO2 +  0.82 MGLY +  0.20 O3 +  0.08 OH'
-  QQK235  1.0   'O3 + PRPE =  0.50 ALD2 +  0.54 CH2O +  0.42 CO +  0.06 H2 +  0.30 HO2 +  0.31 MO2 +  0.14 OH'
-  QQK259  1.0   'NO2 + RCO3 = PPN'
-  QQK310  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3'
+  QQK050  1.0   'N + NO2 = N2O + O'
+  QQK051  1.0   'NO2 + O = NO + O2'
+  QQK053  1.0   'NO2 + OH = HNO3'
+  QQK057  1.0   'HO2 + NO2 = HNO4'
+  QQK063  1.0   'NO2 + NO3 = N2O5'
+  QQK164  0.7   'IALD + O3 =  0.12 CH2O +  0.28 GLYC +  0.20 GLYX +  0.20 HAC +  0.20 HCOOH +  0.60 MGLY +  0.30 O3 +  0.10 OH'
+  QQK184  0.9   'ISOP + O3 =  0.90 CH2O +  0.05 CO +  0.06 HO2 +  0.39 MACR +  0.16 MVK +  0.10 O3 +  0.27 OH +  0.07 PRPE'
+  QQK193  0.8   'MACR + O3 =  0.70 CH2O +  0.20 CO +  0.28 HO2 +  0.80 MGLY +  0.20 O3 +  0.22 OH'
+  QQK204  1.0   'MAO3 + NO2 = PMN'
+  QQK214  1.0   'MCO3 + NO2 = PAN'
+  QQK230  0.8   'MVK + O3 =  0.04 ALD2 +  0.80 CH2O +  0.05 CO +  0.06 HO2 +  0.82 MGLY +  0.20 O3 +  0.08 OH'
+  QQK250  1.0   'O3 + PRPE =  0.50 ALD2 +  0.54 CH2O +  0.42 CO +  0.06 H2 +  0.30 HO2 +  0.31 MO2 +  0.14 OH'
+  QQK273  1.0   'NO2 + RCO3 = PPN'
+  QQK324  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3'
+  QQK331  1.0   'O3 + SO2 = H2SO4'
 ::
 
-OCS_JRATE: QJ073
+OCS_JRATE: QJ075

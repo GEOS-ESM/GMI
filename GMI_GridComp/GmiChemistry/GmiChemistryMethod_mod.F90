@@ -164,8 +164,8 @@
       integer :: ic
       real    :: tempR4
       real*8  :: hugeReal
-      character (len=MAX_LENGTH_SPECIES_NAME), pointer :: tempListNames(:)
-      character (len=MAX_STRING_LENGTH      ) :: forcedBcSpeciesNames
+!      character (len=MAX_LENGTH_SPECIES_NAME), pointer :: tempListNames(:)
+!      character (len=MAX_STRING_LENGTH      ) :: forcedBcSpeciesNames
       character(len=ESMF_MAXSTR) :: IAm, err_msg
 !
 !EOP
@@ -175,8 +175,8 @@
 
       if (pr_diag) Write(6,*) IAm, 'called by ', loc_proc
 
-      allocate(tempListNames(numSpecies), STAT=STATUS)
-      VERIFY_(STATUS)
+!      allocate(tempListNames(numSpecies), STAT=STATUS)
+!      VERIFY_(STATUS)
 
       !################################
       ! Begin reading the resource file

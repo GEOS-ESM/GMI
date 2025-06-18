@@ -82,6 +82,7 @@
                   io3_num, ih2o_num, isynoz_num, chem_mask_khi, nymd, nhms, &
                   pr_diag, loc_proc, synoz_threshold, AerDust_Effect_opt, num_species, &
                   so4v_nden, so4v_sa, so4v_sareff, so4v_saexist,            &
+                  pyro_nden, pyro_sa, pyro_sareff, pyro_saexist, pyro_optDepth, &
                   num_qjs, num_qjo, ilo, ihi, julo, jhi,                    &
                   i1, i2, ju1, j2, k1, k2, jNOindex, jNOamp, cldflag)
 
@@ -145,8 +146,14 @@
 !... SO4 Volc
       real*8 , intent(in) :: so4v_nden          (i1:i2, ju1:j2, k1:k2) ! SO4 Volc part dens calc'd in G2G
       real*8 , intent(in) :: so4v_sa            (i1:i2, ju1:j2, k1:k2) ! SO4 Volc Surf Area calc'd in G2G
-      real*8 , intent(in) :: so4v_sareff                               ! SO4 Volc Surf Area Reff calc'd in G2G
+      real*8 , intent(in) :: so4v_sareff        (i1:i2, ju1:j2, k1:k2) ! SO4 Volc Surf Area Reff calc'd in G2G
       logical, intent(in) :: so4v_saexist                              ! SO4 Volc Surf Area flag
+!... PyroCb 
+      real*8 , intent(in) :: pyro_nden          (i1:i2, ju1:j2, k1:k2) ! PyroCb part dens calc'd in G2G
+      real*8 , intent(in) :: pyro_sa            (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area calc'd in G2G
+      real*8 , intent(in) :: pyro_optDepth      (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area calc'd in G2G
+      real*8 , intent(in) :: pyro_sareff        (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area Reff calc'd in G2G
+      logical, intent(in) :: pyro_saexist                              ! PyroCb Surf Area flag
 !
 ! !INPUT/OUTPUT PARAMETERS:
       real*8 , intent(inOut) :: OptDepth(i1:i2, ju1:j2, k1:k2, num_AerDust)
@@ -282,6 +289,10 @@
                else
                  ODAER_ij  (:,:) = ODAER  (il,ij,:,:)
                  ODMDUST_ij(:,:) = ODMDUST(il,ij,:,:)
+!... if PyroCb on add pyro OD to appropriate aerosol type for fastJX
+                 if(pyro_saexist) then
+                   ODAER_ij(:,2) = ODAER(il,ij,:,2)+pyro_optDepth(il,ij,:)
+                 endif
                endif
 !... if we are NOT doing aerosol effects on photolysis zero out aerosols
             else

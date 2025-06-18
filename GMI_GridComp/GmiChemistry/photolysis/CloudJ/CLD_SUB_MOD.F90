@@ -1153,7 +1153,7 @@
         do L = 1,LTOP
           TAUALL = TAUIC(L) + TAULC(L)
           if (TAUALL .gt. 1.d-7) then
-!  calc g0 to get equivlent isootropic OD below
+!  calc g0 to get equivlent isotropic OD below
             TAUG(L) = (G0L*TAULC(L) + G0I*TAUIC(L))/TAUALL
           endif
         enddo

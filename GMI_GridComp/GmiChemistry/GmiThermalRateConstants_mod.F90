@@ -7,9 +7,11 @@
       module GmiThermalRateConstants_mod
 !
 ! !USES:
+      use MAPL
       use GmiTimeControl_mod, only : GmiSplitDateTime
       use GmiArrayBundlePointer_mod, only : t_GmiArrayBundle
       use GmiFlush_mod, only : GmiFlush
+      USE GmiPhotolysis_GCCMod
 !
       implicit none
 !
@@ -55,9 +57,9 @@
       subroutine calcThermalRateConstants (rootProc,                            &
                      num_time_steps, ih2o_num, imgas_num, nymd, rxnr_adjust_map,&
                      pres3c, tropp, temp3, clwc, fcld, cmf, sadgmi, qkgmi,      &
-                     concentration, rxnr_adjust, Eradius, Tarea, so4v_saexist,  &
+                     concentration, rxnr_adjust, Eradius, Tarea, gcPhot,  &
                      relativeHumidity, conPBLFlag, do_AerDust_Calc,             &
-                     do_LBSplusBCOC_SAD, phot_opt,                              &
+                     do_LBSplusBCOC_SAD, do_StratPyroHetChem, phot_opt,         &
                      pr_diag, loc_proc, num_rxnr_adjust, rxnr_adjust_timpyr,    &
                      ivert, num_sad, num_qks, num_molefrac, num_species,        &
                      ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
@@ -69,7 +71,7 @@
 !
 ! !INPUT PARAMETERS:
       logical, intent(in) :: pr_diag
-      logical, intent(in) :: do_AerDust_Calc, do_LBSplusBCOC_SAD, rootProc
+      logical, intent(in) :: do_AerDust_Calc, do_LBSplusBCOC_SAD, do_StratPyroHetChem, rootProc
 
       integer, intent(in) :: loc_proc
       integer, intent(in) :: num_species
@@ -103,14 +105,14 @@
       REAL*8 , intent(in) :: relativeHumidity (i1:i2, ju1:j2, k1:k2)
       REAL*8 , intent(in) :: ERADIUS (i1:i2, ju1:j2, k1:k2, nSADdust+nSADaer)
       REAL*8 , intent(in) :: TAREA   (i1:i2, ju1:j2, k1:k2, nSADdust+nSADaer)
-      logical, intent(in) :: so4v_saexist
+!      logical, intent(in) :: so4v_saexist
 
       ! array of reaction rate adjustment factors:
       real*8 , intent(in) :: rxnr_adjust(i1:i2, ju1:j2, k1:k2, num_rxnr_adjust, rxnr_adjust_timpyr)
 
-      type (t_GmiArrayBundle), intent(in) :: sadgmi(num_sad) ! surface area densities (cm^2/cm^3)
+      type (t_GmiArrayBundle), intent(inout) :: sadgmi(num_sad) ! surface area densities (cm^2/cm^3)
       type (t_GmiArrayBundle), intent(in) :: concentration(num_species) ! species concentration, known at zone centers (mixing ratio)
-
+      type (GmiPhotolysis_GridComp), intent(in) :: gcPhot
 !
 ! !INPUT/OUTPUT PARAMETERS:
                              ! thermal rate constants (units vary)
@@ -135,6 +137,7 @@
       real*8  :: constcol(num_molefrac, k1:k2)
       real*8  :: qkcol   (num_qks,      k1:k2)
       real*8  :: sadcol  (num_sad,      k1:k2)        ! originally for tropospheric aerosols
+!      real*8  :: radS    (nSAD,         k1:k2)
       real*8  :: sadcol2 (nSADdust+nSADaer,   k1:k2)  ! originally for stratospheric aerosols
       real*8  :: radA    (nSADdust+nSADaer,   k1:k2)
       real*8  :: rhcol   (k1:k2)
@@ -150,6 +153,17 @@
       fcldcol(:) = 0.0d0
       qkcol(:,:) = 0.0d0
 
+!... Special case to use GOCART BC + OC  for O3 related stratospheric het reactions
+      if (do_StratPyroHetChem.and.gcPhot%pyro_saexist) then
+!... need to make PyroCb available to setkin_kcalc
+        sadgmi(IPYROSAD)%pArray3D(:,:,:) = gcPhot%pyro_sa(:,:,:)
+!. orig method of pyrocb
+!.        sadgmi(IPYROSAD)%pArray3D(:,:,:) = &
+!.          TAREA(:,:,:,nSADdust+IBCSAD) + TAREA(:,:,:,nSADdust+IOCSAD)
+      else
+        sadgmi(IPYROSAD)%pArray3D(:,:,:) = 0.0d0
+      endif
+!
       do ij = ju1, j2
         do il = i1, i2
 
@@ -176,7 +190,7 @@
 
           do ic = 1, num_sad
              sadcol(ic,:) = sadgmi(ic)%pArray3D(il,ij,:)
-!             sadreff(ic,:) =
+!             radS(ic,:) = 0.221d-4
           end do
 
           do ic = 1, nSADdust+nSADaer
@@ -195,14 +209,15 @@
                 rhcol(:)     = relativeHumidity(il,ij,:)
 
                 ! Special case to add GOCART BC + OC to LBS for O3 het reactions
-                !  use GOCART soot (BC+OC) for these reactions
+                !  use GOCART PYRO (BC+OC) for these reactions
                 if (do_LBSplusBCOC_SAD) then
                   sadcol(ILBSSAD,:) = &
-                  sadcol(ILBSSAD,:) + sadcol2(nSADdust+IBCSAD,:) + sadcol2(nSADdust+IOCSAD,:)
+                    sadcol(ILBSSAD,:) + sadcol2(nSADdust+IBCSAD,:) + sadcol2(nSADdust+IOCSAD,:)
+!                  radS(ILBSSAD,:) = 0.221d-4
                 endif
 
-                ! If GOCART has SO4v then replace STS for strat het reaction
-                if (so4v_saexist) then
+!... If GOCART has SO4v then replace STS for strat het reaction
+                if (gcPhot%so4v_saexist) then
                   sadcol(ISTSSAD,:) = sadcol2(nSADdust+ISO4vSAD,:)
                 endif
 

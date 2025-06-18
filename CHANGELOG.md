@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a memory leak in GmiSAD
 
 ### Added
-
 - Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
+- Added pyroCb chemistry mechanism as new choice (e.g., parallel_build.csh -mil -gmi_mechanism StratTrop_HFC_S_Pyro
+- Added coupling of GOCART provided SU and BR surface area density and effective radius to chemistry through aerosol state
 
 ### Changed
 

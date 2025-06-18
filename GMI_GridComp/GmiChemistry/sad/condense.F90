@@ -31,6 +31,7 @@
 !   Sad_Ice*
 !   Sad_NAT*
 !   Sad_STS*
+!   Sad_PYRO*
 !   Calcsulf_DBC*
 !   Ternary_DBC*
 !   Density_DBC*
@@ -118,6 +119,7 @@
 !     icesad     : surface area density of ICE aerosols (cm^-1)
 !     natsad     : surface area density of NAT aerosols (cm^-1)
 !     stssad     : surface area density of STS aerosols (cm^-1)
+!     pyrosad    : surface area density of Pyro aerosols (cm^-1)
 !     reffice    : effective radius of ICE aerosols  (cm)
 !     reffnat    : effective radius of NAT aerosols  (cm)
 !     reffsts    : effective radius of STS aerosols  (cm)
@@ -157,11 +159,12 @@
       SUBROUTINE Condense  &
      &  (dt, tropp, pres3c, temp3, dehyd, dehyd_opt, dz,  &
      &   h2oback, hno3cond, hno3gas, lbssad,  &
-     &   denssts, h2ocond, h2so4gas, icesad, natsad, stssad,  &
+     &   denssts, h2ocond, h2so4gas, icesad, natsad, stssad, pyrosad,  &
      &   reffice, reffnat, reffsts, vfall, &
      &   pr_diag, loc_proc, londeg, latdeg, NoPSCZone, PSCMaxP, &
      &   ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
 
+   USE MAPL
       implicit none
 
 !     ----------------------
@@ -194,6 +197,7 @@
       real*8  :: icesad  (i1:i2,   ju1:j2,   k1:k2)
       real*8  :: natsad  (i1:i2,   ju1:j2,   k1:k2)
       real*8  :: stssad  (i1:i2,   ju1:j2,   k1:k2)
+      real*8  :: pyrosad (i1:i2,   ju1:j2,   k1:k2)
       real*8  :: reffice (i1:i2,   ju1:j2,   k1:k2)
       real*8  :: reffnat (i1:i2,   ju1:j2,   k1:k2)
       real*8  :: reffsts (i1:i2,   ju1:j2,   k1:k2)
@@ -390,7 +394,9 @@
         end do
       end do
 !     ==========
-
+!.sds.. this is unneeded since het reacs using "sadgmi" are only done above troposphere
+!      call Sad_PYRO ( pres3c, tropp, pyrosad, ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
+!
 
       if (DOSEDIMENT) then
 !       =============
@@ -989,7 +995,36 @@
       return
       END SUBROUTINE Sad_STS
 
-
+!     =================
+!
+      SUBROUTINE Sad_PYRO  &
+         (pres3c, tropp, pyrosad, ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
+!
+! description:
+!
+! variable declarations
+      implicit none
+!
+! declare input variables
+      real*8,  intent(in)    :: tropp (i1:i2, ju1:j2)
+      real*8,  intent(in)    :: pres3c (ilo:ihi, julo:jhi, k1:k2)
+      real*8,  intent(inout) :: pyrosad (i1:i2, ju1:j2, k1:k2)
+      integer, intent(in) :: ilo, ihi, julo, jhi
+      integer, intent(in) :: i1, i2, ju1, j2, k1, k2
+!
+! declare internal variables
+!
+! set internal parameters
+!
+!
+!... code
+      where (pres3c(i1:i2,ju1:j2,:) > Spread (tropp(:,:), 3, k2))
+        pyrosad(:,:,:) = 0.0d0
+      end where
+!
+      return
+      END SUBROUTINE Sad_PYRO
+!
 !     ===================
 
       SUBROUTINE calcsulf_DBC(t,ptot,qh2o,lbssad,h2so4gas,rlbs,siglbs,  &
