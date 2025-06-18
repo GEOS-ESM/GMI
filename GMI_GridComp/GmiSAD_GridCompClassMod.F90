@@ -385,7 +385,7 @@ CONTAINS
 !       3: (OBSOLETE)  read in lbssad zonal average fields
 !       4:  lbssad provided by AGCM (ExtData)
 !       5:  lbssad provided by CARMA SO4SAREA
-!       6:  lbssad provided by GOCART2G AERO bundle      
+!       6:  lbssad provided by GOCART2G AERO state (SAREA in SU and optionally SU.volc)
 !     ----------------------------------------------
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%lbssad_opt, &
      &                label   = "lbssad_opt:", &
@@ -1141,7 +1141,7 @@ CONTAINS
                              + so4_3d_array(:,:,km:1:-1) * 0.01 ! convert from m2/m3 to cm2/cm3
        NULLIFY(so4_3d_array)
       endif
-      CALL MAPL_MaxMin('GMI: SO4v_SArea(m^2/m^3?):', self%lbssad)
+      CALL MAPL_MaxMin('GMI: SO4 SArea  (m^2/m^3?):', self%lbssad)
     END IF
   end if
 

@@ -276,7 +276,7 @@ do_smv_reord: F
 loss_opt: 0
 do_AerDust_Calc: T
 AerDust_Effect_opt: 0
-do_StratPyroHetChem: T
+do_StratPyroHetChem: T   # HISTORY must include CA.brSAREA and CA.brREFF from CA.br
 
 
         ###########################################################
@@ -395,6 +395,9 @@ sad_opt: 2
 #       3: (OBSOLETE)  read in lbssad zonal average fields
 #       4:  lbssad provided by AGCM (ExtData)
 #       5:  lbssad provided by CARMA SO4SAREA
+#       6:  lbssad provided by GOCART2G AERO state (SAREA in SU and SU.volc) **
+#
+#      ** -> include the GOCART2G fields in HISTORY to ensure that they are computed
 #     ----------------------------------------------
 #     (as listed in GmiSAD_GridCompClassMod.F90)
 

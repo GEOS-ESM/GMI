@@ -2227,12 +2227,12 @@ CONTAINS
      call ESMF_StateGet(suv_state, 'SAREA',        so4_3d_field, __RC__)
      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
      self%so4v_sa(:,:,km:1:-1) = so4_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3 
-     CALL MAPL_MaxMin('GMI: SO4v_SArea(m^2/m^3):', so4_3d_array)
+     CALL MAPL_MaxMin('GMI: SO4v_SAREA(m^2/m^3):', so4_3d_array)
 
      call ESMF_StateGet(suv_state, 'REFF' ,        so4_3d_field, __RC__)
      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
      self%so4v_sareff(:,:,km:1:-1) = so4_3d_array(:,:,1:km)
-     CALL MAPL_MaxMin('GMI: SO4v_SAreff(um):    ', so4_3d_array)
+     CALL MAPL_MaxMin('GMI: SO4v_REFF(um):    ', so4_3d_array)
 
 !
 !
@@ -2363,12 +2363,12 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
      call ESMF_StateGet(pyro_state, 'SAREA',        pyro_philic_3d_field, __RC__)
      call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
      self%pyro_sa(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3
-     CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
+     CALL MAPL_MaxMin('GMI: PyroCb_SAREA(m^2/m^3?):', self%pyro_sa)
 
      call ESMF_StateGet(pyro_state, 'REFF' ,        pyro_philic_3d_field, __RC__)
      call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
      self%pyro_sareff(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)
-     CALL MAPL_MaxMin('GMI: PyroCb_SAreff(um):    ', pyro_3d_array)
+     CALL MAPL_MaxMin('GMI: PyroCb_REFF(um):    ', pyro_3d_array)
 
      
 !... place holder for when optical depth is available    
