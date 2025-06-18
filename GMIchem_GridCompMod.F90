@@ -80,11 +80,9 @@
 
   TYPE GMIchem_State
      PRIVATE
-     TYPE(Chem_Registry),    POINTER :: chemReg  => null()
-     TYPE(Runtime_Registry), POINTER ::   ggReg  => null()    ! Names of GMI Species - transported
-     TYPE(Runtime_Registry), POINTER ::   xxReg  => null()    ! Names of GMI Species - not transported
+     TYPE(Runtime_Registry), POINTER :: ggReg    => null()    ! Names of GMI Species - transported
+     TYPE(Runtime_Registry), POINTER :: xxReg    => null()    ! Names of GMI Species - not transported
      TYPE(GMI_GridComp),     POINTER :: gcGMI    => null()
-     TYPE(Chem_Bundle),      POINTER :: w_c      => null()
      TYPE(Species_Bundle),   POINTER :: bgg      => null()    ! Bundle of GMI Species - transported
      TYPE(Species_Bundle),   POINTER :: bxx      => null()    ! Bundle of GMI Species - not transported
   END TYPE GMIchem_State
@@ -136,16 +134,10 @@ CONTAINS
     type (GMIchem_State), pointer   :: state   ! internal, that is
     type (GMIchem_wrap)             :: wrap
 
-    integer                         :: m, n, i_XX, j_XX
+    integer                         :: n, i_XX, j_XX
     CHARACTER(LEN=ESMF_MAXSTR)      :: FRIENDLIES
     CHARACTER(LEN=ESMF_MAXSTR)      :: providerName
     CHARACTER(LEN=ESMF_MAXSTR)      :: aeroProviderName
-
-    LOGICAL :: searchForImports
-    INTEGER, PARAMETER :: numAeros = 5
-    CHARACTER(LEN=2) :: aeroID(numAeros) = (/ "BC", "DU", "OC", "SS", "SU" /)
-    CHARACTER(LEN=2) :: leadChars
-    CHARACTER(LEN=ESMF_MAXSTR) :: name
 
     LOGICAL :: do_ShipEmission
     INTEGER :: fastj_opt
@@ -172,12 +164,8 @@ CONTAINS
     VERIFY_(STATUS)
     wrap%ptr => state
 
-!   Start by loading the Chem Registry
-!   ----------------------------------
-    allocate ( state%chemReg, __STAT__ )
-    state%chemReg = Chem_RegistryCreate ( STATUS )
-    VERIFY_(STATUS)
-
+!   Start by loading the Registries
+!   -------------------------------
     allocate ( state%ggReg, __STAT__ )
     state%ggReg = Runtime_RegistryCreate ( 'GMI_Mech_Registry.rc', 'GMI_table::', STATUS )
     VERIFY_(STATUS)
@@ -197,8 +185,6 @@ CONTAINS
      CALL Runtime_RegistryPrint ( state%ggReg, 'GMI' )
      PRINT *, TRIM(Iam)//': XX'
      CALL Runtime_RegistryPrint ( state%xxReg,   'XX' )
-     PRINT *, TRIM(Iam)//': OTHERS'
-     CALL Chem_RegistryPrint ( state%chemReg )
     END IF
 
 
@@ -221,80 +207,6 @@ CONTAINS
     If (ESMF_UtilStringLowerCase(trim(aeroProviderName)).eq.'none') aeroProviderName = 'none'
 
     SELECT CASE (TRIM(aeroProviderName))
-
-     CASE ("GOCART")
-
-!   GOCART aerosols and dust.  With the exception of
-!   SO4, select upon dust/aerosol two-letter identifier 
-!   ---------------------------------------------------
-      DO m=1,numAeros-1
-
-       searchForImports = .FALSE.
-
-       SELECT CASE (aeroID(m))
-        CASE("BC")
-         searchForImports = state%chemReg%doing_BC
-        CASE("DU")
-         searchForImports = state%chemReg%doing_DU
-        CASE("OC")
-         searchForImports = state%chemReg%doing_OC
-        CASE("SS")
-         searchForImports = state%chemReg%doing_SS
-        CASE DEFAULT
-         searchForImports = .FALSE.
-       END SELECT
-
-       Doing_Search: IF(searchForImports) THEN
-
-        IF(MAPL_AM_I_ROOT() .AND. m == 1) PRINT *,"Adding the following from GOCART to GMICHEM import state:"
-
-        DO n = state%chemReg%i_GOCART, state%chemReg%j_GOCART
-
-         name = TRIM(state%chemReg%vname(n))
-         leadChars = ESMF_UtilStringUpperCase(name(1:2))
-
-         Match: IF(leadChars == aeroID(m)) THEN
-
-          CALL MAPL_AddImportSpec(GC,                                  &
-               SHORT_NAME  = "GOCART::"//TRIM(state%chemReg%vname(n)), &
-               LONG_NAME   = state%chemReg%vtitle(n),		     &
-               UNITS       = state%chemReg%vunits(n),		     &
-               DIMS        = MAPL_DimsHorzVert,		             &
-               VLOCATION   = MAPL_VLocationCenter,	  RC=STATUS  )
-          VERIFY_(STATUS)
-
-          IF(MAPL_AM_I_ROOT()) PRINT *,"  ",TRIM(state%chemReg%vname(n))
-
-         END IF Match
-
-        END DO 
-
-       END IF Doing_Search
-
-      END DO
-
-!   This is the special case for SO4, which 
-!   does not have "SU" as its leading two characters
-!   ------------------------------------------------
-      IF(state%chemReg%doing_SU) THEN
-
-       Doing_SO4: DO n = state%chemReg%i_SU, state%chemReg%j_SU
-
-        IF( (TRIM(state%chemReg%vname(n)) == "SO4" ) .OR.  &
-            (TRIM(state%chemReg%vname(n)) == "SO4v")       )  THEN
-         CALL MAPL_AddImportSpec(GC,                                  &
-     	      SHORT_NAME  = "GOCART::"//TRIM(state%chemReg%vname(n)), &
-     	      LONG_NAME   = state%chemReg%vtitle(n),                  &
-     	      UNITS       = state%chemReg%vunits(n),                  &
-     	      DIMS        = MAPL_DimsHorzVert,                        &
-     	      VLOCATION   = MAPL_VLocationCenter,           RC=STATUS )
-         VERIFY_(STATUS)
-         IF(MAPL_AM_I_ROOT()) PRINT *,"  ",TRIM(state%chemReg%vname(n))
-        END IF
-
-       END DO Doing_SO4
-
-      END IF
 
      CASE("GOCART.data")
 
@@ -1196,11 +1108,9 @@ CONTAINS
    integer                         :: STATUS
    character(len=ESMF_MAXSTR)      :: COMP_NAME
 
-   type(Chem_Registry), pointer    :: chemReg
    type(Runtime_Registry), pointer ::   ggReg
    type(Runtime_Registry), pointer ::   xxReg
    type(GMI_GridComp), pointer     :: gcGMI       ! Grid Component
-   type(Chem_Bundle), pointer      :: w_c         ! Chemical tracer fields
    type(Species_Bundle), pointer   :: bgg         ! GMI Species - transported
    type(Species_Bundle), pointer   :: bxx         ! GMI Species - not transported
    integer                         :: nymd, nhms  ! time of day
@@ -1215,7 +1125,6 @@ CONTAINS
    integer                         :: km                  ! dist grid indices
    integer                         :: dims(3), k, l, n
 
-   type(Chem_Array), pointer       :: q(:)	   ! array of pointers
    type(MAPL_MetaComp), pointer    :: MAPLobj	   ! GEOS Generic State 
    type(ESMF_State)                :: internal
    type(MAPL_VarSpec), pointer     :: InternalSpec(:)
@@ -1225,7 +1134,6 @@ CONTAINS
    type (MAPL_SunOrbit)            :: ORBIT ! VV adding Mike's SZA edits
 
    CHARACTER(LEN=ESMF_MAXSTR)	   :: short_name
-   CHARACTER(LEN=ESMF_MAXSTR)	   :: diurnal_bb
    CHARACTER(LEN=ESMF_MAXSTR)      :: providerName
    CHARACTER(LEN=ESMF_MAXSTR), POINTER, DIMENSION(:) :: fieldNames
 
@@ -1259,7 +1167,7 @@ CONTAINS
 
 !  Get parameters from gc and clock
 !  --------------------------------
-   call extract_ ( gc, clock, chemReg, ggReg, xxReg, gcGMI, w_c, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS )
+   call extract_ ( gc, clock, ggReg, xxReg, gcGMI, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS )
    VERIFY_(STATUS)
    IF(MAPL_AM_I_ROOT()) THEN
     PRINT *," "
@@ -1315,23 +1223,13 @@ CONTAINS
    CALL sendToGCs(STATUS)
    VERIFY_(STATUS)
 
-!  Initalize the legacy state but do not allocate memory for arrays
-!  ----------------------------------------------------------------
-   call Chem_BundleCreate_ ( chemReg, i1, i2, ig, im, j1, j2, jg, jm, km,  &
-                             w_c, lon=lons, lat=lats, &
-                             skipAlloc=.true., rc=STATUS )
-   VERIFY_(STATUS)
    call Species_BundleCreate ( ggReg, i1, i2, ig, im, j1, j2, jg, jm, km,  &
                              bgg, lon=lons, lat=lats, &
-                             skipAlloc=.true., rc=STATUS )
-   VERIFY_(STATUS)
+                             skipAlloc=.true., __RC__ )
+
    call Species_BundleCreate ( xxReg, i1, i2, ig, im, j1, j2, jg, jm, km,  &
                              bxx, lon=lons, lat=lats, &
-                             skipAlloc=.true., rc=STATUS )
-   VERIFY_(STATUS)
-
-   w_c%grid_esmf = grid
-   ALLOCATE(w_c%delp(i1:i2,j1:j2,km),w_c%rh(i1:i2,j1:j2,km),__STAT__)
+                             skipAlloc=.true., __RC__ )
 
    bgg%grid_esmf = grid
    bxx%grid_esmf = grid
@@ -1340,20 +1238,6 @@ CONTAINS
 !  --------------------------------------------------------------------------
    CALL ESMF_ConfigGetAttribute(CF, PHASE_COUNT, LABEL="GMI_RUN_PHASES:", DEFAULT=2, __RC__ )
    ASSERT_(PHASE_COUNT==1.OR.PHASE_COUNT==2)
-
-!  Activate or de-activate diurnal cycle for biomass burning. Default is OFF.
-!  --------------------------------------------------------------------------
-   CALL ESMF_ConfigGetAttribute(CF, diurnal_bb, LABEL="DIURNAL_BIOMASS_BURNING:", &
-                                DEFAULT="NO", RC=STATUS )
-   VERIFY_(STATUS)
-   IF(diurnal_bb(1:3) == "yes" .OR. diurnal_bb(1:3) == "YES" .OR. diurnal_bb(1:3) == "Yes") THEN	
-    short_name = "will be"
-    w_c%diurnal_bb = .TRUE.
-   ELSE
-    short_name = "will not be"
-    w_c%diurnal_bb = .FALSE.
-   END IF
-   IF(MAPL_AM_I_ROOT()) PRINT *, TRIM(Iam)//': Diurnal cycle '//TRIM(short_name)//" applied to biomass burning."
 
 !  Consistency Checks
 !  ------------------
@@ -1842,11 +1726,9 @@ CONTAINS
    integer                         :: STATUS
    character(len=ESMF_MAXSTR)      :: COMP_NAME
 
-   type(Chem_Registry), pointer    :: chemReg
    type(Runtime_Registry), pointer ::   ggReg     ! Names of GMI Species - transported
    type(Runtime_Registry), pointer ::   xxReg     ! Names of GMI Species - not transported
    type(GMI_GridComp), pointer     :: gcGMI       ! Grid Component
-   type(Chem_Bundle), pointer      :: w_c         ! Chemical tracer fields     
    type(Species_Bundle), pointer   :: bgg         ! GMI Species - transported
    type(Species_Bundle), pointer   :: bxx         ! GMI Species - not transported
    integer                         :: nymd, nhms  ! time
@@ -1862,7 +1744,6 @@ CONTAINS
 
    type(MAPL_MetaComp), pointer    :: MAPLobj      ! GEOS Generic State
    
-   real, pointer, dimension(:,:,:) :: rh2
    real, pointer, dimension(:,:)   :: LATS
    real, pointer, dimension(:,:)   :: LONS
 
@@ -1872,7 +1753,6 @@ CONTAINS
    REAL, POINTER, DIMENSION(:,:,:) :: Q_TEND
    REAL, POINTER, DIMENSION(:,:,:) :: OX_TEND
    REAL, POINTER, DIMENSION(:,:,:) :: PLE
-   REAL, POINTER, DIMENSION(:,:,:) :: DELP
    REAL, POINTER, DIMENSION(:,:,:) :: OCS_import
    REAL, POINTER, DIMENSION(:,:)   :: TROPP
    REAL, POINTER, DIMENSION(:,:)   :: AGCMTROPP
@@ -1929,7 +1809,7 @@ CONTAINS
 
 !  Get ESMF parameters from gc and clock
 !  -------------------------------------
-   CALL extract_(GC, clock, chemReg, ggReg, xxReg, gcGMI, w_c, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS)
+   CALL extract_(GC, clock, ggReg, xxReg, gcGMI, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS)
    VERIFY_(STATUS)
 
    dtInverse = 1.00/runDt
@@ -1937,16 +1817,6 @@ CONTAINS
 !  Layer interface pressures
 !  -------------------------
    CALL MAPL_GetPointer(impChem, PLE, 'PLE', __RC__)
-
-!  Layer pressure thickness
-!  ------------------------
-   CALL MAPL_GetPointer(impChem, DELP, 'DELP', __RC__)
-   w_c%delp = DELP
-
-!  Fill in RH.  Note: Not converted to %
-!  -------------------------------------
-   CALL MAPL_GetPointer(impChem, rh2, 'RH2', __RC__)
-   w_c%rh = rh2
 
 !  Guard against overflow/underflow due to near-zero numbers (mixing ratios)
 !  -------------------------------------------------------------------------
@@ -2674,11 +2544,9 @@ CONTAINS
    integer                         :: STATUS
    character(len=ESMF_MAXSTR)      :: COMP_NAME
 
-   type(Chem_Registry), pointer    :: chemReg
    type(Runtime_Registry), pointer ::   ggReg     ! Names of GMI Species - transported
    type(Runtime_Registry), pointer ::   xxReg     ! Names of GMI Species - not transported
    type(GMI_GridComp), pointer     :: gcGMI       ! Grid Component
-   type(Chem_Bundle), pointer      :: w_c         ! Chemical tracer fields     
    type(Species_Bundle), pointer   :: bgg         ! Bundle of GMI Species - transported
    type(Species_Bundle), pointer   :: bxx         ! Bundle of GMI Species - not transported
    type(MAPL_MetaComp), pointer    :: MAPLobj     ! GEOS Generic State
@@ -2705,7 +2573,7 @@ CONTAINS
 
 !  Get ESMF parameters from gc and clock
 !  -------------------------------------
-   call extract_(gc, clock, chemReg, ggReg, xxReg, gcGMI, w_c, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS, state = state)
+   call extract_(gc, clock, ggReg, xxReg, gcGMI, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS, state = state)
    VERIFY_(STATUS)
 
 !  Call ESMF version
@@ -2713,21 +2581,11 @@ CONTAINS
    call GMI_GridCompFinalize(gcGMI, impChem, expChem, nymd, nhms, gmiDt, STATUS)
    VERIFY_(STATUS)
 
-!  Destroy Chem_Bundle
-!  -------------------
-   call Chem_BundleDestroy ( w_c, STATUS )
-   VERIFY_(STATUS)
-
 !  Destroy Species_Bundles
 !  -----------------------
    call Species_BundleDestroy ( bgg, STATUS )
    VERIFY_(STATUS)
    call Species_BundleDestroy ( bxx, STATUS )
-   VERIFY_(STATUS)
-
-!  Destroy Chem_Registry
-!  ---------------------
-   call Chem_RegistryDestroy ( chemReg, STATUS ) 
    VERIFY_(STATUS)
 
 !  Destroy Runtime Registries
@@ -2739,7 +2597,7 @@ CONTAINS
 
 !  Destroy Legacy state
 !  --------------------
-   deallocate ( state%chemReg, state%ggReg, state%xxReg, state%gcGMI, state%w_c, state%bgg, state%bxx, stat = STATUS )
+   deallocate ( state%ggReg, state%xxReg, state%gcGMI, state%bgg, state%bxx, stat = STATUS )
    VERIFY_(STATUS)
 
 !  Free the masks
@@ -2764,15 +2622,13 @@ CONTAINS
 !-------------------------------------------------------------------------
 !     NASA/GSFC, Global Modeling and Assimilation Office, Code 610.1     !
 !-------------------------------------------------------------------------
-    SUBROUTINE extract_(gc, clock, chemReg, ggReg, xxReg, gcGMI, w_c, bgg, bxx, nymd, nhms, gmiDt, runDt, rc, state)
+    SUBROUTINE extract_(gc, clock, ggReg, xxReg, gcGMI, bgg, bxx, nymd, nhms, gmiDt, runDt, rc, state)
 
     type(ESMF_GridComp), intent(inout) :: gc
     type(ESMF_Clock), intent(in)       :: clock
-    type(Chem_Registry), pointer       :: chemReg
     type(Runtime_Registry), pointer    ::   ggReg       ! Names of GMI Species - transported
     type(Runtime_Registry), pointer    ::   xxReg       ! Names of GMI Species - not transported
     type(GMI_GridComp), pointer        :: gcGMI
-    type(Chem_Bundle), pointer         :: w_c
     type(Species_Bundle), pointer      :: bgg           ! Bundle of GMI Species - transported
     type(Species_Bundle), pointer      :: bxx           ! Bundle of GMI Species - not transported
     integer, intent(out)               :: nymd, nhms
@@ -2815,10 +2671,6 @@ CONTAINS
 
 !   This is likely to be allocated during initialize only
 !   -----------------------------------------------------
-    if ( .not. associated(myState%chemReg) ) then
-         allocate ( myState%chemReg, stat=STATUS )
-         VERIFY_(STATUS)
-    end if
     if ( .not. associated(myState%ggReg) ) then
          allocate ( myState%ggReg, stat=STATUS )
          VERIFY_(STATUS)
@@ -2831,10 +2683,6 @@ CONTAINS
          allocate ( myState%gcGMI, stat=STATUS )
          VERIFY_(STATUS)
     end if
-    if ( .not. associated(myState%w_c) ) then
-         allocate ( myState%w_c, stat=STATUS )
-         VERIFY_(STATUS)
-    end if
     if ( .not. associated(myState%bgg) ) then
          allocate ( myState%bgg, stat=STATUS )
          VERIFY_(STATUS)
@@ -2844,11 +2692,9 @@ CONTAINS
          VERIFY_(STATUS)
     end if
 
-    chemReg => myState%chemReg
-      ggReg => myState%ggReg
-      xxReg => myState%xxReg
+    ggReg   => myState%ggReg
+    xxReg   => myState%xxReg
     gcGMI   => myState%gcGMI
-    w_c     => myState%w_c
     bgg     => myState%bgg
     bxx     => myState%bxx
 

@@ -1256,6 +1256,8 @@ CONTAINS
          call updateTracerToBundle(sadBun, ptr3Dreal, ib)
       end do
 
+      deallocate(ptr3Dreal)
+
       return
 
       end subroutine populateBundleSAD
