@@ -16,9 +16,9 @@
 !   a gas). There is also a Henry's law constant and oxidizing potential for
 !   each species.
 !
-!  Input mechanism:        StratTrop_HFC_S
+!  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Mon Mar 31 16:08:51 2025
+!  Setkin files generated: Tue Jun 24 19:53:53 2025
 !
 !=======================================================================
 

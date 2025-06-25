@@ -23,9 +23,9 @@
 !    qqk    : rates of thermal processes (molecules cm^-3 s^-1)
 !    qqj    : rates of photolytic processes (molecules cm^-3 s^-1)
 !
-!  Input mechanism:        StratTrop_HFC_S
+!  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Mon Mar 31 16:08:51 2025
+!  Setkin files generated: Tue Jun 24 19:53:53 2025
 !
 !=======================================================================
       subroutine Calc_rate_Setkin &
@@ -1332,7 +1332,7 @@
 !
       qqk(kloop,320)=qk(kloop,320)*y(kloop,51)*y(kloop,63)
 !
-!....         ClONO2 + HCl = Cl2 + HNO3
+!....         ClONO2 + HCl = Cl2 +  0.50 N2O5
 !
       qqk(kloop,321)=qk(kloop,321)*y(kloop,33)*y(kloop,51)
 !
@@ -1698,7 +1698,7 @@
 !
       qqj(kloop,74)=qj(kloop,74)*y(kloop,78)
 !
-!....  OCSg + hv = CO
+!....  OCSg + hv = CO + SO2
 !
       qqj(kloop,75)=qj(kloop,75)*y(kloop,98)
 !

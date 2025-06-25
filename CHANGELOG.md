@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed SO2 Fire emissions to be diurnal (non-zero-diff)
 - Now accomodate up to 181 vertical levels in FastJX65 photolysis
 - Small clean-up of condense.F90 (zero-diff)
+- Temporarily removed the trap for RCOOH since the PyroCB mechanism exceeds the previous threshold
 
 ### Removed
 

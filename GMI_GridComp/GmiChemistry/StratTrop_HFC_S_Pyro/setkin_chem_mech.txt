@@ -1,7 +1,7 @@
-Modeler input mechanism:        StratTrop_HFC_S
+Modeler input mechanism:        StratTrop_HFC_S_Pyro.txt
 Principal reaction reference:   GMI_reactions_JPL19.db
 Species nomenclature:           GMI_species.db
-Mechanism timestamp:            Mon Mar 31 16:08:51 2025
+Mechanism timestamp:            Tue Jun 24 19:53:53 2025
 
 Species indices:
   1: A3O2
@@ -456,7 +456,7 @@ Thermal reactions:
 318: HCl + HOCl = Cl2 + H2O
 319: BrONO2 + HCl = BrCl + HNO3
 320: HCl + HOBr = BrCl + H2O
-321: ClONO2 + HCl = Cl2 + HNO3
+321: ClONO2 + HCl = Cl2 +  0.50 N2O5
 322: HCl + HOCl = Cl2 + H2O
 323: HCl + HOBr = BrCl + H2O
 324: N2O5 = 2 HNO3
@@ -549,5 +549,5 @@ Photolyses:
 409: MAOP + hv = HO2 + OH + RCHO
 410: R4N2 + hv =  0.05 A3O2 +  0.32 ACET +  0.32 ALD2 +  0.18 B3O2 +  0.32 ETO2 +  0.27 HO2 +  0.19 MEK +  0.18 MO2 + NO2 +  0.13 RCHO
 411: MAP + hv = MO2 + OH
-412: OCSg + hv = CO
+412: OCSg + hv = CO + SO2
 413: H2SO4 + hv = 2 OH + SO2
