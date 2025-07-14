@@ -24,14 +24,16 @@
 !>>>>>>>>  Cloud-J version 8.0   new lower albedo can be angle/wavelength dependent
 !
       subroutine controlFastJX74 (k1, k2, chem_mask_khi, lat_ij, num_qjs, &
-     &                  month_gmi, jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij, &
-     &                  SZA_ij, cloudfrac_ij, qi_ij, ql_ij, ri_ij, rl_ij, &
-!    &                  cnv_frc_ij, frland_ij, &
-     &                  press3e_ij, pctm_ij, kel_ij,                   &
-     &                  surf_alb_ij, qjgmi_ij, relHumidity_ij,         &
-     &                  overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,    &
-     &                  do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij,      &
-     &                  fjx_solar_cycle_param, CH4_ij, H2O_ij, ozone_ij)
+                   month_gmi, jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij, &
+                   SZA_ij, cloudfrac_ij, qi_ij, ql_ij, ri_ij, rl_ij, &
+!                  cnv_frc_ij, frland_ij, &
+                   press3e_ij, pctm_ij, kel_ij,                   &
+                   surf_alb_ij, qjgmi_ij, relHumidity_ij,         &
+                   overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,    &
+                   do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij,      &
+                   fjx_solar_cycle_param, &
+                   do_CCM_OptProps, num_CCM_WL, num_CCM_aers, CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij, &
+                   CH4_ij, H2O_ij, ozone_ij)
 !
 ! USES:
 !
@@ -56,6 +58,14 @@
       real*8, intent(in), dimension(W_)      :: fjx_solar_cycle_param
       real*8, intent(in), dimension(k1:k2)   :: CH4_ij, H2O_ij(k1:k2)  ! mixing ratio for CH4 & H2O
       real*8, intent(in), dimension(k1:k2), optional :: ozone_ij      ! mixing ratio for ozone
+!... CCM provided aerosol optical characteristics
+      logical, intent(in) :: do_CCM_OptProps
+      integer, intent(in) :: num_CCM_WL, num_CCM_aers
+      real*8,  intent(in), dimension(num_CCM_WL)                           :: CCM_WL_ij
+      real*8,  intent(in), dimension(num_CCM_WL, k1:k2+1, num_CCM_aers)    :: CCM_SSALB_ij, CCM_OPTX_ij
+      real*8,  intent(in), dimension(8, num_CCM_WL, k1:k2+1, num_CCM_aers) :: CCM_SSLEG_ij
+!.sds.end
+!
       real*8, intent(out), dimension(k1:k2)                    :: overheadO3col_ij
       real*8, intent(out), dimension(k1:chem_mask_khi,num_qjs) :: qjgmi_ij
       real*8, intent(inout), dimension(k1:k2,NSADaer*nrh_b)    :: ODAER_ij
@@ -477,153 +487,158 @@
 !    (-4)  SS-3     ss_aop.r1.26to2.50.dat
 !    (-5)  SS-4     ss_aop.r2.50to10.dat
 !
-        if(oldgmi_aero) then 
-          ioffd = 2000   ! aertype > 1000 is use old GMI parameters, aertype > 2000 is hydrophobic
-          gmi_naer = 14  ! add 14 for offset in orig GMI table to first dust type
-        else
-          ioffd = 10     ! use UCI aerosol types
-          gmi_naer = 0   ! use UCI aerosol types, no additional offset
-        endif
-!... dust (hydrophobic)
-        do N=1,NSADdust
+        if(do_CCM_OptProps) then
+!.if bulk params, no loop
           num_aer = num_aer+1
+        else
           if(oldgmi_aero) then 
-            rho = gmiDAA(4,gmi_naer+N)*1000.0
+            ioffd = 2000   ! aertype > 1000 is use old GMI parameters, aertype > 2000 is hydrophobic
+            gmi_naer = 14  ! add 14 for offset in orig GMI table to first dust type
           else
-            rho = DAA(10+N)*1.0d+3
+            ioffd = 10     ! use UCI aerosol types
+            gmi_naer = 0   ! use UCI aerosol types, no additional offset
           endif
-          do L = k1,k2
-            LL = L-k1+1
-            IDXAER(LL,num_aer) = ioffd+gmi_naer+N
-!... capture tropospheric aerosol parameters for diagnostic output
+!... dust (hydrophobic)
+          do N=1,NSADdust
+            num_aer = num_aer+1
             if(oldgmi_aero) then 
-              ERADIUS_ij(l,num_aer) = gmiRAA(4,gmi_naer+N) * 1.0D-4
+              rho = gmiDAA(4,gmi_naer+N)*1000.0
             else
-              ERADIUS_ij(l,num_aer) = RAA(10+N) * 1.0D-4
+              rho = DAA(10+N)*1.0d+3
             endif
+            do L = k1,k2
+              LL = L-k1+1
+              IDXAER(LL,num_aer) = ioffd+gmi_naer+N
+!... capture tropospheric aerosol parameters for diagnostic output
+              if(oldgmi_aero) then 
+                ERADIUS_ij(l,num_aer) = gmiRAA(4,gmi_naer+N) * 1.0D-4
+              else
+                ERADIUS_ij(l,num_aer) = RAA(10+N) * 1.0D-4
+              endif
 !... het reactions turned on, otherwise leave 0.0
-            if(AerDust_Effect_opt.eq.0.or.AerDust_Effect_opt.eq.2) then
-              TAREA_ij(l,num_aer) = 3.D0 * ODMDUST_ij(L,N) / ( eradius_ij(L,num_aer) * rho )
-            endif
+              if(AerDust_Effect_opt.eq.0.or.AerDust_Effect_opt.eq.2) then
+                TAREA_ij(l,num_aer) = 3.D0 * ODMDUST_ij(L,N) / ( eradius_ij(L,num_aer) * rho )
+              endif
 !... convert to approriate units for FastJX
-            AERSP(LL,num_aer) = ODMDUST_ij(L,N) * gridBoxHeight_ij(L) * 1.0d3
-          enddo
+              AERSP(LL,num_aer) = ODMDUST_ij(L,N) * gridBoxHeight_ij(L) * 1.0d3
+            enddo
 !
-        enddo
+          enddo
 !
 !... remapped NSADaer (hydrophyllic)
-        do N=1,NSADaer
-          num_aer = num_aer+1
-          kdry = iDRYwaer(N)
-          rho = gmiDAA(4,kdry)*1.0D+3
-          do L = k1,k2
-            LL = L-k1+1
+          do N=1,NSADaer
+            num_aer = num_aer+1
+            kdry = iDRYwaer(N)
+            rho = gmiDAA(4,kdry)*1.0D+3
+            do L = k1,k2
+              LL = L-k1+1
 !... capture tropospheric aerosol parameters for diagnostic output
 !... old method for aerosol surface area
-            IF ( relHumidity_ij(L) <= tRH(2) ) THEN
-               IRH = 1
-             ELSE IF ( relHumidity_ij(L) <= tRH(3) ) THEN
-               IRH = 2
-             ELSE IF ( relHumidity_ij(L) <= tRH(4) ) THEN
-               IRH = 3
-             ELSE IF ( relHumidity_ij(L) <= tRH(5) ) THEN
-               IRH = 4
-             ELSE IF ( relHumidity_ij(L) <= tRH(6) ) THEN
-               IRH = 5
-             ELSE IF ( relHumidity_ij(L) <= tRH(7) ) THEN
-               IRH = 6
-             ELSE
-               IRH = 7
-            ENDIF
+              IF ( relHumidity_ij(L) <= tRH(2) ) THEN
+                 IRH = 1
+               ELSE IF ( relHumidity_ij(L) <= tRH(3) ) THEN
+                 IRH = 2
+               ELSE IF ( relHumidity_ij(L) <= tRH(4) ) THEN
+                 IRH = 3
+               ELSE IF ( relHumidity_ij(L) <= tRH(5) ) THEN
+                 IRH = 4
+               ELSE IF ( relHumidity_ij(L) <= tRH(6) ) THEN
+                 IRH = 5
+               ELSE IF ( relHumidity_ij(L) <= tRH(7) ) THEN
+                 IRH = 6
+               ELSE
+                 IRH = 7
+              ENDIF
 !... if sulfate, distinguish between strat and trop parameters?
 !... trop
-!            if(PPP(LL).ge.tropp_ij) then
-            if(oldgmi_aero) then 
-              ioffd = 1000   ! aertype > 1000 is use old GMI parameters
-              IDXAER(LL,num_aer) = ioffd+kdry+IRH-1
-            else
-              IDXAER(LL,num_aer) = idxAtype(n)
-            endif
+!               if(PPP(LL).ge.tropp_ij) then
+              if(oldgmi_aero) then 
+                ioffd = 1000   ! aertype > 1000 is use old GMI parameters
+                IDXAER(LL,num_aer) = ioffd+kdry+IRH-1
+              else
+                IDXAER(LL,num_aer) = idxAtype(n)
+              endif
 !... strat SO4
-!            else
-!              if(oldgmi_aero) then 
-!                IDXAER(LL,num_aer) = ioffd+kdry+IRH-1
 !              else
-!                IDXAER(LL,num_aer) = 1
+!                if(oldgmi_aero) then 
+!                  IDXAER(LL,num_aer) = ioffd+kdry+IRH-1
+!                else
+!                  IDXAER(LL,num_aer) = 1
+!                endif
 !              endif
-!            endif
-            if(IRH.ge.NgmiRH_) then
-              SCALEQ = gmiQW(N,NgmiRH_) / gmiQW(N,1)  !gmiQW(N,1) is dry extinction eff. for wAersl "N"
-              REFF   = gmiRW(N,NgmiRH_)
-            else
-              FRAC = min( ((relHumidity_ij(L)-tRH(IRH)) / (tRH(IRH+1)-tRH(IRH))) ,1.0d0)
-              scaleQ = (FRAC*gmiQW(N,IRH+1) + (1.d0-FRAC)*gmiQW(N,IRH)) / gmiQW(N,1)
-              REFF   =  FRAC*gmiRW(N,IRH+1) + (1.d0-FRAC)*gmiRW(N,IRH)
-            endif
-            scaleR = REFF / (gmiRW(N,1))
+              if(IRH.ge.NgmiRH_) then
+                SCALEQ = gmiQW(N,NgmiRH_) / gmiQW(N,1)  !gmiQW(N,1) is dry extinction eff. for wAersl "N"
+                REFF   = gmiRW(N,NgmiRH_)
+              else
+                FRAC = min( ((relHumidity_ij(L)-tRH(IRH)) / (tRH(IRH+1)-tRH(IRH))) ,1.0d0)
+                scaleQ = (FRAC*gmiQW(N,IRH+1) + (1.d0-FRAC)*gmiQW(N,IRH)) / gmiQW(N,1)
+                REFF   =  FRAC*gmiRW(N,IRH+1) + (1.d0-FRAC)*gmiRW(N,IRH)
+              endif
+              scaleR = REFF / (gmiRW(N,1))
 !... calc diagnostic: effective radius
-            eradius_ij (L,num_aer) = 1.0D-4 * REFF
+              eradius_ij (L,num_aer) = 1.0D-4 * REFF
 !... calc diagnostic: hygroscopic growth
-            HYGRO_ij(L,N) = scaleQ * scaleR * scaleR
+              HYGRO_ij(L,N) = scaleQ * scaleR * scaleR
 !... het reactions turned off
-            if(AerDust_Effect_opt.eq.0.or.AerDust_Effect_opt.eq.2) then
-              TAREA_ij(L,num_aer) = 3.D0 * ODAER_ij(L,N) * scaleR**3 &
-                                    / ( eradius_ij(L,num_aer) * rho )
-            endif
+              if(AerDust_Effect_opt.eq.0.or.AerDust_Effect_opt.eq.2) then
+                TAREA_ij(L,num_aer) = 3.D0 * ODAER_ij(L,N) * scaleR**3 &
+                                      / ( eradius_ij(L,num_aer) * rho )
+              endif
 !
 !... convert aerosols to approriate units in photo_jx
-            AERSP(LL,num_aer) = ODAER_ij(L,N) * gridBoxHeight_ij(L) * 1.0d3
+              AERSP(LL,num_aer) = ODAER_ij(L,N) * gridBoxHeight_ij(L) * 1.0d3
 !... end old method
 !
+            enddo
           enddo
-        enddo
 !
 !... BCphobic Aerosols
-        num_aer = num_aer+1
-        loc_naer = 6    ! UM-BC1  | 0.140 1.500| UMich w/Mie code logN:r=.050:s=.642  n=1.80+0.50i
-        gmi_naer = iDRYwaer(2)   !
+          num_aer = num_aer+1
+          loc_naer = 6    ! UM-BC1  | 0.140 1.500| UMich w/Mie code logN:r=.050:s=.642  n=1.80+0.50i
+          gmi_naer = iDRYwaer(2)   !
 !
-        if(oldgmi_aero) then 
-          ioffd = 2000   ! aertype > 1000 is use old GMI parameters, aertype > 2000 is hydrophobic
-          IDXAER(:,num_aer) = ioffd+gmi_naer
-        else
-          IDXAER(:,num_aer) = loc_naer
-        endif
-!... capture tropospheric aerosol parameters for diagnostic output
-        rho = gmiDAA(4,gmi_naer)*1.0D+3
-        do l = k1,k2
-          ll = l-k1+1
-!          ERADIUS_ij(ll,NSADdust+2) = gmiRAA(4,gmi_naer) * 1.0d-4
-          if(ODcAER_ij(l,1).gt.0.0.and.(AerDust_Effect_opt.eq.0.or.AerDust_Effect_opt.eq.2)) then
-             TAREA_ij(ll,NSADdust+2) = TAREA_ij(ll,NSADdust+2) &
-                + 3.D0*ODcAER_ij(l,1) / (ERADIUS_ij(ll,NSADdust+2)*rho)
+          if(oldgmi_aero) then 
+            ioffd = 2000   ! aertype > 1000 is use old GMI parameters, aertype > 2000 is hydrophobic
+            IDXAER(:,num_aer) = ioffd+gmi_naer
+          else
+            IDXAER(:,num_aer) = loc_naer
           endif
-          AERSP(ll,num_aer) = ODcAER_ij(l,1) * gridBoxHeight_ij(l) * 1.0d3
-        enddo
+!... capture tropospheric aerosol parameters for diagnostic output
+          rho = gmiDAA(4,gmi_naer)*1.0D+3
+          do l = k1,k2
+            ll = l-k1+1
+!          ERADIUS_ij(ll,NSADdust+2) = gmiRAA(4,gmi_naer) * 1.0d-4
+            if(ODcAER_ij(l,1).gt.0.0.and.(AerDust_Effect_opt.eq.0.or.AerDust_Effect_opt.eq.2)) then
+               TAREA_ij(ll,NSADdust+2) = TAREA_ij(ll,NSADdust+2) &
+                  + 3.D0*ODcAER_ij(l,1) / (ERADIUS_ij(ll,NSADdust+2)*rho)
+            endif
+            AERSP(ll,num_aer) = ODcAER_ij(l,1) * gridBoxHeight_ij(l) * 1.0d3
+          enddo
 !
 !... OCphobic Aerosols
-        num_aer = num_aer+1
-        loc_naer = 8    ! UM-BB08C| 0.149 1.230| UMich w/Mie code 8%BC 0%RH logN:r=.080:s=.500 n=1.552+0.04i
-        gmi_naer = iDRYwaer(3)   !
+          num_aer = num_aer+1
+          loc_naer = 8    ! UM-BB08C| 0.149 1.230| UMich w/Mie code 8%BC 0%RH logN:r=.080:s=.500 n=1.552+0.04i
+          gmi_naer = iDRYwaer(3)   !
 !
-        if(oldgmi_aero) then 
-          IDXAER(:,num_aer) = ioffd+gmi_naer
-        else
-          IDXAER(:,num_aer) = loc_naer
-        endif
+          if(oldgmi_aero) then 
+            IDXAER(:,num_aer) = ioffd+gmi_naer
+          else
+            IDXAER(:,num_aer) = loc_naer
+          endif
 !... capture tropospheric aerosol parameters for diagnostic output
-        rho = gmiDAA(4,gmi_naer)*1.0D+3
-        do l = k1,k2
-          ll = l-k1+1
+          rho = gmiDAA(4,gmi_naer)*1.0D+3
+          do l = k1,k2
+            ll = l-k1+1
 !          ERADIUS_ij(ll,NSADdust+3) = gmiRAA(4,gmi_naer) * 1.0d-4
 !... het reactions turned off
-          if(ODcAER_ij(l,2).gt.0.0.and.(AerDust_Effect_opt.eq.0.or.AerDust_Effect_opt.eq.2)) then
-             TAREA_ij(ll,NSADdust+3) = TAREA_ij(ll,NSADdust+3)  &
-                + 3.D0*ODcAER_ij(l,2) / (ERADIUS_ij(ll,NSADdust+3)*rho)
-          endif
-          AERSP(ll,num_aer) = ODcAER_ij(l,2) * gridBoxHeight_ij(l) * 1.0d3
-        enddo
+            if(ODcAER_ij(l,2).gt.0.0.and.(AerDust_Effect_opt.eq.0.or.AerDust_Effect_opt.eq.2)) then
+               TAREA_ij(ll,NSADdust+3) = TAREA_ij(ll,NSADdust+3)  &
+                  + 3.D0*ODcAER_ij(l,2) / (ERADIUS_ij(ll,NSADdust+3)*rho)
+            endif
+            AERSP(ll,num_aer) = ODcAER_ij(l,2) * gridBoxHeight_ij(l) * 1.0d3
+          enddo
 !... end aerosol initialization
+        endif 
       endif 
 !
 !!! set up clouds
@@ -766,7 +781,9 @@
       call CLOUD_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT,  &
              DDD, RRR, OOO, LWP, IWP, REFFL, REFFI, CLF, CLDCOR, CLDIW,  &
              AERSP, IDXAER, LTOP, num_aer, VALJXX, num_qjs,  &
-             TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT, cldOD_out, aerOD_out)
+             TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT, &
+             do_CCM_OptProps, num_CCM_WL, num_CCM_aers, CCM_WL_ij, &
+             CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij, cldOD_out, aerOD_out)
 !     
 !... send CLOUD_JX calcd cloud optical depth of 400nm back for diagnostic output w no FJX top layer
      cldOD_ij(k1:k2) = cldOD_out(1:k2-k1+1)

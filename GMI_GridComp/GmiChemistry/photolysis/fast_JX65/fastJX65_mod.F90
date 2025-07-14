@@ -1203,18 +1203,18 @@ do L = 1, L1_
 !         NDCLD = CLDNDX (ILNG, JLAT, L)
 !         PATH = CLDLWP (ILNG, JLAT, L)
 !         DENS = PATH / ZH (ILNG, JLAT, L)
-           if (M .eq. 1) then
-              NDCLD = CLDWNDX (ILNG, JLAT, L)
-              ODCLD = CLDW (ILNG, JLAT, L)
-           else
-              NDCLD = CLDINDX (ILNG, JLAT, L)
-              ODCLD = CLDI (ILNG, JLAT, L)
-           endif
-           RH = RELH (L)
+          if (M .eq. 1) then
+            NDCLD = CLDWNDX (ILNG, JLAT, L)
+            ODCLD = CLDW (ILNG, JLAT, L)
+          else
+            NDCLD = CLDINDX (ILNG, JLAT, L)
+            ODCLD = CLDI (ILNG, JLAT, L)
+          endif
+          RH = RELH (L)
 ! endBian, 11/22/2011
-         if (ODCLD.gt.0.d0) then
+          if (ODCLD.gt.0.d0) then
             if (NDCLD.lt.4.or.NDCLD.gt.13) then
-                NDCLD = 9
+              NDCLD = 9
             endif
 !---now calculate cloud OD at 600 nm from mixed formulae:
             !REFF = RAA (NDCLD)
@@ -1233,19 +1233,19 @@ do L = 1, L1_
 !            do K = 1, 5
             do K = 1, numScat-1
 ! endBian, 11/22/2011
-               OD (K, L) = OD (K, L) + OPTX (K)
-               SSA (K, L) = SSA (K, L) + SSAX (K) * OPTX (K)
-               do I = 1, 8
-                  SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX(K)
-               enddo
+              OD (K, L) = OD (K, L) + OPTX (K)
+              SSA (K, L) = SSA (K, L) + SSAX (K) * OPTX (K)
+              do I = 1, 8
+                SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX(K)
+              enddo
             enddo
-         endif
+          endif
 !---use OD of clouds (not aerosols) at 600 nm to determine added layers
 ! begBian, 11/22/2011
-         enddo ! m
+        enddo ! m
 
 !         OD600 (L) = OD (4, L)
-         OD600 (L) = OD (3, L)
+        OD600 (L) = OD (3, L)
 ! endBian, 11/22/2011
 !---aerosols in layer: check aerosol index
 !---this uses data from climatology OR from current CTM (STT of aerosols
@@ -1256,7 +1256,7 @@ do L = 1, L1_
         ! Loop over the no. of aerosol/cloud types supplied from CTM
 ! begBian, 11/22/2011
 !         do M = 1, MX
-         do M = 1, NSADdust+NSADaer
+        do M = 1, NSADdust+NSADaer
 !            NAER = AERindex (M)
 !            it = 3
 !            if (M .ge. it) then
@@ -1265,39 +1265,39 @@ do L = 1, L1_
 
 !... For mineral dust
 !            if ((M .gt. it) .and. (M .ge. it + NSADdust)) then
-            if (M .le. NSADdust) then
-                ODaer = OPTdust (L, M)
-                NAER = 14 + M
-                !NAER = M
-                call OPTICA (OPTX, SSAX, SLEGX, ODaer, RH, NAER)
-!                do K = 1, 5
-                do K = 1, numScat-1
-                   OD (K, L) = OD (K, L) + OPTX (K)
-                   SSA(K,L) = SSA(K,L) + SSAX(K) * OPTX(K)
-                   do I = 1, 8
-                      SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX (K)
-                   enddo
-                enddo
+          if (M .le. NSADdust) then
+            ODaer = OPTdust (L, M)
+            NAER = 14 + M
+            !NAER = M
+            call OPTICA (OPTX, SSAX, SLEGX, ODaer, RH, NAER)
+!            do K = 1, 5
+            do K = 1, numScat-1
+              OD (K, L) = OD (K, L) + OPTX (K)
+              SSA(K,L) = SSA(K,L) + SSAX(K) * OPTX(K)
+              do I = 1, 8
+                SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX (K)
+              enddo
+            enddo
 !... For Trop sulfate at RH=0-90
-            else
-                do MS = 1, NRH_b
-                   MSOD = (M-NSADdust-1)*5+MS
-                   MSN  = 14+NSADdust+(M-NSADdust-1)*7+MS
-                   !MSOD = (M-NSADdust-1)*NRH_b + MS
-                   !MSN  = NSADdust+(M-NSADdust-1)*NRH_b+MS
-                   ODaer = OPTaer (L, MSOD)
-                   NAER  = MSN
-                   call OPTICA (OPTX, SSAX, SLEGX, ODaer, RH, NAER)
-!                   do K = 1, 5
-                   do K = 1, numScat-1
-                      OD (K, L) = OD (K, L) + OPTX (K)
-                      SSA (K, L) = SSA (K, L) + SSAX (K) * OPTX (K)
-                      do I = 1, 8
-                         SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX (K)
-                      enddo
-                   enddo
+          else
+            do MS = 1, NRH_b
+              MSOD = (M-NSADdust-1)*5+MS
+              MSN  = 14+NSADdust+(M-NSADdust-1)*7+MS
+              !MSOD = (M-NSADdust-1)*NRH_b + MS
+              !MSN  = NSADdust+(M-NSADdust-1)*NRH_b+MS
+              ODaer = OPTaer (L, MSOD)
+              NAER  = MSN
+              call OPTICA (OPTX, SSAX, SLEGX, ODaer, RH, NAER)
+!              do K = 1, 5
+              do K = 1, numScat-1
+                OD (K, L) = OD (K, L) + OPTX (K)
+                SSA (K, L) = SSA (K, L) + SSAX (K) * OPTX (K)
+                do I = 1, 8
+                  SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX (K)
                 enddo
-            endif
+              enddo
+            enddo
+          endif
 !               PATH = AER1P_dust (L, M-it)
 !               call OPTICA (OPTX, SSAX, SLEGX, PATH, RH, NAER)
 !            end if
@@ -1331,20 +1331,20 @@ do L = 1, L1_
 !                  enddo
 !               enddo
 !            endif
-         enddo ! M
+        enddo ! M
 ! endBian, 11/22/2011
 
 ! begBian, 11/22/2011
-!         do K = 1, 5
-         do K = 1, numScat-1
+!        do K = 1, 5
+        do K = 1, numScat-1
 ! endBian, 11/22/2011
-            if (OD (K, L) .gt.0.d0) then
-               SSA (K, L) = SSA (K, L) / OD (K, L)
-               do I = 1, 8
-                  SLEG (I, K, L) = SLEG (I, K, L) / OD (K, L)
-               enddo
-            endif
-         enddo
+          if (OD (K, L) .gt.0.d0) then
+            SSA (K, L) = SSA (K, L) / OD (K, L)
+            do I = 1, 8
+              SLEG (I, K, L) = SLEG (I, K, L) / OD (K, L)
+            enddo
+          endif
+        enddo
 
       enddo ! L
 !---can add aerosol OD at 600 nm to determine added layers, but not done

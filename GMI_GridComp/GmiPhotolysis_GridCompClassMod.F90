@@ -133,7 +133,7 @@
     character (len=MAX_LENGTH_VAR_NAME)  :: qj_var_name
     integer             :: phot_opt
     integer             :: fastj_opt
-    logical             :: do_clear_sky
+    logical             :: do_clear_sky, do_LymanAlpha
     real*8              :: fastj_offset_sec
 
     real*8              :: synoz_threshold
@@ -188,6 +188,7 @@
 
     integer             :: AerDust_Effect_opt
     logical             :: do_AerDust_Calc
+    logical             :: do_CCM_OptProps
     character (len=MAX_LENGTH_FILE_NAME) :: AerDust_infile_name
     character (len=MAX_LENGTH_FILE_NAME) :: Dust_infile_name
     character (len=MAX_LENGTH_FILE_NAME) :: Aerosol_infile_name
@@ -445,9 +446,15 @@ CONTAINS
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_clear_sky, label="do_clear_sky:", &
      &                       default=.false., rc=STATUS)
 
-      call ESMF_ConfigGetAttribute(gmiConfigFile, self%fastj_offset_sec, &
-     &                label   = "fastj_offset_sec:", &
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_CCM_OptProps, label="do_CCM_OptProps:", &
+     &                       default=.false., rc=STATUS)
+
+      call ESMF_ConfigGetAttribute(gmiConfigFile, self%fastj_offset_sec, label="fastj_offset_sec:", &
      &                default = 0.0d0, rc=STATUS )
+
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_LymanAlpha, label="do_LymanAlpha:", &
+     &                       default=.false., rc=STATUS)
+
       VERIFY_(STATUS)
 !
 !... CloudJ_cldflag = 1 ! clear sky
@@ -974,6 +981,20 @@ CONTAINS
          Allocate(self%tArea(i1:i2, ju1:j2, k1:k2, nSADdust+nSADaer))
          self%tArea = 0.0d0
 
+!... arrays needed for using aerosol optical properties from aerosol module
+         if(self%do_CCM_OptProps) then
+           self%JXbundle%NUM_CCM_aers = 1
+           self%JXbundle%CCM_WL = 0
+           Allocate(self%JXbundle%CCM_WL(W_)) 
+           self%JXbundle%CCM_WL = 0.0d0
+           Allocate(self%JXbundle%CCM_SSALB(W_, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%CCM_SSALB = 0.0d0
+           Allocate(self%JXbundle%CCM_OPTX(W_, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%CCM_OPTX = 0.0d0
+           Allocate(self%JXbundle%CCM_SSLEG(8, W_, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%CCM_SSLEG = 0.0d0
+         endif
+
 !... G2G SO4volc
          Allocate(self%so4v_nden(i1:i2, ju1:j2, k1:k2))
          self%so4v_nden = 0.0d0
@@ -1211,8 +1232,8 @@ CONTAINS
    type(ESMF_Field)   :: oc_philic_3d_field
    type(ESMF_Field)   :: br_phobic_3d_field
    type(ESMF_Field)   :: br_philic_3d_field
-   type(ESMF_Field)   :: bc_pyro_3d_field
-   type(ESMF_Field)   :: br_pyro_3d_field
+   type(ESMF_Field)   ::   bc_pyro_3d_field
+   type(ESMF_Field)   ::   br_pyro_3d_field
    type(ESMF_Field)   ::       so4_3d_field
    type(ESMF_Field)   ::        du_4d_field
    type(ESMF_Field)   ::        ss_4d_field
@@ -1479,6 +1500,15 @@ CONTAINS
    VERIFY_(STATUS)
    CALL Acquire_SU(STATUS)
    VERIFY_(STATUS)
+!
+! Obtain aerosol optical properties from either 
+! aeroProvider
+! ----------------------------------------------
+   if(self%do_CCM_OptProps) then
+     if(MAPL_AM_I_ROOT()) print '(''Getting Aerosol Properties from '',a32)', TRIM(self%aeroProviderName)
+     CALL Acquire_OptProps(STATUS)
+     VERIFY_(STATUS)
+   endif
 
 ! Grab imports and do units conversions
 ! -------------------------------------
@@ -1516,29 +1546,24 @@ CONTAINS
                              CLOCK=self%clock, tdt=tdt, label='GMI-PHOT', &
                              SZA=solarZenithAngle, __RC__ )
 
-          call calcPhotolysisRateConstants (self%JXbundle,                 &
-                 tropopausePress,                                          &
-                 self%pr_qj_o3_o1d, self%pr_qj_opt_depth,                  & ! VV
-                 pctm2, mass, press3e, press3c, kel,                       &
-                 self%SpeciesConcentration%concentration, solarZenithAngle,&
-                 self%cellArea, surf_alb, fracCloudCover,                  &
-                 tau_cloud, tau_clw, tau_cli, totalCloudFraction,          &
-                 qi_, ql_, ri_, rl_,                                       &
-                 self%overheadO3col, self%qjgmi, gridBoxThickness,         &
-                 self%optDepth, self%eRadius, self%tArea, self%odAer,      &
-                 relativeHumidity, self%odMdust, self%dust, self%wAersl,   &
-                 self%dAersl, humidity, num_AerDust, self%phot_opt,        &
-                 self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, &
-                 self%do_AerDust_Calc, self%do_ozone_inFastJX,             &
-                 self%do_synoz, self%qj_timpyr, IO3, IH2O, ISYNOZ,         &
-                 self%chem_mask_khi, nymd, nhms, self%pr_diag, loc_proc,   &
-                 self%synoz_threshold, self%AerDust_Effect_opt, NSP,       &
+          call calcPhotolysisRateConstants (self%JXbundle, tropopausePress,         &
+                 self%pr_qj_o3_o1d, self%pr_qj_opt_depth,                           &
+                 pctm2, mass, press3e, press3c, kel, self%SpeciesConcentration%concentration, &
+                 solarZenithAngle, self%cellArea, surf_alb,                         &
+                 fracCloudCover, tau_cloud, tau_clw, tau_cli,                       &
+                 totalCloudFraction, qi_, ql_, ri_, rl_,                            &
+                 self%overheadO3col, self%qjgmi, gridBoxThickness, self%optDepth,   &
+                 self%eRadius, self%tArea, self%odAer, relativeHumidity, self%odMdust, self%dust, &
+                 self%wAersl, self%dAersl, humidity, num_AerDust, self%phot_opt,    &
+                 self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, self%do_LymanAlpha, &
+                 self%do_AerDust_Calc, self%do_ozone_inFastJX, self%do_synoz, self%qj_timpyr, &
+                 IO3, IH2O, ISYNOZ, self%chem_mask_khi, nymd, nhms,                 &
+                 self%pr_diag, loc_proc, self%synoz_threshold, self%AerDust_Effect_opt, NSP, &
                  self%so4v_nden, self%so4v_sa, self%so4v_sareff, self%so4v_saexist, &
                  self%pyro_nden, self%pyro_sa, self%pyro_sareff, self%pyro_saexist, self%pyro_optDepth, &
-                 NUM_J, self%num_qjo, ilo, ihi, julo, jhi,                 &
-                 i1, i2, ju1, j2, k1, k2, self%jNOindex, self%jNOamp,      &
-                 self%cldflag)
-        endif
+                 NUM_J, self%num_qjo, ilo, ihi, julo, jhi,                          &
+                 i1, i2, ju1, j2, k1, k2, self%jNOindex, self%jNOamp, self%cldflag, self%do_CCM_OptProps)
+         endif
       END IF
 
 ! Return species concentrations to the chemistry bundle
@@ -2008,6 +2033,138 @@ CONTAINS
 
   RETURN
  END SUBROUTINE Acquire_OC
+
+!
+! !ROUTINE:  Acquire_OptProps
+!
+! !INTERFACE:
+
+  SUBROUTINE Acquire_OptProps(rc)
+  
+  IMPLICIT NONE
+
+  INTEGER, INTENT(OUT) :: rc
+!
+! !DESCRIPTION:
+!
+!  Obtain aerosol optical properties from seroProvider if desired
+!
+!EOP
+!---------------------------------------------------------------------------
+
+  CHARACTER(LEN=255) :: IAm
+  REAL*4, POINTER, DIMENSION(:,:,:) :: PTR3D
+  REAL, POINTER, DIMENSION(:,:,:,:) :: PTR4D
+  character (len=ESMF_MAXSTR) :: aerophot
+  REAL :: qmin,qmax
+  integer :: N, M
+
+  character*16 :: tmpstr
+
+
+  rc = 0
+  IAm = "Acquire_OptProps"
+
+  SELECT CASE (TRIM(self%aeroProviderName))
+
+    CASE("GOCART2G")
+      self%JXbundle%num_CCM_aers = 1
+      self%JXbundle%num_CCM_WL = 5
+      do M = 1,self%JXbundle%num_CCM_WL
+        self%JXbundle%CCM_WL(M) = m*100+100
+      enddo
+!... loop over individual aerosols
+      do N = 1,self%JXbundle%num_CCM_aers
+        do M = 1,self%JXbundle%num_CCM_WL
+!          call ESMF_StateGet(aero_state, 'SSA', aerophot, __RC__)
+!          call ESMF_FieldGet( aerophot, farrayPtr=PTR3D, __RC__ )
+!          self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+          call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol', value=aerophot, __RC__)
+          if (aerophot /= '') then
+            call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+          endif
+          self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+!          self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = 1.0000
+!          call ESMF_StateGet(aero_state, 'extinction_in_air_due_to_ambient_aerosol', aerophot, __RC__)
+!          call ESMF_FieldGet( aerophot, farrayPtr=PTR3D, __RC__ )
+          call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol', value=aerophot, __RC__)
+          if (aerophot /= '') then
+            call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+          endif
+          self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+!          self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = 0.01
+!
+!.sds      call ESMF_StateGet(aero_state, 'SLEG', aerophot, __RC__)
+!.sds      call ESMF_FieldGet( aerophot, farrayPtr=PTR4D, __RC__ )
+!.sds      self%JXbundle%CCM_SSLEG(:,:,:,km:1:-1) = PTR4D(:,:,1:km)
+!        enddo
+!
+!  w(nm)    Q    r-eff  ss-alb  pi(0) pi(1) pi(2) pi(3) pi(4) pi(5) pi(6) pi(7)
+! 24 S70(rvm) Trop sulfate at RH=70 (n@400=1.36 log-norm: r=.07um/sigma=2.0)
+!  600  1.2726  0.241  1.0000  1.000 2.254 2.782 2.632 2.298 1.874 1.488 1.167
+
+          self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
+          self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
+          self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
+          self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
+          self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
+          self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
+          self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
+          self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
+
+!     IF( MAPL_AM_I_ROOT() ) THEN
+!       PRINT *,"sds-SSA: ",n,m,maxval(self%JXbundle%CCM_SSALB(M,:,:,:,N)),minval(self%JXbundle%CCM_SSALB(M,:,:,:,N))
+ !      PRINT *,"sds-AOD: ",n,m,maxval(self%JXbundle%CCM_OPTX(M,:,:,:,N)),minval(self%JXbundle%CCM_OPTX(M,:,:,:,N))
+ !    ENDIF
+        enddo
+      enddo
+
+!   CASE("GMICHEM")
+!... could I pull out calc of this in CloudJ to new routine?
+
+    CASE("CARMA")
+!      do M = 1,self%JXbundle%num_CCM_WL
+!        call ESMF_StateGet(aero_state, 'SSA', aerophot, __RC__)
+!        call ESMF_FieldGet( field=aerophot, farrayPtr=PTR3D, __RC__ )
+!        self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,1) = PTR3D(:,:,1:km)
+!
+!        call ESMF_StateGet(aero_state, 'EXT', aerophot, __RC__)
+!        call ESMF_FieldGet( field=aerophot, farrayPtr=PTR3D, __RC__ )
+!        self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,1) = PTR3D(:,:,1:km)
+!
+!        call ESMF_StateGet(aero_state, 'SLEG', aerophot, __RC__)
+!        call ESMF_FieldGet( field=aerophot, farrayPtr=PTR4D, __RC__ )
+!        self%JXbundle%CCM_SSLEG(:,M,:,:,km:1:-1,1) = PTR4D(:,:,:,1:km)
+!      enddo
+      self%JXbundle%CCM_SSALB(:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_OPTX (:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_SSLEG(:,:,:,:,:,:) = 0.0d0
+
+    CASE("none")
+      self%JXbundle%CCM_SSALB(:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_OPTX (:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_SSLEG(:,:,:,:,:,:) = 0.0d0
+
+    CASE DEFAULT
+      STATUS = 1
+      VERIFY_(STATUS)
+
+  END SELECT
+
+  IF(self%verbose) THEN
+    PTR3D = self%JXbundle%CCM_SSALB(1,:,:,:,1)
+    CALL pmaxmin('CCM_SSALB:', PTR3D, qmin, qmax, iXj, km, 1. )
+    PTR3D = self%JXbundle%CCM_OPTX(1,:,:,:,1)
+    CALL pmaxmin('CCM_OPTX:', PTR3D, qmin, qmax, iXj, km, 1. )
+    do N = 1,8
+      PTR3D = self%JXbundle%CCM_SSLEG(N,1,:,:,:,1)
+      write(tmpstr,'(''CCM_SSLEG: '',i2.2)') n
+      CALL pmaxmin(tmpstr, PTR3D, qmin, qmax, iXj, km, 1. )
+    enddo
+  END IF
+
+  RETURN
+ END SUBROUTINE Acquire_OptProps
 
 !---------------------------------------------------------------------------
 ! NASA/GSFC, Global Modeling and Assimilation Office, Code 610.1, GEOS/DAS !

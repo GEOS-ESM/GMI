@@ -12,6 +12,11 @@ TYPE t_fastJXbundle
        REAL*8 :: fjx_solar_cycle_param(W_)
 
 !----------------------------------------------------------------------------
+       integer :: num_CCM_WL, num_CCM_aers
+       real*8, pointer :: CCM_WL(:)
+       real*8, pointer :: CCM_SSALB(:,:,:,:,:)
+       real*8, pointer :: CCM_OPTX (:,:,:,:,:)
+       real*8, pointer :: CCM_SSLEG(:,:,:,:,:,:)
 
 END TYPE t_fastJXbundle
       end module GmiFastJX_includeMod

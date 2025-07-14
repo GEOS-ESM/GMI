@@ -1345,8 +1345,8 @@ CONTAINS
 
 
       IF ( TRIM(short_name) == 'RCOOH' ) THEN
-        IF ( MAXVAL(bgg%qa(L)%data3d) > 1.e-9 ) THEN
-          PRINT*,'RCOOH values are too high (GT 1e-9), likely from an old RESTART'
+        IF ( MAXVAL(bgg%qa(L)%data3d) > 5.e-9 ) THEN
+          PRINT*,'RCOOH values are too high (GT 5e-9), likely from an old RESTART'
           PRINT*,'Remove RCOOH from gmichem_internal_rst.'
           STATUS = 1
           VERIFY_(STATUS)
