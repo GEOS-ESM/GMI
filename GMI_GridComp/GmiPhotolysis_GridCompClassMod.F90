@@ -2050,18 +2050,19 @@ CONTAINS
 !
 ! !DESCRIPTION:
 !
-!  Obtain aerosol optical properties from seroProvider if desired
+!  Obtain aerosol optical properties from aeroProvider if desired
 !
 !EOP
 !---------------------------------------------------------------------------
 
   CHARACTER(LEN=255) :: IAm
   REAL*4, POINTER, DIMENSION(:,:,:) :: PTR3D
+  REAL, POINTER, DIMENSION(:,:,:)   :: AS_PTR_AER, AS_PTR_RH, AS_PTR_PLE
   REAL, POINTER, DIMENSION(:,:,:,:) :: PTR4D
   character (len=ESMF_MAXSTR) :: aerophot
   REAL :: qmin,qmax
-  integer :: N, M
-
+  integer :: N, M, STATUS, AS_STATUS
+  logical :: implements_aerosol_optics
   character*16 :: tmpstr
 
 
@@ -2071,30 +2072,99 @@ CONTAINS
   SELECT CASE (TRIM(self%aeroProviderName))
 
     CASE("GOCART2G")
-      self%JXbundle%num_CCM_aers = 1
-      self%JXbundle%num_CCM_WL = 5
-      do M = 1,self%JXbundle%num_CCM_WL
-        self%JXbundle%CCM_WL(M) = m*100+100
-      enddo
-!... loop over individual aerosols
-      do N = 1,self%JXbundle%num_CCM_aers
+       call ESMF_AttributeGet(aero_state, &
+          name='implements_aerosol_optics_method', &
+          value=implements_aerosol_optics,__RC__)
+       if (implements_aerosol_optics) then
+! callback
+print *, 'GMI: give it a whirl!'
+        self%JXbundle%num_CCM_aers = 1
+        self%JXbundle%num_CCM_WL = 5
+
+      ! set RH for aerosol optics
+        call ESMF_AttributeGet(aero_state, &
+              name='relative_humidity_for_aerosol_optics', value=aerophot, __RC__)
+        if(aerophot /= '') then
+           call MAPL_GetPointer(impChem,    AS_PTR_RH, 'RH2', __RC__)
+           call MAPL_GetPointer(aero_state, AS_PTR_AER, trim(aerophot), __RC__)
+           AS_PTR_AER = AS_PTR_RH
+        endif
+           
+      ! set PLE for aerosol optics
+        call ESMF_AttributeGet(aero_state, &
+           name='air_pressure_for_aerosol_optics', value=aerophot,__RC__)
+        if (aerophot /= '') then
+           call MAPL_GetPointer(impChem,    AS_PTR_PLE, 'PLE', __RC__)
+           call MAPL_GetPointer(aero_state, AS_PTR_AER, trim(aerophot), __RC__)
+           AS_PTR_AER = AS_PTR_PLE
+        endif
+
+      ! Set callback to use photolysis table
+        call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=1, __RC__)
+
+        N = self%JXbundle%num_CCM_aers
+           
+      ! Loop over wavelengths
         do M = 1,self%JXbundle%num_CCM_WL
+           call ESMF_AttributeSet(aero_state, &
+              name='band_for_aerosol_optics', &
+              value=550,__RC__)
+
+         ! execute the aero provider's optics method
+           call ESMF_MethodExecute(aero_state, &
+              label="run_aerosol_optics", &
+              userRC=AS_STATUS, RC=STATUS)
+           VERIFY_(AS_STATUS)
+           VERIFY_(STATUS)
+
+           call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol', value=aerophot, __RC__)
+           if (aerophot /= '') then
+              call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+           endif
+           self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+           call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol', value=aerophot, __RC__)
+           if (aerophot /= '') then
+             call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+           endif
+           self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+           
+         ! Temporary legendre coefficients
+           self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
+           self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
+           self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
+           self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
+           self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
+           self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
+           self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
+           self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
+        enddo
+      ! rest callback
+        call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=0, __RC__)
+      else
+           self%JXbundle%num_CCM_aers = 1
+           self%JXbundle%num_CCM_WL = 5
+           do M = 1,self%JXbundle%num_CCM_WL
+             self%JXbundle%CCM_WL(M) = m*100+100
+           enddo
+!... loop over individual aerosols
+           do N = 1,self%JXbundle%num_CCM_aers
+            do M = 1,self%JXbundle%num_CCM_WL
 !          call ESMF_StateGet(aero_state, 'SSA', aerophot, __RC__)
 !          call ESMF_FieldGet( aerophot, farrayPtr=PTR3D, __RC__ )
 !          self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
-          call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol', value=aerophot, __RC__)
-          if (aerophot /= '') then
-            call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
-          endif
-          self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+            call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol', value=aerophot, __RC__)
+            if (aerophot /= '') then
+              call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+            endif
+            self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
 !          self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = 1.0000
 !          call ESMF_StateGet(aero_state, 'extinction_in_air_due_to_ambient_aerosol', aerophot, __RC__)
 !          call ESMF_FieldGet( aerophot, farrayPtr=PTR3D, __RC__ )
-          call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol', value=aerophot, __RC__)
-          if (aerophot /= '') then
-            call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
-          endif
-          self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+            call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol', value=aerophot, __RC__)
+            if (aerophot /= '') then
+              call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+            endif
+            self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
 !          self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = 0.01
 !
 !.sds      call ESMF_StateGet(aero_state, 'SLEG', aerophot, __RC__)
@@ -2106,22 +2176,22 @@ CONTAINS
 ! 24 S70(rvm) Trop sulfate at RH=70 (n@400=1.36 log-norm: r=.07um/sigma=2.0)
 !  600  1.2726  0.241  1.0000  1.000 2.254 2.782 2.632 2.298 1.874 1.488 1.167
 
-          self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
-          self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
-          self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
-          self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
-          self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
-          self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
-          self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
-          self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
+            self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
+            self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
+            self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
+            self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
+            self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
+            self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
+            self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
+            self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
 
 !     IF( MAPL_AM_I_ROOT() ) THEN
 !       PRINT *,"sds-SSA: ",n,m,maxval(self%JXbundle%CCM_SSALB(M,:,:,:,N)),minval(self%JXbundle%CCM_SSALB(M,:,:,:,N))
  !      PRINT *,"sds-AOD: ",n,m,maxval(self%JXbundle%CCM_OPTX(M,:,:,:,N)),minval(self%JXbundle%CCM_OPTX(M,:,:,:,N))
  !    ENDIF
-        enddo
-      enddo
-
+          enddo
+         enddo
+      endif
 !   CASE("GMICHEM")
 !... could I pull out calc of this in CloudJ to new routine?
 
