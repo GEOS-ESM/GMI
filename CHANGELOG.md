@@ -7,9 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+
+- Fixed a memory leak in GmiSAD
+
 ### Added
+- Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
+- Added pyroCb chemistry mechanism as new choice (e.g., parallel_build.csh -mil -gmi_mechanism StratTrop_HFC_S_Pyro
+- Added coupling of GOCART provided SU and BR surface area density and effective radius to chemistry through aerosol state
+
 ### Changed
+
+- Changed SO2 Fire emissions to be diurnal (non-zero-diff)
+- Now accomodate up to 181 vertical levels in FastJX65 photolysis
+- Small clean-up of condense.F90 (zero-diff)
+
 ### Removed
+
+- Removed references to Chem_Bundle (w_c), Chem_Array and Chem_Registry
+- Removed support for Aerosols coming from old GOCART
+
 ### Deprecated
 
 

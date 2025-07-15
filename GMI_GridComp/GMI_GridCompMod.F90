@@ -298,34 +298,14 @@
       CALL GmiDepos_GridCompRun       (gcGMI%gcDepos,     bgg, bxx, impChem, expChem, nymd, nhms, tdt, __RC__)  ! tdt
 
       IF ( doChem ) THEN
-!
-!     call mapl_maxmin('sds-00a0: ',gcGMI%gcSAD%sadgmi(5)%pArray3D(:,:,:) )
-!     call mapl_maxmin('sds-00a1: ',gcGMI%gcPhot%pyro_sa(:,:,:) )
-
 
         CALL GmiSAD_GridCompRun       (gcGMI%gcSAD,       bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
-!
-!     call mapl_maxmin('sds-00b0: ',gcGMI%gcSAD%sadgmi(5)%pArray3D(:,:,:) )
-!     call mapl_maxmin('sds-00b1: ',gcGMI%gcPhot%pyro_sa(:,:,:) )
-
 
         CALL GmiPhotolysis_GridCompRun(gcGMI%gcPhot,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
-!
-!     call mapl_maxmin('sds-00c0: ',gcGMI%gcSAD%sadgmi(5)%pArray3D(:,:,:) )
-!     call mapl_maxmin('sds-00c1: ',gcGMI%gcPhot%pyro_sa(:,:,:) )
-
 
         CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, gcGMI%gcSAD, gcGMI%gcPhot,  __RC__)
-!
-!     call mapl_maxmin('sds-00d0: ',gcGMI%gcSAD%sadgmi(5)%pArray3D(:,:,:) )
-!     call mapl_maxmin('sds-00d1: ',gcGMI%gcPhot%pyro_sa(:,:,:) )
-
 
         CALL GmiChemistry_GridCompRun (gcGMI%gcChem,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
-!
-!     call mapl_maxmin('sds-00e0: ',gcGMI%gcSAD%sadgmi(5)%pArray3D(:,:,:) )
-!     call mapl_maxmin('sds-00e1: ',gcGMI%gcPhot%pyro_sa(:,:,:) )
-
 
       ENDIF
 
