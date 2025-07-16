@@ -2076,8 +2076,6 @@ CONTAINS
           name='implements_aerosol_optics_method', &
           value=implements_aerosol_optics,__RC__)
        if (implements_aerosol_optics) then
-! callback
-print *, 'GMI: give it a whirl!'
         self%JXbundle%num_CCM_aers = 1
         self%JXbundle%num_CCM_WL = 5
 
@@ -2108,7 +2106,7 @@ print *, 'GMI: give it a whirl!'
         do M = 1,self%JXbundle%num_CCM_WL
            call ESMF_AttributeSet(aero_state, &
               name='band_for_aerosol_optics', &
-              value=550,__RC__)
+              value=500,__RC__)
 
          ! execute the aero provider's optics method
            call ESMF_MethodExecute(aero_state, &
@@ -2138,7 +2136,7 @@ print *, 'GMI: give it a whirl!'
            self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
            self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
         enddo
-      ! rest callback
+      ! reset callback
         call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=0, __RC__)
       else
            self%JXbundle%num_CCM_aers = 1
