@@ -1,7 +1,7 @@
 Modeler input mechanism:        StratTrop_HFC_S_Pyro.txt
 Principal reaction reference:   GMI_reactions_JPL19.db
 Species nomenclature:           GMI_species.db
-Mechanism timestamp:            Thu Jul 24 18:59:05 2025
+Mechanism timestamp:            Tue Jun 24 19:53:53 2025
 
 Species indices:
   1: A3O2

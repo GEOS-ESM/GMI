@@ -22,7 +22,7 @@
 !
 !  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Thu Jul 24 18:59:05 2025
+!  Setkin files generated: Tue Jun 24 19:53:53 2025
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
@@ -281,7 +281,7 @@
 !
 !....           ClO + MO2 = CH2O + Cl + HO2 + O2
 !
-      rcarr(41,:) = skarr(  1.800D-11 ,600.0D+00 ,temperature)
+      rcarr(41,:) = skarr(  1.800D-12 ,600.0D+00 ,temperature)
 !
 !....           HO2 + MO2 = MP + O2
 !
