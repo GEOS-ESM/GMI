@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed a memory leak in GmiSAD
 - Corrected the use of PyroCB OptDepth - now add to all the RH bins for BC
+- Fix for the K-rate of ClO+MO2 in HFC+S mech, personal comm - E Fleming
 
 ### Added
 - Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
