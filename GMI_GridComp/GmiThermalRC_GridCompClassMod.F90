@@ -297,6 +297,8 @@ CONTAINS
       VERIFY_(STATUS)
 !
 !... mutually exclusive, do_StratPyroHetChem takes precedence
+!... adding BC and OC to LBS was a first attempt at the effects of PyroCB
+!... the current approach uses BR from GOCART2G
       if(self%do_StratPyroHetChem) self%do_LBSplusBCOC_SAD = .false.
 !
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%pr_qqjk, &
