@@ -280,7 +280,7 @@
 !
 !....           ClO + MO2 = CH2O + Cl + HO2 + O2
 !
-      rcarr(41,:) = skarr(  1.800D-12 ,600.0D+00 ,temperature)
+      rcarr(41,:) = skarr(  1.800D-11 ,600.0D+00 ,temperature)
 !
 !....           HO2 + MO2 = MP + O2
 !
@@ -2217,7 +2217,7 @@
 !
 !.old          skohmek(:) = 2.92D-12 * (300.0d0 / tk(:))**(-2.0d0) * exp(414.0d0 / tk(:))
 !... JPL 19-5
-          skohmek(:) = 1.33d-13 + 3.82d-11 * exp(2000.0d0 / tk(:))
+          skohmek(:) = 1.33d-13 + 3.82d-11 * exp(-2000.0d0 / tk(:))
 !
         END FUNCTION skohmek
 !
