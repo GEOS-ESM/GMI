@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Now accomodate up to 181 vertical levels in FastJX65 photolysis
 - Small clean-up of condense.F90 (zero-diff)
 - Temporarily removed the trap for RCOOH since the PyroCB mechanism exceeds the previous threshold
+- Default value for effective radius of Pyro and SO4v is now 1 instead of 0, because it may be used as a denominator
 
 ### Removed
 
