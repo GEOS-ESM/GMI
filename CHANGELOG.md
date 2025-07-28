@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed a memory leak in GmiSAD
+- Fixed the diagnostic GMITTO3
 - Fixed the K-rate of ClO+MO2 (personal comm - E Fleming)     [ALL mechanisms]
 - Fixed typo in skohmek (resolving artifacts at lid)          [Pyro and JPL19 mechanisms]
 - Fixed Phot reaction OCSg + hv = CO + SO2  (SO2 was missing) [Pyro  mechanism]
