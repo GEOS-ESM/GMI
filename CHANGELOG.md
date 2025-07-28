@@ -10,18 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed a memory leak in GmiSAD
 - Fixed the diagnostic GMITTO3
+- Fixed the K-rate of ClO+MO2 (personal comm - E Fleming)     [ALL mechanisms]
+- Fixed typo in skohmek (resolving artifacts at lid)          [Pyro and JPL19 mechanisms]
+- Fixed Phot reaction OCSg + hv = CO + SO2  (SO2 was missing) [Pyro  mechanism]
+- Corrected the use of PyroCB OptDepth - now add to all the RH bins for BC
 
 ### Added
 
-- Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
-- Added pyroCb chemistry mechanism as new choice (e.g., parallel_build.csh -mil -gmi_mechanism StratTrop_HFC_S_Pyro
+- Added pyroCb chemistry mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism StratTrop_HFC_S_Pyro
 - Added coupling of GOCART provided SU and BR surface area density and effective radius to chemistry through aerosol state
+- Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
 
 ### Changed
 
 - Changed SO2 Fire emissions to be diurnal (non-zero-diff)
 - Now accomodate up to 181 vertical levels in FastJX65 photolysis
 - Small clean-up of condense.F90 (zero-diff)
+- Default value for effective radius of Pyro and SO4v is now 1 instead of 0, because it may be used as a denominator
+- Pyro  mechanism: Changed Thermal reaction ClONO2 + HCl = Cl2 + HNO3 - replaced product HNO3 with N2O5/2.0
+- Pyro  mechanism: Changed the CARN volcano file to be the version from 2024
+- Pyro  mechanism: Set default lbssad_opt to 6  (from GOCART2G)
 
 ### Removed
 

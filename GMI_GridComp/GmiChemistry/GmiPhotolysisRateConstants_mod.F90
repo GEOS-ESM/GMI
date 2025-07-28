@@ -173,7 +173,7 @@
 !
 ! !LOCAL VARIABLES:
       integer :: idumday, idumyear
-      integer :: il, ij, it, ic, n
+      integer :: il, ij, it, ic, n, irh
       integer :: jday, ich4_num
       integer :: month_gmi
       integer, parameter :: four = 4
@@ -291,7 +291,9 @@
                  ODMDUST_ij(:,:) = ODMDUST(il,ij,:,:)
 !... if PyroCb on add pyro OD to appropriate aerosol type for fastJX
                  if(pyro_saexist) then
-                   ODAER_ij(:,2) = ODAER(il,ij,:,2)+pyro_optDepth(il,ij,:)
+                   do irh=NRH_b+1,2*NRH_b   ! loop over all RH bins for BC (the second aerosol)
+                     ODAER_ij(:,irh) = ODAER(il,ij,:,irh)+pyro_optDepth(il,ij,:)
+                   enddo
                  endif
                endif
 !... if we are NOT doing aerosol effects on photolysis zero out aerosols

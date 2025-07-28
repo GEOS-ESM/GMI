@@ -103,7 +103,7 @@
 ! !LOCAL VARIABLES:
       integer :: ic
 !.sds      real*8, allocatable  :: h2ocombo(:, :, :)
-      real*8, allocatable  :: sadcombo(:, :, :)
+      real*8, allocatable  :: loc_sadlbs(:, :, :)
 !
 !EOP
 !-----------------------------------------------------------------------------
@@ -115,7 +115,7 @@
      &          pr_diag, loc_proc, i1, i2, ju1, j2, k1, k2, num_sad, num_species)
       else if (sad_opt == 2) then
 
-        allocate(sadcombo(i1:i2,  ju1:j2,  k1:k2))
+        allocate(loc_sadlbs(i1:i2,  ju1:j2,  k1:k2))
 
         call Update_Sad2 (rateintv, tropp, press3c, press3e, kel,          &
      &             concentration, hno3cond, hno3gas,                       &
@@ -126,28 +126,28 @@
      &             ih2o_num, ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1,     &
      &             k2, num_sad, num_species)
 
-        sadcombo(:,:,:) = sadgmi(ILBSSAD)%pArray3D(:,:,:)
+        loc_sadlbs(:,:,:) = sadgmi(ILBSSAD)%pArray3D(:,:,:)
 !... grow LBS SAD wrt rel hum
         call Update_Sad3 (press3c, kel, concentration, lbssad,             &
-     &             sadcombo, pr_diag, loc_proc, nymd, ih2o_num, i1, i2,    &
+     &             loc_sadlbs, pr_diag, loc_proc, nymd, ih2o_num, i1, i2,    &
      &             ju1, j2, k1, k2, ilo, ihi, julo, jhi, num_species)
 
         where (press3c(i1:i2,ju1:j2,:) > Spread (tropp(:,:), 3, k2))
-           sadgmi(ILBSSAD)%pArray3D(:,:,:) = sadcombo(:,:,:)
+           sadgmi(ILBSSAD)%pArray3D(:,:,:) = loc_sadlbs(:,:,:)
         end where
 
-        deallocate(sadcombo)
+        deallocate(loc_sadlbs)
 
       else if (sad_opt == 3) then
-        allocate(sadcombo(i1:i2,  ju1:j2,  k1:k2))
-        sadcombo(:,:,:) = sadgmi(ILBSSAD)%pArray3D(:,:,:)
+        allocate(loc_sadlbs(i1:i2,  ju1:j2,  k1:k2))
+        loc_sadlbs(:,:,:) = sadgmi(ILBSSAD)%pArray3D(:,:,:)
 !... grow LBS SAD wrt rel hum
         call Update_Sad3 (press3c, kel, concentration, lbssad,          &
-     &             sadcombo, pr_diag, loc_proc, nymd, ih2o_num, i1, i2, &
+     &             loc_sadlbs, pr_diag, loc_proc, nymd, ih2o_num, i1, i2, &
      &             ju1, j2, k1, k2, ilo, ihi, julo, jhi, num_species)
 
-        sadgmi(ILBSSAD)%pArray3D(:,:,:) = sadcombo(:,:,:)
-        deallocate(sadcombo)
+        sadgmi(ILBSSAD)%pArray3D(:,:,:) = loc_sadlbs(:,:,:)
+        deallocate(loc_sadlbs)
       end if
 
       end subroutine updateSurfaceAreaDensities

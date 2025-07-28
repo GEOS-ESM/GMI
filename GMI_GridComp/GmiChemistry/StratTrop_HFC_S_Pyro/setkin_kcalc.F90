@@ -20,9 +20,9 @@
 !   rcarr       : cm3 molecule-1 s-1 - rate constant values in units as
 !                 appropriate
 !
-!  Input mechanism:        StratTrop_HFC_S
+!  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Mon Mar 31 16:08:51 2025
+!  Setkin files generated: Thu Jul 24 18:59:05 2025
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
@@ -49,7 +49,7 @@
       REAL*8,  INTENT (IN)  :: pressure    (       npres0)
       REAL*8,  INTENT (IN)  :: temperature (       npres0)
       REAL*8,  INTENT (IN)  :: sadcol      (NSAD  ,npres0)
-!      REAL*8,  INTENT (IN)  :: sadreff     (NSAD,  npres0)
+!      REAL*8,  INTENT (IN)  :: sadreff     (NSAD  ,npres0)
       REAL*8,  INTENT (IN)  :: sadcol2     (NSADaer+NSADdust,npres0)
       REAL*8,  INTENT (IN)  :: radA        (NSADaer+NSADdust,npres0)
       REAL*8,  INTENT (IN)  :: specarr     (NMF   ,npres0)
@@ -107,9 +107,8 @@
       sad_sts(:)  = sadcol(ISTSSAD, :)
       sad_nat(:)  = sadcol(INATSAD, :)
       sad_ice(:)  = sadcol(IICESAD, :)
-!.old      sad_pyro(:) = sadcol(IPYROSAD, :)
-!... Use GOCART pyro (BC+OC) for this reaction
       sad_pyro(:) = sadcol(IPYROSAD,:)
+!... Use GOCART pyro (BC+OC) for this reaction
 !.old      sad_pyro(:) = sadcol2(NSADdust+2,:)+sadcol2(NSADdust+3,:)
 !
 !
@@ -282,7 +281,7 @@
 !
 !....           ClO + MO2 = CH2O + Cl + HO2 + O2
 !
-      rcarr(41,:) = skarr(  1.800D-12 ,600.0D+00 ,temperature)
+      rcarr(41,:) = skarr(  1.800D-11 ,600.0D+00 ,temperature)
 !
 !....           HO2 + MO2 = MP + O2
 !
@@ -1448,7 +1447,7 @@
       rcarr(320,:) = skice_hcl_hobr (temperature  & 
      &           ,pressure ,sad_ice ,specarr(  51,:) ,ptrop)
 !
-!....           ClONO2 + HCl = Cl2 + HNO3
+!....           ClONO2 + HCl = Cl2 +  0.50 N2O5
 !
       rcarr(321,:) = skpyro_clono2_hcl (temperature  & 
      &           ,adcol ,pressure ,sad_pyro ,specarr(    33,:) ,specarr(  51,:) ,water  & 
@@ -2348,7 +2347,7 @@
 !
 !.old          skohmek(:) = 2.92D-12 * (300.0d0 / tk(:))**(-2.0d0) * exp(414.0d0 / tk(:))
 !... JPL 19-5
-          skohmek(:) = 1.33d-13 + 3.82d-11 * exp(2000.0d0 / tk(:))
+          skohmek(:) = 1.33d-13 + 3.82d-11 * exp(-2000.0d0 / tk(:))
 !
         END FUNCTION skohmek
 !
@@ -4309,10 +4308,9 @@
 !
         END FUNCTION skice_hcl_hobr
 !
-!.... skpyro_clono2_hcl (temperature ,adcol ,pressure ,sad_lbs ,specarr(ClONO2,:) ,specarr( HCl,:) ,water ,ptrop)
+!.... skpyro_clono2_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(ClONO2,:) ,specarr( HCl,:) ,water ,ptrop)
 !
 !_2_
-!
 !
         FUNCTION skpyro_clono2_hcl (tk,ad,pr,sad,clono2,hcl,h2o,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -4330,7 +4328,8 @@
           pi = acos(-1.0d0)
 !
 !=======================================================================
-!     ClONO2 + HCl on stratospheric pyroCb aerosol = Cl2 + HNO3
+!     ClONO2 + HCl on stratospheric pyroCb aerosol = Cl2 + 0.5 N2O5
+!.old..     ClONO2 + HCl on stratospheric pyroCb aerosol = Cl2 + HNO3
 !=======================================================================
 !
 !.... First order reaction rate constant
@@ -4419,7 +4418,7 @@
 !
         END FUNCTION skpyro_clono2_hcl
 !
-!.... skpyro_hocl_hcl (temperature ,adcol ,pressure ,sad_lbs ,specarr(HOCl,:) ,specarr(HCl,:) ,water ,ptrop)
+!.... skpyro_hocl_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOCl,:) ,specarr(HCl,:) ,water ,ptrop)
 !
 !_3_
 !
@@ -4579,7 +4578,7 @@
 !
         END FUNCTION skpyro_hocl_hcl
 !
-!.... skpyro_hobr_hcl (temperature ,adcol ,pressure ,sad_lbs ,specarr(HOBr,:) ,specarr(HCl,:) ,water ,ptrop)
+!.... skpyro_hobr_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOBr,:) ,specarr(HCl,:) ,water ,ptrop)
 !
 !_4_
 !

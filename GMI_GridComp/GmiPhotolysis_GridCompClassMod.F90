@@ -980,7 +980,7 @@ CONTAINS
                   self%so4v_sareff(i1:i2, ju1:j2, k1:k2))
          self%so4v_nden   = 0.0d0
          self%so4v_sa     = 0.0d0
-         self%so4v_sareff = 0.0d0
+         self%so4v_sareff = 1.0d0
          self%so4v_saexist = .FALSE.
 
 !... G2G PyroCb aerosols
@@ -991,7 +991,7 @@ CONTAINS
          self%pyro_nden      = 0.0d0
          self%pyro_sa        = 0.0d0
          self%pyro_optDepth  = 0.0d0
-         self%pyro_sareff    = 0.0d0
+         self%pyro_sareff    = 1.0d0
          self%pyro_saexist = .FALSE.
 
          Allocate(self%optDepth(i1:i2, ju1:j2, k1:k2, num_AerDust))
@@ -2372,6 +2372,7 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
 
      
 !... place holder for when optical depth is available    
+!... magic index 14+2 refers to the 2nd dust bin out of 7; see line 2214 in fastJX65_mod.F90
      call  GetQAA_RAAinFastJX65 (RAA_b, QAA_b, four, NP_b)
      self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
                            self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
@@ -2393,7 +2394,7 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
      self%pyro_nden(:,:,:) = 0.0d0
      self%pyro_sa(:,:,:) = 0.0d0
      self%pyro_optDepth(:,:,:) = 0.0d0
-     self%pyro_sareff = 0.0d0
+     self%pyro_sareff = 1.0d0
      self%pyro_saexist = .FALSE.
 
   END SELECT

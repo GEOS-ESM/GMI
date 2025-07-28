@@ -1251,7 +1251,7 @@ CONTAINS
       allocate(ptr3Dreal(i1:i2, j1:j2, 1:km))
 
       do ib = 1, numVars
-         ptr3Dreal(:,:,:) = self%sadgmi(ib)%pArray3D(:,:,km:1:-1)
+         ptr3Dreal(:,:,:) = self%sadgmi(ib)%pArray3D(:,:,km:1:-1) ! sadBun needs top-down
 
          call updateTracerToBundle(sadBun, ptr3Dreal, ib)
       end do
