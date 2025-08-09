@@ -2056,12 +2056,12 @@ CONTAINS
 !---------------------------------------------------------------------------
 
   CHARACTER(LEN=255) :: IAm
-  REAL*4, POINTER, DIMENSION(:,:,:) :: PTR3D
-  REAL, POINTER, DIMENSION(:,:,:)   :: AS_PTR_AER, AS_PTR_RH, AS_PTR_PLE
-  REAL, POINTER, DIMENSION(:,:,:,:) :: PTR4D
+  REAL*4, POINTER, DIMENSION(:,:,:)   :: PTR3D
+  REAL, POINTER, DIMENSION(:,:,:)     :: AS_PTR_AER, AS_PTR_RH, AS_PTR_PLE
+  REAL*4, POINTER, DIMENSION(:,:,:,:) :: PTR4D
   character (len=ESMF_MAXSTR) :: aerophot
   REAL :: qmin,qmax
-  integer :: N, M, STATUS, AS_STATUS
+  integer :: N, M, STATUS, AS_STATUS, imom
   logical :: implements_aerosol_optics
   character*16 :: tmpstr
 
@@ -2115,26 +2115,46 @@ CONTAINS
            VERIFY_(AS_STATUS)
            VERIFY_(STATUS)
 
+!          SSA as provided by callback is actually the scattering; normalize later
            call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol', value=aerophot, __RC__)
            if (aerophot /= '') then
               call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
            endif
            self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+
            call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol', value=aerophot, __RC__)
            if (aerophot /= '') then
              call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
            endif
            self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
            
+!          Hard-wired for 8 moments; these are provided by callback weighted by scattering; normalize at end
+           call ESMF_AttributeGet(aero_state, name='legendre_coefficients_of_p11_for_photolysis', value=aerophot, __RC__)
+           if(MAPL_AM_I_ROOT()) print *, 'GMIleg: ', aerophot
+           if (aerophot /= '') then
+             call MAPL_GetPointer(aero_state, PTR4D, trim(aerophot), __RC__)
+           endif
+           do imom = 1, 8
+            self%JXbundle%CCM_SSLEG(imom,M,:,:,km:1:-1,N) = PTR4D(:,:,1:km,imom)
+            self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N) = self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N)/self%JXbundle%CCM_SSALB(M,:,:,:,N)
+            if(MAPL_AM_I_ROOT()) print *, 'GMIleg: ', imom,M,N,self%JXbundle%CCM_SSLEG(imom,M,1,1,1,N), &
+                 self%JXbundle%CCM_OPTX(M,1,1,1,N), self%JXbundle%CCM_SSALB(M,1,1,1,N)
+           end do
+
+!          Normalize SSA
+!          Should protect against small value of AOD with a where?           
+           self%JXbundle%CCM_SSALB = self%JXbundle%CCM_SSALB / self%JXbundle%CCM_OPTX
+
+           
          ! Temporary legendre coefficients
-           self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
-           self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
-           self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
-           self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
-           self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
-           self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
-           self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
-           self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
+!           self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
+!           self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
+!           self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
+!           self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
+!           self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
+!           self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
+!           self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
+!           self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
         enddo
       ! reset callback
         call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=0, __RC__)
