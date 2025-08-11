@@ -23,7 +23,7 @@
 !
 !>>>>>>>>  Cloud-J version 8.0   new lower albedo can be angle/wavelength dependent
 !
-      subroutine controlFastJX74 (k1, k2, chem_mask_khi, lat_ij, num_qjs, &
+      subroutine controlFastJX74 (k1, k2, lat_ij, num_qjs, &
      &                  month_gmi, jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij, &
      &                  SZA_ij, cloudfrac_ij, qi_ij, ql_ij, ri_ij, rl_ij, &
 !    &                  cnv_frc_ij, frland_ij, &
@@ -42,7 +42,7 @@
 # include "gmi_time_constants.h"
 # include "setkin_par.h"
 !---------------key params in/out of CLOUD_J-------------------------
-      integer, intent(in) :: k1, k2, num_qjs, chem_mask_khi
+      integer, intent(in) :: k1, k2, num_qjs
       integer, intent(in) :: jday, month_gmi, cldflag
       integer, intent(in) :: AerDust_Effect_opt
       logical, intent(in) :: do_clear_sky, do_AerDust_Calc
@@ -57,7 +57,7 @@
       real*8, intent(in), dimension(k1:k2)   :: CH4_ij, H2O_ij(k1:k2)  ! mixing ratio for CH4 & H2O
       real*8, intent(in), dimension(k1:k2), optional :: ozone_ij      ! mixing ratio for ozone
       real*8, intent(out), dimension(k1:k2)                    :: overheadO3col_ij
-      real*8, intent(out), dimension(k1:chem_mask_khi,num_qjs) :: qjgmi_ij
+      real*8, intent(out), dimension(k1:k2,num_qjs) :: qjgmi_ij
       real*8, intent(inout), dimension(k1:k2,NSADaer*nrh_b)    :: ODAER_ij
       real*8, intent(inout), dimension(k1:k2,NSADaer)          :: HYGRO_ij
       real*8, intent(inout), dimension(k1:k2,2)                :: ODcAER_ij
@@ -791,23 +791,23 @@
         ODcAER_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
      enddo
 !... map FastJX's Jrates to our order
-      kall = chem_mask_khi-k1+1
+      kall = k2-k1+1
       do n=1,num_qjs
 !
 !.sds.. as per previous 6.5 code:
 !... * original fast-J/2 code had VALJ(2) as J[O3 -> O(3P)+O2]
 !...     but now J[O3] is total O3 rate [O(1D) and O(3P)], correct
         if(JVMAP(n).eq.'O3') then
-          qjgmi_ij(k1:chem_mask_khi,n) = (JFACTA(n) &
+          qjgmi_ij(k1:k2,n) = (JFACTA(n) &
             * (VALJXX(1:kall,JINDO3) - VALJXX(1:kall,JINDO1D)))
 !.sds.. as per previous 6.5 code:
 !...     need to add both branches of Acet for GMI
         elseif(JVMAP(n).eq.'Acet-a') then
-          qjgmi_ij(k1:chem_mask_khi,n) = (JFACTA(n) &
+          qjgmi_ij(k1:k2,n) = (JFACTA(n) &
             * (VALJXX(1:kall,JINDAceta) + VALJXX(1:kall,JINDAcetb)))
         else
 !.sds.. all others
-          qjgmi_ij(k1:chem_mask_khi,n) = JFACTA(n) * VALJXX(1:kall,JIND(n))
+          qjgmi_ij(k1:k2,n) = JFACTA(n) * VALJXX(1:kall,JIND(n))
         endif
       enddo
 !
@@ -833,7 +833,7 @@
 !
 ! !INTERFACE:
 !
-      subroutine initializeFastJX74 (k1, k2, chem_mask_khi, num_qjs &
+      subroutine initializeFastJX74 (k1, k2, num_qjs &
        , cross_section_file, cloud_scat_file, ssa_scat_file &
        , aer_scat_file, UMaer_scat_file, GMI_scat_file, T_O3_climatology_file &
        , H2O_CH4_climatology_file, cldflag, rootProc)
@@ -848,7 +848,6 @@
 ! !INPUT PARAMETERS:
       logical            , intent(in) :: rootProc
       integer            , intent(in) :: k1, k2
-      integer            , intent(in) :: chem_mask_khi ! number of chemistry levels [JVL_]
       integer            , intent(in) :: num_qjs       ! number of photolysis reactions [JVN_]
       integer            , intent(in) :: cldflag       ! type of cloud OD calc for J rates
 !... fast-J X-sections (spectral data) input file name

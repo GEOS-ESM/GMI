@@ -79,7 +79,7 @@
                   Waersl, Daersl, humidity, num_AerDust, phot_opt,          &
                   fastj_opt, fastj_offset_sec, do_clear_sky,                &
                   do_AerDust_Calc, do_ozone_inFastJX, do_synoz, qj_timpyr,  &
-                  io3_num, ih2o_num, isynoz_num, chem_mask_khi, nymd, nhms, &
+                  io3_num, ih2o_num, isynoz_num, nymd, nhms, &
                   pr_diag, loc_proc, synoz_threshold, AerDust_Effect_opt, num_species, &
                   so4v_nden, so4v_sa, so4v_sareff, so4v_saexist,            &
                   pyro_nden, pyro_sa, pyro_sareff, pyro_saexist, pyro_optDepth, &
@@ -108,7 +108,7 @@
       integer, intent(in) :: i1, i2, ju1, j2, k1, k2
       integer, intent(in) :: isynoz_num, io3_num, ih2o_num
       integer, intent(in) :: nymd, nhms
-      integer, intent(in) :: chem_mask_khi, qj_timpyr
+      integer, intent(in) :: qj_timpyr
       integer, intent(in) :: AerDust_Effect_opt
       integer, intent(in) :: phot_opt, fastj_opt
       integer, intent(in) :: num_AerDust
@@ -191,7 +191,7 @@
       real*8  :: HYGRO_ij  (k1:k2,NSADaer)
                  ! Column optical depth for mineral dust
       real*8  :: ODMDUST_ij(k1:k2,NSADdust) 
-      real*8  :: qjgmi_ij   (k1:chem_mask_khi, num_qjs)
+      real*8  :: qjgmi_ij   (k1:k2, num_qjs)
       real*8  :: n2adj(i1:i2, ju1:j2, k1:k2)
       real*8  :: o2adj(i1:i2, ju1:j2, k1:k2)
       real*8  :: RAA_b(4, NP_b), QAA_b(4, NP_b)
@@ -319,7 +319,7 @@
 !
             if (fastj_opt == 4) then
                if (.not. do_ozone_inFastJX) then
-                  call controlFastJX65 (k1, k2, chem_mask_khi, num_qjs, month_gmi,          &
+                  call controlFastJX65 (k1, k2, num_qjs, month_gmi,                         &
      &                        jday, time_sec, sza_ij, do_clear_sky,                         &
      &                        tau_clw(il,ij,k1:k2), tau_cli(il,ij,k1:k2),                   &
      &                        pres3e(il,ij,k1:k2), pctm2(il,ij), kel_ij,                    &
@@ -327,7 +327,7 @@
      &                        overheadO3col_ij, ODAER_ij, ODMDUST_ij, cldOD_ij,             &
      &                        JXbundle%fjx_solar_cycle_param, ozone_ij)
                else
-                  call controlFastJX65 (k1, k2, chem_mask_khi, num_qjs, month_gmi,          &
+                  call controlFastJX65 (k1, k2, num_qjs, month_gmi,                         &
      &                        jday, time_sec, sza_ij, do_clear_sky,                         &
      &                        tau_clw(il,ij,k1:k2), tau_cli(il,ij,k1:k2),                   &
      &                        pres3e(il,ij,k1:k2), pctm2(il,ij), kel_ij,                    &
@@ -343,7 +343,7 @@
                tArea_ij(:,:)   = 0.0d0
 !
                if (do_ozone_inFastJX) then
-                  call controlFastJX74 (k1, k2, chem_mask_khi, lat_ij, num_qjs, month_gmi,          &
+                  call controlFastJX74 (k1, k2, lat_ij, num_qjs, month_gmi,                         &
      &                        jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij(k1:k2),       &
      &                        sza_ij, totalCloudFraction(il,ij,k1:k2),                              &
      &                        qi(il,ij,k1:k2), ql(il,ij,k1:k2),                                     &
@@ -355,7 +355,7 @@
      &                        do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij,  &
      &                        JXbundle%fjx_solar_cycle_param, CH4_ij, H2O_ij)
                else
-                  call controlFastJX74 (k1, k2, chem_mask_khi, lat_ij, num_qjs, month_gmi,          &
+                  call controlFastJX74 (k1, k2, lat_ij, num_qjs, month_gmi,                         &
      &                        jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij(k1:k2),       &
      &                        sza_ij, totalCloudFraction(il,ij,k1:k2),                              &
      &                        qi(il,ij,k1:k2), ql(il,ij,k1:k2),                                     &
@@ -409,13 +409,13 @@
             optDepth(il,ij,:,2) = totalCloudFraction(il,ij,:)
 !
             do ic = 1, num_qjs
-               qjgmi(ic)%pArray3D(il,ij,k1:chem_mask_khi) = qjgmi_ij(k1:chem_mask_khi,ic)
+               qjgmi(ic)%pArray3D(il,ij,:) = qjgmi_ij(:,ic)
             end do
 
 !           ----------------------------------------------------------------------------------------------------------
 !                                      Michael Prather recommends a run-time adjustment to j(NO)
 !           ----------------------------------------------------------------------------------------------------------
-            qjgmi(jNOindex)%pArray3D(il,ij,k1:chem_mask_khi) = qjgmi(jNOindex)%pArray3D(il,ij,k1:chem_mask_khi)*jNOamp
+            qjgmi(jNOindex)%pArray3D(il,ij,:) = qjgmi(jNOindex)%pArray3D(il,ij,:)*jNOamp
 !           ----------------------------------------------------------------------------------------------------------
  
             overheadO3col(il,ij,:) = overheadO3col_ij(:)
