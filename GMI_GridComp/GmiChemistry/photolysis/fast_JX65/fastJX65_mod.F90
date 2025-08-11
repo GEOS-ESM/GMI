@@ -39,7 +39,7 @@
 !
 ! !INTERFACE:
 !
-      subroutine controlFastJX65 (k1, k2, chem_mask_khi, num_qjs,        &
+      subroutine controlFastJX65 (k1, k2, num_qjs,                       &
      &                  month_gmi, jday, time_sec, SZA_ij, do_clear_sky, &
      &                  tau_clw_ij, tau_cli_ij,                          &
      &                  press3e_ij, pctm_ij, kel_ij,                     &
@@ -55,7 +55,6 @@
 ! !INPUT PARAMETERS:
       integer, intent(in)  :: k1                 ! first interface index
       integer, intent(in)  :: k2                 ! last  interface index
-      integer, intent(in)  :: chem_mask_khi      ! number of chemistry levels     [jpnl]
       integer, intent(in)  :: num_qjs            ! number of photolysis reactions [jppj]
       integer, intent(in)  :: month_gmi          ! number of month (1- 12)        [month]
       integer, intent(in)  :: jday
@@ -78,11 +77,11 @@
 !
 ! !OUTPUT PARAMETERS:
       real*8,  intent(out) :: overheadO3col_ij(k1:k2)
-      real*8,  intent(out) :: qjgmi_ij(k1:chem_mask_khi, num_qjs)
+      real*8,  intent(out) :: qjgmi_ij(k1:k2, num_qjs)
       real*8,  intent(out) :: optdepth_ij(k1:k2) ! optical depth in box   (unitless) [od]
 !
 ! !LOCAL VARIABLES:
-      real*8  ZPJ(chem_mask_khi-k1+1, num_qjs)    !2-D array of J's indexed to CTM chemistry!
+      real*8  ZPJ(k2-k1+1, num_qjs)    !2-D array of J's indexed to CTM chemistry!
       real*8 GMTAU,DELTAU, ALBEDO,SZA
       real*8 SOLF, U0, FREFL
       integer I,J,K,L,ILNG,JLAT,ODINDX, IDAY, il, ik, ic
@@ -94,7 +93,7 @@
       ILNG                = I_
       JLAT                = J_
       L_                  = k2 - k1 + 1
-      JVL_                = chem_mask_khi
+      JVL_                = k2
       JVN_                = num_qjs
       L1_                 = L_ + 1
       L2_                 = 2 * L1_
@@ -237,7 +236,7 @@
 !
 ! !INTERFACE:
 !
-      subroutine initializeFastJX65 (k1, k2, chem_mask_khi, num_qjs, &
+      subroutine initializeFastJX65 (k1, k2, num_qjs, &
                   cross_section_file, T_O3_climatology_file, rootProc)
 !                  aerosolOpticalData_file, &
 !                  cross_section_file  , scattering_data_file,   &
@@ -252,7 +251,6 @@
 ! !INPUT PARAMETERS:
       logical            , intent(in) :: rootProc
       integer            , intent(in) :: k1, k2
-      integer            , intent(in) :: chem_mask_khi ! number of chemistry levels [JVL_]
       integer            , intent(in) :: num_qjs       ! number of photolysis reactions [JVN_]
                            ! UMichigan aerosol optical data file
 !      character (len=128), intent(in) :: aerosolOpticalData_file
@@ -276,7 +274,7 @@
       L_    = k2 - k1 + 1
       L1_   = L_ + 1
       L2_   = 2 * L_ + 2
-      JVL_  = chem_mask_khi
+      JVL_  = k2
       JVN_  = num_qjs
 !
 !      allocate(OPTDUSt(1:L_,NSADdust))

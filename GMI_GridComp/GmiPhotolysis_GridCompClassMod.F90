@@ -137,8 +137,6 @@
     real*8              :: fastj_offset_sec
 
     real*8              :: synoz_threshold
-    integer             :: chem_mask_klo
-    integer             :: chem_mask_khi
 
     real*8              :: qj_init_val
     integer             :: qj_timpyr
@@ -705,21 +703,6 @@ CONTAINS
 !         self%qj_labels(self%num_qjo)   = 'optical depth'
 !      end if
 
-!     -----------------------------------------------------
-!     chem_mask_klo, chem_mask_khi:
-!       chemistry turned off where k is outside of range of
-!       [chem_mask_klo, chem_mask_khi]
-!     -----------------------------------------------------
-
-      call ESMF_ConfigGetAttribute(gmiConfigFile, self%chem_mask_klo, &
-     &                label   = "chem_mask_klo:", &
-     &                default = 1, rc=STATUS )
-      VERIFY_(STATUS)
-
-      call ESMF_ConfigGetAttribute(gmiConfigFile, self%chem_mask_khi, &
-     &                label   = "chem_mask_khi:", &
-     &                default = km, rc=STATUS )
-      VERIFY_(STATUS)
 
 !     -------------------------------------------------------------------
 !     synoz_threshold:  chemistry turned off where synoz > this threshold
@@ -934,13 +917,13 @@ CONTAINS
             !=======
             case (4)
             !=======
-                call initializeFastJX65 (k1, k2, self%chem_mask_khi, NUM_J,    &
+                call initializeFastJX65 (k1, k2, NUM_J,    &
      &                         self%cross_section_file,                        &
      &                         self%T_O3_climatology_file, rootProc)
             !=======
             case (5)
             !=======
-                call InitializeFastJX74 (k1, k2, self%chem_mask_khi, NUM_J,    &
+                call InitializeFastJX74 (k1, k2, NUM_J,    &
      &                         self%cross_section_file,  self%cloud_scat_file, &
      &                         self%ssa_scat_file, self%aer_scat_file,         &
      &                         self%UMaer_scat_file, self%GMI_scat_file,       &
@@ -1534,7 +1517,7 @@ CONTAINS
                  self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, &
                  self%do_AerDust_Calc, self%do_ozone_inFastJX,             &
                  self%do_synoz, self%qj_timpyr, IO3, IH2O, ISYNOZ,         &
-                 self%chem_mask_khi, nymd, nhms, self%pr_diag, loc_proc,   &
+                 nymd, nhms, self%pr_diag, loc_proc,   &
                  self%synoz_threshold, self%AerDust_Effect_opt, NSP,       &
                  self%so4v_nden, self%so4v_sa, self%so4v_sareff, self%so4v_saexist, &
                  self%pyro_nden, self%pyro_sa, self%pyro_sareff, self%pyro_saexist, self%pyro_optDepth, &
