@@ -1435,9 +1435,16 @@ CONTAINS
     press3c(i1:i2,j1:j2,kReverse)  =         pl(i1:i2,j1:j2,k)*Pa2hPa       ! Pa               hPa
         kel(i1:i2,j1:j2,kReverse)  =          T(i1:i2,j1:j2,k)              ! K
    humidity(i1:i2,j1:j2,kReverse)  =          Q(i1:i2,j1:j2,k)*ToGrPerKg    ! kg kg^{-1}       g kg^{-1}
-
-    HNO3GAS(i1:i2,j1:j2,kReverse)  = HNO3GASsad(i1:i2,j1:j2,k)
   END DO
+
+  IF(ASSOCIATED(HNO3GASsad)) THEN
+   DO k=1,km
+    kReverse = km-k+1
+    HNO3GAS(i1:i2,j1:j2,kReverse)  = HNO3GASsad(i1:i2,j1:j2,k)
+   END DO
+  ELSE
+    HNO3GAS(:,:,:)  = 0.0
+  END IF
 
 ! Layer edges                                                               GEOS-5 Units       GMI Units
 ! -----------                                                               ------------       -------------
