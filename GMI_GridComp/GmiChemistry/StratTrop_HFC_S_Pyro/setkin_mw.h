@@ -14,9 +14,9 @@
 !  for the species in the model mechanism.
 !
 !
-!  Input mechanism:        StratTrop_HFC_S
+!  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Mon Mar 31 16:08:51 2025
+!  Setkin files generated: Tue Aug 26 20:52:13 2025
 !
 !=======================================================================
 
