@@ -1258,14 +1258,17 @@ CONTAINS
       VERIFY_(STATUS)
 
 
-      IF ( TRIM(short_name) == 'RCOOH' ) THEN
-        IF ( MAXVAL(bgg%qa(L)%data3d) > 1.e-9 ) THEN
-          PRINT*,'RCOOH values are too high (GT 1e-9), likely from an old RESTART'
-          PRINT*,'Remove RCOOH from gmichem_internal_rst.'
-          STATUS = 1
-          VERIFY_(STATUS)
-        ENDIF
-      ENDIF
+! MEM aug2025 - Removing the trap because it has been years since the sink for RCOOH
+!               was introduced; the PyroCB mechanism may exceed 1e-9 but stays lower
+!               than 2e-9 .
+!     IF ( TRIM(short_name) == 'RCOOH' ) THEN
+!       IF ( MAXVAL(bgg%qa(L)%data3d) > 1.e-9 ) THEN
+!         PRINT*,'RCOOH values are too high (GT 1e-9), likely from an old RESTART'
+!         PRINT*,'Remove RCOOH from gmichem_internal_rst.'
+!         STATUS = 1
+!         VERIFY_(STATUS)
+!       ENDIF
+!     ENDIF
 
    end do
 
