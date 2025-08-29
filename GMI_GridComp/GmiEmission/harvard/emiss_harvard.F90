@@ -181,8 +181,9 @@
 !... Perform unit conversions
         tdtinv = 1.0d0 / tdt
 
-!... isoprene emissions coming from HEMCO already kgC/m2/s, convert to kgIsoprene/box/s
         if (doMEGANviaHEMCO) then 
+           ! isoprene emissions coming from HEMCO already kgC/m2/s 
+           ! convert to kgIsoprene/box/s
            emiss_isop = emiss_isop / ( ATOMSC_PER_MOLECISOP * 12.01 )  *  &
                                        mw(iisoprene_num) * mcor
         else
@@ -674,8 +675,8 @@
 
         iXj = (i2-i1+1)*(j2-ju1+1)
         tempemis = emiss_isop(:,:)/mcor(:,:)
-!       CALL pmaxmin('emiss_isop in add_emiss:', tempemis(:,:) &
-!    &   , qmin, qmax, iXj, 1, 1. )
+!       CALL pmaxmin('em isop HRVRD:', tempemis(:,:) &
+!        , qmin, qmax, iXj, 1, 1. )
 
         concentration(iisoprene_num)%pArray3D(:,:,1) =  &
           concentration(iisoprene_num)%pArray3D(:,:,1) +  &
