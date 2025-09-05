@@ -2350,14 +2350,14 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
       call ESMF_StateGet(pyro_state, 'CA.brphobic', pyro_phobic_3d_field, __RC__)
     ENDIF
 !
-!... PyroCb number density, part I
+!... PyroCb number density, part I - this is actually mass concentration kg m-3
      call ESMF_FieldGet(field=pyro_phobic_3d_field, farrayPtr=pyro_3d_array, __RC__)
 !
-     self%pyro_nden(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)
-!... PyroCb number density, part II
+     self%pyro_nden(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)*airdens(:,:,1:km)
+!... PyroCb number density, part II - result 
      call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
-     self%pyro_nden(:,:,km:1:-1) = (self%pyro_nden(:,:,km:1:-1)+pyro_3d_array(:,:,1:km)) &
-                                    *airdens(:,:,1:km)
+     self%pyro_nden(:,:,km:1:-1) =   self%pyro_nden(:,:,km:1:-1) &
+                                   + pyro_3d_array(:,:,1:km)*airdens(:,:,1:km)
 !
 !... PyroCb SAD
      call ESMF_StateGet(pyro_state, 'SAREA',        pyro_philic_3d_field, __RC__)
@@ -2377,7 +2377,7 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
                            self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
                           ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
 !... code
-     where (pl(i1:i2,ju1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
+     where (press3c(i1:i2,j1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
         self%pyro_sa(:,:,:) = 0.0d0
         self%pyro_optDepth(:,:,:) = 0.0d0
       end where
