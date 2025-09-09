@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed references to Chem_Bundle (w_c), Chem_Array and Chem_Registry
 - Removed support for Aerosols coming from old GOCART
 - Eliminated chem_mask_klo/chem_mask_khi variables in GMI, not needed nor supported
+- Removed the trap for high values of RCOOH, no longer an issue
 
 ### Deprecated
 
