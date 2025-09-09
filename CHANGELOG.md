@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added coupling of GOCART provided SU and BR surface area density and effective radius to chemistry through aerosol state
 - Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
 - Added GitHub Actions workflow for CI builds
+- Added minimal strat chem mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism StratTrop_Minimal
 
 ### Changed
 
