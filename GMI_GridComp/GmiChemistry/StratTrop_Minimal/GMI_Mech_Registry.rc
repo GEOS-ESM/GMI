@@ -1,0 +1,128 @@
+#------------------------------------------------------------------------
+#BOP
+#
+# !RESOURCE: GMI_Mech_Registry
+# 
+# !HELP:
+#
+#  For the mechanism: GeosCCM_Combo_Minimal2_Mechanism
+#
+#  The GMI Mechanism Registry resource file provides names and units
+#  for the species in the GMI chemical mechanism. There is a different
+#  file for each different mechanism, and the choice of mechanism
+#  occurs at compile time.
+#
+#  This file is read at run-time.  It provides the list of GMI species
+#  that GEOS will use for the INTERNAL state.  There is a separate,
+#  largely identical list of species that the SMV chemical solver will use,
+#  i.e. the GMI internal list.
+#
+#  The differences between the GEOS list (this file) and the
+#  GMI internal list are as follows:
+#    - AOADAYS is only in the GEOS list
+#    - T2M15d  is only in the GEOS list
+#    - H2O     is only in the GMI internal list
+#
+#  This file has 2 tables:  the GMI table holds the chemical species
+#  that are transported; the XX table holds the non-transported species.
+#
+#  The following assumptions exist in the code:
+#    - AOADAYS is the first entry in the GMI_table
+#    - T2M15d  is the last entry in the XX_table
+#
+# !REVISION HISTORY:
+#
+#  2022-09-15  manyin   Derived this file from Chem_Registry.rc
+#
+#-----------------------------------------------------------------------
+#EOP
+
+GMI_table::
+
+# Name     Units        Long Name
+# -----    ------       --------------------------------
+AOADAYS    days          'Age-of-air'                                                                    
+ACTA       'mol mol-1'   '{CH3C(O)OH; Acetic acid}'                                                      
+ALD2       'mol mol-1'   '{CH3CHO; Acetaldehyde}'                                                        
+Br         'mol mol-1'   'Atomic Bromine ground state (2P3/2)'                                           
+BrCl       'mol mol-1'   'Bromine chloride'                                                              
+BrO        'mol mol-1'   'Bromine monoxide radical'                                                      
+BrONO2     'mol mol-1'   'Bromine nitrate'                                                               
+C2H6       'mol mol-1'   'Ethane'                                                                        
+C3H8       'mol mol-1'   'Propane'                                                                       
+CCl4       'mol mol-1'   'Carbon tetrachloride'                                                          
+CF2ClBr    'mol mol-1'   'Halon-1211, Bromochlorodifluoromethane'                                        
+CF3Br      'mol mol-1'   'Halon-1301, Bromotrifluoromethane'                                             
+CFC113     'mol mol-1'   'CFC113, Trichlorotrifluoroethane'                                              
+CFC11      'mol mol-1'   'Freon-11, Trichlorofluoromethane'                                              
+CFC12      'mol mol-1'   'Freon-12, Dichlorodifluoromethane'                                             
+CH2O       'mol mol-1'   'Formalydehyde'                                                                 
+CH3Br      'mol mol-1'   'Methyl bromide'                                                                
+CH3CCl3    'mol mol-1'   'Methyl chloroform, 1-1-1-trichloroethane'                                      
+CH3Cl      'mol mol-1'   'Methyl chloride'                                                               
+CH4        'mol mol-1'   'Methane'                                                                       
+Cl2        'mol mol-1'   'Molecular chlorine'                                                            
+Cl2O2      'mol mol-1'   'Chlorine peroxide'                                                             
+Cl         'mol mol-1'   'Atomic Chlorine ground state (2P3/2)'                                          
+ClO        'mol mol-1'   'Chlorine monoxide radical'                                                     
+ClONO2     'mol mol-1'   'Chlorine nitrate'                                                              
+CO         'mol mol-1'   'Carbon monoxide'                                                               
+H2         'mol mol-1'   'Molecular hydrogen'                                                            
+H2O2       'mol mol-1'   'Hydrogen peroxide'                                                             
+HBr        'mol mol-1'   'Hydrogen bromide'                                                              
+HCFC141b   'mol mol-1'   'HCFC-141b (C2Cl2FH3)'                                                          
+HCFC142b   'mol mol-1'   'HCFC-142b (C2ClF2H3)'                                                          
+HCFC22     'mol mol-1'   'HCFC-22 (CClF2H)'                                                              
+HCl        'mol mol-1'   'Hydrochloric Acid'                                                             
+HCOOH      'mol mol-1'   'Formic acid, HC(=O)OH'                                                         
+HNO2       'mol mol-1'   'Nitrous acid'                                                                  
+HNO3       'mol mol-1'   'Nitric acid'                                                                   
+HNO4       'mol mol-1'   'Pernitric acid'                                                                
+HO2        'mol mol-1'   'Perhydroxyl radical'                                                           
+HOBr       'mol mol-1'   'Hydrobromous acid'                                                             
+HOCl       'mol mol-1'   'Hydrochlorous acid'                                                            
+IAP        'mol mol-1'   'Peroxide (C5H10O5) from IAO2'                                                  
+ISOP       'mol mol-1'   '{CH2=C(CH3)CH=CH2; Isoprene CH3C(O)CH=CH2 or CH2=C(CH3)CH=CH2'                 
+MEK        'mol mol-1'   '{CH3C(O)CH3; Methyl ethyl ketone}'                                             
+MP         'mol mol-1'   '{CH3OOH; Methylhydroperoxide}'                                                 
+N2O        'mol mol-1'   'Nitrous oxide'                                                                 
+N2O5       'mol mol-1'   'Dinitrogen pentoxide'                                                          
+NO         'mol mol-1'   'Nitric oxide'                                                                  
+NO2        'mol mol-1'   'Nitrogen dioxide'                                                              
+NO3        'mol mol-1'   'Nitrogen trioxide'                                                             
+OX         'mol mol-1'   'Ozone'                                                                         
+OClO       'mol mol-1'   'Symmetrical chlorine dioxide'                                                  
+OH         'mol mol-1'   'Hydroxyl radical'                                                              
+PAN        'mol mol-1'   '{CH3C(O)OONO2; Peroxyacetylnitrate}'                                           
+RCHO       'mol mol-1'   '{CH3CH2CHO; >= C3 aldehydes}'                                                  
+HNO3COND   'mol mol-1'   'Condensed Nitric Acid'                                                         
+::
+
+XX_table::
+
+# Name     Units        Long Name
+# -----    ------       --------------------------------
+A3O2       'mol mol-1'   '{CH3CH2CH2OO; Primary RO2 from C3H8}'                                          
+ATO2       'mol mol-1'   '{CH3C(O)CH2O2; RO2 from acetone}'                                              
+B3O2       'mol mol-1'   '{CH3CH(OO)CH3; Secondary RO2 from C3H8}'                                       
+ETO2       'mol mol-1'   '{C2H5O2 or CH3CH2OO; Ethylperoxy radical}'                                     
+H          'mol mol-1'   'Atomic Hydrogen ground state (2S)'                                             
+IAO2       'mol mol-1'   'RO2 (C5H9O5) from isoprene oxidation products (now ICHOO)'                     
+KO2        'mol mol-1'   'RO2 (C4H7O3) from C3 ketones maybe:CH3C(O)CH2'                                 
+MCO3       'mol mol-1'   '{CH3C(O)O2; Peroxyacetyl radical}'                                             
+MO2        'mol mol-1'   '{CH3O2; Methylperoxy radical}'                                                 
+N          'mol mol-1'   'Atomic nitrogen ground state'                                                  
+O          'mol mol-1'   'Atomic Oxygen ground state (3P)'                                               
+O1D        'mol mol-1'   'Atomic Oxygen first excited singlet state (1D)'                                
+RA3P       'mol mol-1'   '{CH3CH2CH2OOH; Peroxide from A3O2}'                                            
+RB3P       'mol mol-1'   '{CH3CH(OOH)CH3; Peroxide from B3O2}'                                           
+RCO3       'mol mol-1'   '{CH3CH2C(O)OO; Peroxypropionyl radical}'                                       
+RIO1       'mol mol-1'   'RO2 (C5H9O3) from isoprene oxydation products (now IHOO1)'                     
+RIO2       'mol mol-1'   'RO2 (C5H9O3) from isoprene (now IHOO4)'                                        
+RIP        'mol mol-1'   '{HOCH2C(OOH)(CH3)CH=CH2; 1,2-ISOPOOH}'                                         
+ACET       'mol mol-1'   '{CH3C(O)CH3; Acetone}'                                                         
+N2         cm-3          'Molecular nitrogen'                                                            
+O2         cm-3          'Molecular oxygen'                                                              
+NUMDENS    cm-3          'Total number density'                                                          
+T2M15d     K             'Daily T2M time average'                                                        
+::
