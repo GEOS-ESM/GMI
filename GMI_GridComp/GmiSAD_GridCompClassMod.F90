@@ -385,7 +385,7 @@ CONTAINS
 !       3: (OBSOLETE)  read in lbssad zonal average fields
 !       4:  lbssad provided by AGCM (ExtData)
 !       5:  lbssad provided by CARMA SO4SAREA
-!       6:  lbssad provided by GOCART2G AERO bundle      
+!       6:  lbssad provided by GOCART2G AERO state (SAREA in SU and optionally SU.volc)
 !     ----------------------------------------------
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%lbssad_opt, &
      &                label   = "lbssad_opt:", &
@@ -1251,7 +1251,7 @@ CONTAINS
       allocate(ptr3Dreal(i1:i2, j1:j2, 1:km))
 
       do ib = 1, numVars
-         ptr3Dreal(:,:,:) = self%sadgmi(ib)%pArray3D(:,:,km:1:-1)
+         ptr3Dreal(:,:,:) = self%sadgmi(ib)%pArray3D(:,:,km:1:-1) ! sadBun needs top-down
 
          call updateTracerToBundle(sadBun, ptr3Dreal, ib)
       end do

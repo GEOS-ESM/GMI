@@ -225,7 +225,7 @@
       SUBROUTINE PHOTO_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT, DDD,  &
                            RRR, OOO, LWP, IWP, REFFL, REFFI,               &
                            AERSP, NDXAER, L1U, ANU, VALJXX, NJXU, LDARK,   &
-                           do_CCM_OptProps, num_CCM_WL, num_CCM_aers, CCM_WL, &
+                           do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL, &
                            CCM_SSALB, CCM_OPTX, CCM_SSLEG, cldOD_out, aerOD_out)
 !-----------------------------------------------------------------------
 !
@@ -265,6 +265,7 @@
 !     ZZHT    scale height (cm) used above top of CTM (ZHL(L_+1))
 !     L1U     dimension of CTM = levels +1 (L+1 = above-CTM level)
 !!
+      use MAPL
       implicit none
 !
 !.sds  added MAPL physical constants being used
@@ -285,10 +286,10 @@
                                                 LWP,IWP,REFFL,REFFI
 !... CCM provided aerosol optical characteristics
       logical, intent(in) :: do_CCM_OptProps
-      integer, intent(in) :: num_CCM_WL, num_CCM_aers
+      integer, intent(in) :: num_CCM_WL, num_CCM_aers, num_CCM_mom
       real*8,  intent(in), dimension(num_CCM_WL)    :: CCM_WL
       real*8,  intent(in), dimension(num_CCM_WL, L1U, num_CCM_aers)    :: CCM_SSALB, CCM_OPTX
-      real*8,  intent(in), dimension(8, num_CCM_WL, L1U,  num_CCM_aers) :: CCM_SSLEG
+      real*8,  intent(in), dimension(num_CCM_mom, num_CCM_WL, L1U,  num_CCM_aers) :: CCM_SSLEG
 
       real*8,  intent(in), dimension(L1U,AN_):: AERSP
       integer, intent(in), dimension(L1U,AN_):: NDXAER
@@ -356,7 +357,6 @@
 !                        or         99.0                 80 km
       if (SZA .gt. SZAMAX) then
         LDARK = .true.
-!.sds.. changes
 !.sds.. calc aerosol OD diagnostics for nighttime too AOD diagnostic
         if(.not.do_CCM_OptProps) then
           do L = 1,L1U
@@ -530,12 +530,26 @@
 !---  UMich aerosols use relative humidity (RH)
 !.sds... what if CCM provides aerosol optical characteristics
         if(do_CCM_OptProps) then
+          if(num_CCM_mom.ne.8) then
+            print *,'Number of Legendre coefs not correct from AERO_Provider: ',num_CCM_mom
+            stop
+          endif
           do M = 1,ANU
             !... accumulate
             do K = 1,NS2
 !.sds...
 !---Pick nearest Mie wavelength to get scattering properites------------
-              JMIE = minloc(CCM_WL(:)-WL(K))
+              JMIE = minloc(abs(CCM_WL(:)-WL(K)))
+!. debug
+              if(JMIE(1).lt.1.or.JMIE(1).gt.num_CCM_WL) then
+                print *,'sdspj-1: ',m,k,num_CCM_WL,JMIE
+                print *,'sdspj-2: ',m,k,CCM_WL
+                print *,'sdspj-3: ',m,k,WL
+                print *,'sdspj-4: ',m,k,shape(CCM_OPTX)
+                print *,'sdspj-5: ',m,k,shape(CCM_SSALB)
+                print *,'sdspj-6: ',m,k,shape(CCM_SSLEG)
+                stop
+              endif
 !
               OD(K,L)  = OD(K,L)  + CCM_OPTX(JMIE(1),L,M)
               SSA(K,L) = SSA(K,L) + CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)

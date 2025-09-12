@@ -137,8 +137,6 @@
     real*8              :: fastj_offset_sec
 
     real*8              :: synoz_threshold
-    integer             :: chem_mask_klo
-    integer             :: chem_mask_khi
 
     real*8              :: qj_init_val
     integer             :: qj_timpyr
@@ -289,6 +287,9 @@ CONTAINS
 !
 !EOP
 !-------------------------------------------------------------------------
+   type (ESMF_Config) :: g2g_cfg      ! GOCART2G_GridComp.rc
+   integer :: n_wavelengths_profile, n_mom
+   real, allocatable :: wavelengths_profile(:)
 
    CHARACTER(LEN=*), PARAMETER :: IAm = 'GmiPhotolysis_GridCompInitialize'
    CHARACTER(LEN=255) :: rcfilen = 'GMI_GridComp.rc'
@@ -712,21 +713,6 @@ CONTAINS
 !         self%qj_labels(self%num_qjo)   = 'optical depth'
 !      end if
 
-!     -----------------------------------------------------
-!     chem_mask_klo, chem_mask_khi:
-!       chemistry turned off where k is outside of range of
-!       [chem_mask_klo, chem_mask_khi]
-!     -----------------------------------------------------
-
-      call ESMF_ConfigGetAttribute(gmiConfigFile, self%chem_mask_klo, &
-     &                label   = "chem_mask_klo:", &
-     &                default = 1, rc=STATUS )
-      VERIFY_(STATUS)
-
-      call ESMF_ConfigGetAttribute(gmiConfigFile, self%chem_mask_khi, &
-     &                label   = "chem_mask_khi:", &
-     &                default = km, rc=STATUS )
-      VERIFY_(STATUS)
 
 !     -------------------------------------------------------------------
 !     synoz_threshold:  chemistry turned off where synoz > this threshold
@@ -941,13 +927,13 @@ CONTAINS
             !=======
             case (4)
             !=======
-                call initializeFastJX65 (k1, k2, self%chem_mask_khi, NUM_J,    &
+                call initializeFastJX65 (k1, k2, NUM_J,    &
      &                         self%cross_section_file,                        &
      &                         self%T_O3_climatology_file, rootProc)
             !=======
             case (5)
             !=======
-                call InitializeFastJX74 (k1, k2, self%chem_mask_khi, NUM_J,    &
+                call InitializeFastJX74 (k1, k2, NUM_J,    &
      &                         self%cross_section_file,  self%cloud_scat_file, &
      &                         self%ssa_scat_file, self%aer_scat_file,         &
      &                         self%UMaer_scat_file, self%GMI_scat_file,       &
@@ -983,16 +969,29 @@ CONTAINS
 
 !... arrays needed for using aerosol optical properties from aerosol module
          if(self%do_CCM_OptProps) then
+!
+!   Get information from GOCART2G_GridComp.rc
+!   -----------------------------------------
+           g2g_cfg = ESMF_ConfigCreate (__RC__)
+           call ESMF_ConfigLoadFile (g2g_cfg, 'GOCART2G_GridComp.rc', __RC__)
+           n_wavelengths_profile = ESMF_ConfigGetLen (g2g_cfg,label='aerosol_photolysis_wavelength_in_nm_from_LUT', __RC__)
+           allocate(wavelengths_profile(  n_wavelengths_profile), __STAT__)
+           call ESMF_ConfigGetAttribute (g2g_cfg, wavelengths_profile, label='aerosol_photolysis_wavelength_in_nm_from_LUT:', __RC__)
+           call ESMF_ConfigGetAttribute (g2g_cfg, n_mom, label='n_phase_function_moments_photolysis:', __RC__)
+           call ESMF_ConfigDestroy(g2g_cfg, __RC__)
+!
            self%JXbundle%NUM_CCM_aers = 1
-           self%JXbundle%CCM_WL = 0
-           Allocate(self%JXbundle%CCM_WL(W_)) 
-           self%JXbundle%CCM_WL = 0.0d0
-           Allocate(self%JXbundle%CCM_SSALB(W_, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%NUM_CCM_mom = n_mom
+           self%JXbundle%NUM_CCM_WL = n_wavelengths_profile
+           Allocate(self%JXbundle%CCM_WL(n_wavelengths_profile)) 
+           self%JXbundle%CCM_WL = wavelengths_profile
+           Allocate(self%JXbundle%CCM_SSALB(n_wavelengths_profile, i1:i2, ju1:j2, k1:k2, 1))
            self%JXbundle%CCM_SSALB = 0.0d0
-           Allocate(self%JXbundle%CCM_OPTX(W_, i1:i2, ju1:j2, k1:k2, 1))
+           Allocate(self%JXbundle%CCM_OPTX(n_wavelengths_profile, i1:i2, ju1:j2, k1:k2, 1))
            self%JXbundle%CCM_OPTX = 0.0d0
-           Allocate(self%JXbundle%CCM_SSLEG(8, W_, i1:i2, ju1:j2, k1:k2, 1))
+           Allocate(self%JXbundle%CCM_SSLEG(n_mom, n_wavelengths_profile, i1:i2, ju1:j2, k1:k2, 1))
            self%JXbundle%CCM_SSLEG = 0.0d0
+           deallocate (wavelengths_profile)
          endif
 
 !... G2G SO4volc
@@ -1560,7 +1559,7 @@ CONTAINS
                  self%wAersl, self%dAersl, humidity, num_AerDust, self%phot_opt,    &
                  self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, self%do_LymanAlpha, &
                  self%do_AerDust_Calc, self%do_ozone_inFastJX, self%do_synoz, self%qj_timpyr, &
-                 IO3, IH2O, ISYNOZ, self%chem_mask_khi, nymd, nhms,                 &
+                 IO3, IH2O, ISYNOZ, nymd, nhms,                                     &
                  self%pr_diag, loc_proc, self%synoz_threshold, self%AerDust_Effect_opt, NSP, &
                  self%so4v_nden, self%so4v_sa, self%so4v_sareff, self%so4v_saexist, &
                  self%pyro_nden, self%pyro_sa, self%pyro_sareff, self%pyro_saexist, self%pyro_optDepth, &
@@ -2060,9 +2059,9 @@ CONTAINS
   REAL, POINTER, DIMENSION(:,:,:)     :: AS_PTR_AER, AS_PTR_RH, AS_PTR_PLE
   REAL*4, POINTER, DIMENSION(:,:,:,:) :: PTR4D
   character (len=ESMF_MAXSTR) :: aerophot
-  REAL :: qmin,qmax
-  integer :: N, M, STATUS, AS_STATUS, imom
-  logical :: implements_aerosol_optics
+  REAL :: qmin, qmax, value
+  integer :: N, M, STATUS, AS_STATUS, imom, ivalue
+  logical :: implements_aerosol_optics, prmaxmin
   character*16 :: tmpstr
 
 
@@ -2072,13 +2071,10 @@ CONTAINS
   SELECT CASE (TRIM(self%aeroProviderName))
 
     CASE("GOCART2G")
-       call ESMF_AttributeGet(aero_state, &
-          name='implements_aerosol_optics_method', &
-          value=implements_aerosol_optics,__RC__)
-       if (implements_aerosol_optics) then
-        self%JXbundle%num_CCM_aers = 1
-        self%JXbundle%num_CCM_WL = 5
-
+      call ESMF_AttributeGet(aero_state, &
+         name='implements_aerosol_optics_method', &
+         value=implements_aerosol_optics,__RC__)
+      if (implements_aerosol_optics) then
       ! set RH for aerosol optics
         call ESMF_AttributeGet(aero_state, &
               name='relative_humidity_for_aerosol_optics', value=aerophot, __RC__)
@@ -2089,8 +2085,8 @@ CONTAINS
         endif
            
       ! set PLE for aerosol optics
-        call ESMF_AttributeGet(aero_state, &
-           name='air_pressure_for_aerosol_optics', value=aerophot,__RC__)
+        call ESMF_AttributeGet(aero_state, name='air_pressure_for_aerosol_optics' &
+                               , value=aerophot,__RC__)
         if (aerophot /= '') then
            call MAPL_GetPointer(impChem,    AS_PTR_PLE, 'PLE', __RC__)
            call MAPL_GetPointer(aero_state, AS_PTR_AER, trim(aerophot), __RC__)
@@ -2101,12 +2097,28 @@ CONTAINS
         call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=1, __RC__)
 
         N = self%JXbundle%num_CCM_aers
-           
+        
+!... debug sds
+!    if(mapl_am_i_root()) then
+!      print *,'sds gmibeg BundlePrint','******************'
+!      call ESMF_StatePrint ( aero_state )
+!      print *,'sds gmiend BundlePrint******************'
+!    endif
+!... debug sds
+
       ! Loop over wavelengths
         do M = 1,self%JXbundle%num_CCM_WL
+
+           ivalue = self%JXbundle%CCM_WL(m)
+!           if(mapl_am_i_root()) print *,'Aero OptProp callback set up: ',m,ivalue
            call ESMF_AttributeSet(aero_state, &
               name='band_for_aerosol_optics', &
-              value=500,__RC__)
+              value=ivalue,__RC__)
+
+           ivalue = self%JXbundle%num_CCM_mom
+           call ESMF_AttributeSet(aero_state, &
+              name='n_phase_function_moments', &
+              value=ivalue,__RC__)
 
          ! execute the aero provider's optics method
            call ESMF_MethodExecute(aero_state, &
@@ -2116,99 +2128,70 @@ CONTAINS
            VERIFY_(STATUS)
 
 !          SSA as provided by callback is actually the scattering; normalize later
-           call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol', value=aerophot, __RC__)
+           call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol' &
+                 , value=aerophot, __RC__)
            if (aerophot /= '') then
               call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
            endif
+    
            self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
 
-           call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol', value=aerophot, __RC__)
+           call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol' &
+                 , value=aerophot, __RC__)
            if (aerophot /= '') then
              call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
            endif
            self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
-           
-!          Hard-wired for 8 moments; these are provided by callback weighted by scattering; normalize at end
-           call ESMF_AttributeGet(aero_state, name='legendre_coefficients_of_p11_for_photolysis', value=aerophot, __RC__)
-           if(MAPL_AM_I_ROOT()) print *, 'GMIleg: ', aerophot
+!
+!... put floor on CCM_SSALB and CCM_OPTX
+           where(self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N).lt.1e-5) &
+             self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = 1e-5
+           where(self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N).lt.1e-3) &
+             self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = 1e-3
+!
+!... Hard-wired for 8 moments; these are provided by callback weighted by scattering; normalize at end
+           call ESMF_AttributeGet(aero_state, name='legendre_coefficients_of_p11_for_photolysis' &
+                 , value=aerophot, __RC__)
+!
            if (aerophot /= '') then
              call MAPL_GetPointer(aero_state, PTR4D, trim(aerophot), __RC__)
+!
+             do imom = 1, 8
+               self%JXbundle%CCM_SSLEG(imom,M,:,:,km:1:-1,N) = PTR4D(:,:,1:km,imom)
+!.debug
+!               if(MAPL_AM_I_ROOT()) print '(''GMIleg: '',3i3,6e12.3)', imom,M,N &
+!               print '(''GMIleg: '',3i3,6e12.3)', imom,M,N &
+!                 , maxval(self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N)) &
+!                 , minval(self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N)) &
+!                 , maxval(PTR4D(:,:,:,imom)) &
+!                 , minval(PTR4D(:,:,:,imom))
+!.
+               self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N) = self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N) &
+                                                         /self%JXbundle%CCM_SSALB(M,:,:,:,N)
+             end do
            endif
-           do imom = 1, 8
-            self%JXbundle%CCM_SSLEG(imom,M,:,:,km:1:-1,N) = PTR4D(:,:,1:km,imom)
-            self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N) = self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N)/self%JXbundle%CCM_SSALB(M,:,:,:,N)
-            if(MAPL_AM_I_ROOT()) print *, 'GMIleg: ', imom,M,N,self%JXbundle%CCM_SSLEG(imom,M,1,1,1,N), &
-                 self%JXbundle%CCM_OPTX(M,1,1,1,N), self%JXbundle%CCM_SSALB(M,1,1,1,N)
-           end do
 
 !          Normalize SSA
 !          Should protect against small value of AOD with a where?           
-           self%JXbundle%CCM_SSALB = self%JXbundle%CCM_SSALB / self%JXbundle%CCM_OPTX
+!.          self%JXbundle%CCM_SSALB = self%JXbundle%CCM_SSALB / self%JXbundle%CCM_OPTX
 
-           
-         ! Temporary legendre coefficients
-!           self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
-!           self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
-!           self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
-!           self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
-!           self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
-!           self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
-!           self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
-!           self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
         enddo
       ! reset callback
         call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=0, __RC__)
-      else
-           self%JXbundle%num_CCM_aers = 1
-           self%JXbundle%num_CCM_WL = 5
-           do M = 1,self%JXbundle%num_CCM_WL
-             self%JXbundle%CCM_WL(M) = m*100+100
-           enddo
-!... loop over individual aerosols
-           do N = 1,self%JXbundle%num_CCM_aers
-            do M = 1,self%JXbundle%num_CCM_WL
-!          call ESMF_StateGet(aero_state, 'SSA', aerophot, __RC__)
-!          call ESMF_FieldGet( aerophot, farrayPtr=PTR3D, __RC__ )
-!          self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
-            call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol', value=aerophot, __RC__)
-            if (aerophot /= '') then
-              call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
-            endif
-            self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
-!          self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = 1.0000
-!          call ESMF_StateGet(aero_state, 'extinction_in_air_due_to_ambient_aerosol', aerophot, __RC__)
-!          call ESMF_FieldGet( aerophot, farrayPtr=PTR3D, __RC__ )
-            call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol', value=aerophot, __RC__)
-            if (aerophot /= '') then
-              call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
-            endif
-            self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
-!          self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = 0.01
 !
-!.sds      call ESMF_StateGet(aero_state, 'SLEG', aerophot, __RC__)
-!.sds      call ESMF_FieldGet( aerophot, farrayPtr=PTR4D, __RC__ )
-!.sds      self%JXbundle%CCM_SSLEG(:,:,:,km:1:-1) = PTR4D(:,:,1:km)
-!        enddo
-!
-!  w(nm)    Q    r-eff  ss-alb  pi(0) pi(1) pi(2) pi(3) pi(4) pi(5) pi(6) pi(7)
-! 24 S70(rvm) Trop sulfate at RH=70 (n@400=1.36 log-norm: r=.07um/sigma=2.0)
-!  600  1.2726  0.241  1.0000  1.000 2.254 2.782 2.632 2.298 1.874 1.488 1.167
-
-            self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
-            self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
-            self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
-            self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
-            self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
-            self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
-            self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
-            self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
-
-!     IF( MAPL_AM_I_ROOT() ) THEN
-!       PRINT *,"sds-SSA: ",n,m,maxval(self%JXbundle%CCM_SSALB(M,:,:,:,N)),minval(self%JXbundle%CCM_SSALB(M,:,:,:,N))
- !      PRINT *,"sds-AOD: ",n,m,maxval(self%JXbundle%CCM_OPTX(M,:,:,:,N)),minval(self%JXbundle%CCM_OPTX(M,:,:,:,N))
- !    ENDIF
-          enddo
-         enddo
+!.test!  w(nm)    Q    r-eff  ss-alb  pi(0) pi(1) pi(2) pi(3) pi(4) pi(5) pi(6) pi(7)
+!.test! 24 S70(rvm) Trop sulfate at RH=70 (n@400=1.36 log-norm: r=.07um/sigma=2.0)
+!.test!  600  1.2726  0.241  1.0000  1.000 2.254 2.782 2.632 2.298 1.874 1.488 1.167
+!.test
+!.test            self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
+!.test            self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
+!.test            self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
+!.test            self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
+!.test            self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
+!.test            self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
+!.test            self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
+!.test            self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
+!.test
       endif
 !   CASE("GMICHEM")
 !... could I pull out calc of this in CloudJ to new routine?
@@ -2239,20 +2222,25 @@ CONTAINS
     CASE DEFAULT
       STATUS = 1
       VERIFY_(STATUS)
-
-  END SELECT
-
-  IF(self%verbose) THEN
-    PTR3D = self%JXbundle%CCM_SSALB(1,:,:,:,1)
-    CALL pmaxmin('CCM_SSALB:', PTR3D, qmin, qmax, iXj, km, 1. )
-    PTR3D = self%JXbundle%CCM_OPTX(1,:,:,:,1)
-    CALL pmaxmin('CCM_OPTX:', PTR3D, qmin, qmax, iXj, km, 1. )
-    do N = 1,8
-      PTR3D = self%JXbundle%CCM_SSLEG(N,1,:,:,:,1)
-      write(tmpstr,'(''CCM_SSLEG: '',i2.2)') n
-      CALL pmaxmin(tmpstr, PTR3D, qmin, qmax, iXj, km, 1. )
-    enddo
-  END IF
+!
+    END SELECT
+!
+!... debug diags
+    prmaxmin = .true.
+    if(prmaxmin) then
+      do M = 1,self%JXbundle%num_CCM_WL
+        if(mapl_am_i_root()) print *,'Aero Opt Prop callback no: ',m
+        PTR3D = self%JXbundle%CCM_SSALB(m,:,:,:,1)
+        CALL pmaxmin('CCM_SSALB:', PTR3D, qmin, qmax, iXj, km, 1. )
+        PTR3D = self%JXbundle%CCM_OPTX(m,:,:,:,1)
+        CALL pmaxmin('CCM_OPTX:', PTR3D, qmin, qmax, iXj, km, 1. )
+        do N = 1,self%JXbundle%num_CCM_mom
+          PTR3D = self%JXbundle%CCM_SSLEG(N,m,:,:,:,1)
+          write(tmpstr,'(''CCM_SSLEG: '',i2.2)') n
+          CALL pmaxmin(tmpstr, PTR3D, qmin, qmax, iXj, km, 1. )
+        enddo
+      end do
+    endif
 
   RETURN
  END SUBROUTINE Acquire_OptProps

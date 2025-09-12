@@ -23,9 +23,9 @@
 !    qqk    : rates of thermal processes (molecules cm^-3 s^-1)
 !    qqj    : rates of photolytic processes (molecules cm^-3 s^-1)
 !
-!  Input mechanism:        StratTrop_HFC_S
+!  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Mon Mar 31 16:08:51 2025
+!  Setkin files generated: Tue Aug 26 20:52:13 2025
 !
 !=======================================================================
       subroutine Calc_rate_Setkin &
@@ -1332,73 +1332,77 @@
 !
       qqk(kloop,320)=qk(kloop,320)*y(kloop,51)*y(kloop,63)
 !
+!....         ClONO2 = HNO3 + HOCl
+!
+      qqk(kloop,321)=qk(kloop,321)*y(kloop,33)
+!
 !....         ClONO2 + HCl = Cl2 + HNO3
 !
-      qqk(kloop,321)=qk(kloop,321)*y(kloop,33)*y(kloop,51)
+      qqk(kloop,322)=qk(kloop,322)*y(kloop,33)*y(kloop,51)
 !
 !....         HCl + HOCl = Cl2 + H2O
 !
-      qqk(kloop,322)=qk(kloop,322)*y(kloop,51)*y(kloop,64)
+      qqk(kloop,323)=qk(kloop,323)*y(kloop,51)*y(kloop,64)
 !
 !....         HCl + HOBr = BrCl + H2O
 !
-      qqk(kloop,323)=qk(kloop,323)*y(kloop,51)*y(kloop,63)
+      qqk(kloop,324)=qk(kloop,324)*y(kloop,51)*y(kloop,63)
 !
 !....         N2O5 = 2 HNO3
 !
-      qqk(kloop,324)=qk(kloop,324)*y(kloop,90)
+      qqk(kloop,325)=qk(kloop,325)*y(kloop,90)
 !
 !....         NO3 + NO3 = 2 NO2 + O2
 !
-      qqk(kloop,325)=qk(kloop,325)*y(kloop,93)*y(kloop,93)
+      qqk(kloop,326)=qk(kloop,326)*y(kloop,93)*y(kloop,93)
 !
 !....         HO2 =  0.50 H2O
 !
-      qqk(kloop,326)=qk(kloop,326)*y(kloop,62)
+      qqk(kloop,327)=qk(kloop,327)*y(kloop,62)
 !
 !....         NO2 =  0.50 HNO2 +  0.50 HNO3
 !
-      qqk(kloop,327)=qk(kloop,327)*y(kloop,92)
+      qqk(kloop,328)=qk(kloop,328)*y(kloop,92)
 !
 !....         NO3 = HNO3
 !
-      qqk(kloop,328)=qk(kloop,328)*y(kloop,93)
+      qqk(kloop,329)=qk(kloop,329)*y(kloop,93)
 !
 !....         N2O5 = 2 HNO3
 !
-      qqk(kloop,329)=qk(kloop,329)*y(kloop,90)
+      qqk(kloop,330)=qk(kloop,330)*y(kloop,90)
 !
 !....         DMS + OH = SO2
 !
-      qqk(kloop,330)=qk(kloop,330)*y(kloop,35)*y(kloop,99)
+      qqk(kloop,331)=qk(kloop,331)*y(kloop,35)*y(kloop,99)
 !
 !....         DMS + NO3 = HNO3 + SO2
 !
-      qqk(kloop,331)=qk(kloop,331)*y(kloop,35)*y(kloop,93)
+      qqk(kloop,332)=qk(kloop,332)*y(kloop,35)*y(kloop,93)
 !
 !....         O + SO2 = H2SO4
 !
-      qqk(kloop,332)=qk(kloop,332)*y(kloop,94)*y(kloop,124)
+      qqk(kloop,333)=qk(kloop,333)*y(kloop,94)*y(kloop,124)
 !
 !....         OH + SO2 = H2SO4
 !
-      qqk(kloop,333)=qk(kloop,333)*y(kloop,99)*y(kloop,124)
+      qqk(kloop,334)=qk(kloop,334)*y(kloop,99)*y(kloop,124)
 !
 !....         H2O2 + SO2 = H2SO4
 !
-      qqk(kloop,334)=qk(kloop,334)*y(kloop,44)*y(kloop,124)
+      qqk(kloop,335)=qk(kloop,335)*y(kloop,44)*y(kloop,124)
 !
 !....         O3 + SO2 = H2SO4
 !
-      qqk(kloop,335)=qk(kloop,335)*y(kloop,96)*y(kloop,124)
+      qqk(kloop,336)=qk(kloop,336)*y(kloop,96)*y(kloop,124)
 !
 !....         O + OCSg = CO + SO2
 !
-      qqk(kloop,336)=qk(kloop,336)*y(kloop,94)*y(kloop,98)
+      qqk(kloop,337)=qk(kloop,337)*y(kloop,94)*y(kloop,98)
 !
 !....         OCSg + OH = SO2
 !
-      qqk(kloop,337)=qk(kloop,337)*y(kloop,98)*y(kloop,99)
+      qqk(kloop,338)=qk(kloop,338)*y(kloop,98)*y(kloop,99)
 !
 !                  start photolytic reactions
 !
@@ -1698,7 +1702,7 @@
 !
       qqj(kloop,74)=qj(kloop,74)*y(kloop,78)
 !
-!....  OCSg + hv = CO
+!....  OCSg + hv = CO + SO2
 !
       qqj(kloop,75)=qj(kloop,75)*y(kloop,98)
 !

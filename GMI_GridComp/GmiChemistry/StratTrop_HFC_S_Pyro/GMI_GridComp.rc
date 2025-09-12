@@ -114,7 +114,7 @@ do_simpledep: F
 
 do_emission: T
 do_dust_emiss: F
-Diurnal_Emission_Species: 9
+Diurnal_Emission_Species: 10
 
         ##################################################################################
         # Are emissions provided per m^2 (by area) or per gridbox?  Default: by area = T
@@ -139,6 +139,7 @@ CH2O_biom
 MEK_biom
 CO_biom
 NO_biom
+SO2_FIRES-FLUX
 NO_air
 ALD2_biof
 ALK4_fosf
@@ -156,7 +157,6 @@ CO_fosf
 CO_biof
 NO_fosf
 NO_biof
-SO2_FIRES-FLUX
 SO2_NONENERGY-FLUX
 SO2_ENERGY-FLUX
 SO2_SHIPPING-FLUX
@@ -175,8 +175,8 @@ emissionSpeciesLayers::
 1
 1
 1
-72
 1
+72
 1
 1
 1
@@ -202,7 +202,7 @@ emissionSpeciesLayers::
 ::
 
 emissionPointFilenames::
-SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
+SO2:volcano:ExtData/chemistry/CARN/v202401/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
 #SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
 #H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
 ::
@@ -276,7 +276,7 @@ do_smv_reord: F
 loss_opt: 0
 do_AerDust_Calc: T
 AerDust_Effect_opt: 0
-do_StratPyroHetChem: T
+do_StratPyroHetChem: T   # HISTORY must include CA.brSAREA and CA.brREFF from CA.br
 
 
         ###########################################################
@@ -395,13 +395,11 @@ sad_opt: 2
 #       3: (OBSOLETE)  read in lbssad zonal average fields
 #       4:  lbssad provided by AGCM (ExtData)
 #       5:  lbssad provided by CARMA SO4SAREA
-#       6:  lbssad provided by GOCART2G AERO state (SAREA in SU and SU.volc) **
-#
-#      ** -> include the GOCART2G fields in HISTORY to ensure that they are computed
+#       6:  lbssad provided by GOCART2G    -> HISTORY must include SO4SAREA from SU
 #     ----------------------------------------------
 #     (as listed in GmiSAD_GridCompClassMod.F90)
 
-lbssad_opt: 4
+lbssad_opt: 6
 
         ##############################
         # Photolysis related variables

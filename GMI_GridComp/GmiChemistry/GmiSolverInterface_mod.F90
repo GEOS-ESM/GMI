@@ -39,7 +39,7 @@
      &                 do_smv_reord, do_synoz, do_qqjk_inchem,    &
      &                 do_semiss_inchem, imgas_num, initrogen_num, ioxygen_num,   &
      &                 isynoz_num, yda, qqkda, qqjda, pr_nc_period, tdt,       &
-     &                 chem_mask_klo, chem_mask_khi, loc_proc, synoz_threshold,&
+     &                 loc_proc, synoz_threshold,&
      &                 ilong, ilat, ivert, itloop, i1, i2, ju1, j2, k1, k2,    &
      &                 ilo, ihi, julo, jhi, num_molefrac, num_qjo,  &
      &                 num_qks, num_qjs, num_active, num_species, rootProc)
@@ -57,7 +57,6 @@
       integer, intent(in) :: imgas_num, initrogen_num, ioxygen_num, isynoz_num
       integer, intent(in) :: ilong, ilat, ivert, itloop
       integer, intent(in) :: i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi
-      integer, intent(in) :: chem_mask_klo, chem_mask_khi
       integer, intent(in) :: num_molefrac
       integer, intent(in) :: num_qjo, num_qks, num_qjs
       integer, intent(in) :: num_active, num_species
@@ -151,9 +150,7 @@
      &    MXRO2 * concentration(imgas_num)%pArray3D(:,:,:)
       end if
 
-      do_cell_chem(:,:,:) = .false.
-
-      do_cell_chem(:,:,chem_mask_klo:chem_mask_khi) = .true.
+      do_cell_chem(:,:,:) = .true.
 
       IF (do_synoz) THEN
         where (concentration(isynoz_num)%pArray3D(:,:,:) > synoz_threshold)

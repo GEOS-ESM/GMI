@@ -87,8 +87,6 @@
 
     integer             :: chem_opt
     real*8              :: chem_cycle
-    integer             :: chem_mask_klo
-    integer             :: chem_mask_khi
     real*8              :: synoz_threshold
     real*8              :: hcl_limit
     real*8              :: t_cloud_ice
@@ -215,20 +213,6 @@
       call ESMF_ConfigGetAttribute(config, self%chem_cycle, &
                       label   = "chem_cycle:",              &
                       default = 1.0d0, __RC__ )
-
-!     -----------------------------------------------------
-!     chem_mask_klo, chem_mask_khi:
-!       chemistry turned off where k is outside of range of
-!       [chem_mask_klo, chem_mask_khi]
-!     -----------------------------------------------------
-
-      call ESMF_ConfigGetAttribute(config, self%chem_mask_klo, &
-                      label   = "chem_mask_klo:",              &
-                      default = k1, __RC__ )
-
-      call ESMF_ConfigGetAttribute(config, self%chem_mask_khi, &
-                      label   = "chem_mask_khi:",              &
-                      default = k2, __RC__ )
 
 !     -------------------------------------------------------------------
 !     synoz_threshold:  chemistry turned off where synoz > this threshold
@@ -759,7 +743,7 @@
                  self%do_smv_reord, self%do_synoz,                             &
                  do_semiss_inchem, nymd, nhms,                                 &
                  gmi_sec, tdt8, pr_diag, loc_proc, self%synoz_threshold,       &
-                 self%chem_cycle, self%chem_mask_klo, self%chem_mask_khi,      &
+                 self%chem_cycle,                                              &
                  self%imgas_num, self%initrogen_num, self%ioxygen_num,         &
                  self%isynoz_num, num_species, self%num_qks, self%num_qjs,     &
                  self%num_qjo, self%num_sad, self%num_molefrac, self%num_chem, &

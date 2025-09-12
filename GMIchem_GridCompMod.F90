@@ -134,7 +134,7 @@ CONTAINS
     type (GMIchem_State), pointer   :: state   ! internal, that is
     type (GMIchem_wrap)             :: wrap
 
-    integer                         :: m, n, i_XX, j_XX
+    integer                         :: n, i_XX, j_XX
     CHARACTER(LEN=ESMF_MAXSTR)      :: FRIENDLIES
     CHARACTER(LEN=ESMF_MAXSTR)      :: providerName
     CHARACTER(LEN=ESMF_MAXSTR)      :: aeroProviderName
@@ -239,6 +239,36 @@ CONTAINS
 
       STATUS = 0
 
+!!... This is for CARMA SO4 surface area
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4SAREA',  &
+!              LONG_NAME          = 'SO4 aerosol surface area (non-Volcanic)',  &
+!              UNITS              = 'm2 m-3', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+!!...
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4Reff',  &
+!              LONG_NAME          = 'SO4 aerosol effective radius (non-Volcanic)',  &
+!              UNITS              = 'm', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+!...
+!       CALL MAPL_AddImportSpec(GC,  &
+!              SHORT_NAME         = 'SO4SAREAvolc',  &
+!              LONG_NAME          = 'SO4 aerosol surface area (Volcanic)',  &
+!              UNITS              = 'm2 m-3', &
+!              DIMS               = MAPL_DimsHorzVert,    &
+!              VLOCATION          = MAPL_VLocationCenter,    &
+!                                                        RC=STATUS  )
+!       VERIFY_(STATUS)
+!
+!       IF(MAPL_AM_I_ROOT()) PRINT *,"  using CARMA SO4SAREA and SO4Reff"
+!
 
      CASE("CARMA")
 
@@ -1229,8 +1259,8 @@ CONTAINS
 
 
       IF ( TRIM(short_name) == 'RCOOH' ) THEN
-        IF ( MAXVAL(bgg%qa(L)%data3d) > 5.e-9 ) THEN
-          PRINT*,'RCOOH values are too high (GT 5e-9), likely from an old RESTART'
+        IF ( MAXVAL(bgg%qa(L)%data3d) > 1.e-9 ) THEN
+          PRINT*,'RCOOH values are too high (GT 1e-9), likely from an old RESTART'
           PRINT*,'Remove RCOOH from gmichem_internal_rst.'
           STATUS = 1
           VERIFY_(STATUS)
@@ -2141,7 +2171,7 @@ CONTAINS
        IF(ASSOCIATED( TO3)) TO3 = TO3+wrk
 
        IF(ASSOCIATED(TTO3)) THEN
-        wgt  = MAX(0.0,MIN(1.0,(PLE(:,:,k)-bgg%qa(iT2M)%data3d(:,:,km))/(PLE(:,:,k)-PLE(:,:,k-1))))
+        wgt  = MAX(0.0,MIN(1.0,(PLE(:,:,k)-bxx%qa(iT2M)%data3d(:,:,km))/(PLE(:,:,k)-PLE(:,:,k-1))))
         TTO3 = TTO3+wrk*wgt
        END IF
 

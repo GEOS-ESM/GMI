@@ -10,6 +10,7 @@
         USE GMI_CMN_MOD
 !.sds  added MAPL physical constants being used
         use MAPL_ConstantsMod, only: MAPL_PI, MAPL_PI_R8
+        use MAPL
 !.sds  added LDRADIUS[3,4] to GEOS_UtilitiesMod.F90
 !       use GEOS_UtilsMod, only: LDRADIUS3, LDRADIUS4
 !
@@ -23,7 +24,7 @@
 !
 !>>>>>>>>  Cloud-J version 8.0   new lower albedo can be angle/wavelength dependent
 !
-      subroutine controlFastJX74 (k1, k2, chem_mask_khi, lat_ij, num_qjs, &
+      subroutine controlFastJX74 (k1, k2, lat_ij, num_qjs, &
                    month_gmi, jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij, &
                    SZA_ij, cloudfrac_ij, qi_ij, ql_ij, ri_ij, rl_ij, &
 !                  cnv_frc_ij, frland_ij, &
@@ -32,7 +33,8 @@
                    overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,    &
                    do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij,      &
                    fjx_solar_cycle_param, &
-                   do_CCM_OptProps, num_CCM_WL, num_CCM_aers, CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij, &
+                   do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL_ij, &
+                   CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij, &
                    CH4_ij, H2O_ij, ozone_ij)
 !
 ! USES:
@@ -44,7 +46,7 @@
 # include "gmi_time_constants.h"
 # include "setkin_par.h"
 !---------------key params in/out of CLOUD_J-------------------------
-      integer, intent(in) :: k1, k2, num_qjs, chem_mask_khi
+      integer, intent(in) :: k1, k2, num_qjs
       integer, intent(in) :: jday, month_gmi, cldflag
       integer, intent(in) :: AerDust_Effect_opt
       logical, intent(in) :: do_clear_sky, do_AerDust_Calc
@@ -60,14 +62,14 @@
       real*8, intent(in), dimension(k1:k2), optional :: ozone_ij      ! mixing ratio for ozone
 !... CCM provided aerosol optical characteristics
       logical, intent(in) :: do_CCM_OptProps
-      integer, intent(in) :: num_CCM_WL, num_CCM_aers
+      integer, intent(in) :: num_CCM_WL, num_CCM_aers, num_CCM_mom
       real*8,  intent(in), dimension(num_CCM_WL)                           :: CCM_WL_ij
       real*8,  intent(in), dimension(num_CCM_WL, k1:k2+1, num_CCM_aers)    :: CCM_SSALB_ij, CCM_OPTX_ij
-      real*8,  intent(in), dimension(8, num_CCM_WL, k1:k2+1, num_CCM_aers) :: CCM_SSLEG_ij
+      real*8,  intent(in), dimension(num_CCM_mom, num_CCM_WL, k1:k2+1, num_CCM_aers) :: CCM_SSLEG_ij
 !.sds.end
 !
       real*8, intent(out), dimension(k1:k2)                    :: overheadO3col_ij
-      real*8, intent(out), dimension(k1:chem_mask_khi,num_qjs) :: qjgmi_ij
+      real*8, intent(out), dimension(k1:k2,num_qjs) :: qjgmi_ij
       real*8, intent(inout), dimension(k1:k2,NSADaer*nrh_b)    :: ODAER_ij
       real*8, intent(inout), dimension(k1:k2,NSADaer)          :: HYGRO_ij
       real*8, intent(inout), dimension(k1:k2,2)                :: ODcAER_ij
@@ -208,6 +210,10 @@
 !             AERSP, IDXAER, L_+1, AN_, VALJXX, num_qjs,  &
 !             TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT)
 !
+! PPP     = gridbox edge pressures (hPa)
+! TTT     = gridbox temperatures (K)
+! RRR     = Relative humidity (%)
+! ZZZ     = gridbox bottom height [edge] (cm)
 ! U0      = cos(SZA)
 ! SZA     = solar zenith angle (degrees) - PASS IN
 ! RFL     = Lambertian albedo of surface for angles 1:4 & U0 (#5)
@@ -782,7 +788,7 @@
              DDD, RRR, OOO, LWP, IWP, REFFL, REFFI, CLF, CLDCOR, CLDIW,  &
              AERSP, IDXAER, LTOP, num_aer, VALJXX, num_qjs,  &
              TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT, &
-             do_CCM_OptProps, num_CCM_WL, num_CCM_aers, CCM_WL_ij, &
+             do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL_ij, &
              CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij, cldOD_out, aerOD_out)
 !     
 !... send CLOUD_JX calcd cloud optical depth of 400nm back for diagnostic output w no FJX top layer
@@ -804,23 +810,23 @@
         ODcAER_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
      enddo
 !... map FastJX's Jrates to our order
-      kall = chem_mask_khi-k1+1
+      kall = k2-k1+1
       do n=1,num_qjs
 !
 !.sds.. as per previous 6.5 code:
 !... * original fast-J/2 code had VALJ(2) as J[O3 -> O(3P)+O2]
 !...     but now J[O3] is total O3 rate [O(1D) and O(3P)], correct
         if(JVMAP(n).eq.'O3') then
-          qjgmi_ij(k1:chem_mask_khi,n) = (JFACTA(n) &
+          qjgmi_ij(k1:k2,n) = (JFACTA(n) &
             * (VALJXX(1:kall,JINDO3) - VALJXX(1:kall,JINDO1D)))
 !.sds.. as per previous 6.5 code:
 !...     need to add both branches of Acet for GMI
         elseif(JVMAP(n).eq.'Acet-a') then
-          qjgmi_ij(k1:chem_mask_khi,n) = (JFACTA(n) &
+          qjgmi_ij(k1:k2,n) = (JFACTA(n) &
             * (VALJXX(1:kall,JINDAceta) + VALJXX(1:kall,JINDAcetb)))
         else
 !.sds.. all others
-          qjgmi_ij(k1:chem_mask_khi,n) = JFACTA(n) * VALJXX(1:kall,JIND(n))
+          qjgmi_ij(k1:k2,n) = JFACTA(n) * VALJXX(1:kall,JIND(n))
         endif
       enddo
 !
@@ -846,7 +852,7 @@
 !
 ! !INTERFACE:
 !
-      subroutine initializeFastJX74 (k1, k2, chem_mask_khi, num_qjs &
+      subroutine initializeFastJX74 (k1, k2, num_qjs &
        , cross_section_file, cloud_scat_file, ssa_scat_file &
        , aer_scat_file, UMaer_scat_file, GMI_scat_file, T_O3_climatology_file &
        , H2O_CH4_climatology_file, cldflag, rootProc)
@@ -861,7 +867,6 @@
 ! !INPUT PARAMETERS:
       logical            , intent(in) :: rootProc
       integer            , intent(in) :: k1, k2
-      integer            , intent(in) :: chem_mask_khi ! number of chemistry levels [JVL_]
       integer            , intent(in) :: num_qjs       ! number of photolysis reactions [JVN_]
       integer            , intent(in) :: cldflag       ! type of cloud OD calc for J rates
 !... fast-J X-sections (spectral data) input file name
