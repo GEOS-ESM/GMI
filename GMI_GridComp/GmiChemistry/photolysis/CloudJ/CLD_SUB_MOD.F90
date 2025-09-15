@@ -33,7 +33,7 @@
       CONTAINS
 !
 !
-      SUBROUTINE CLOUD_JX (U0,SZA,RFL,SOLF,LPRTJ,PPP,ZZZ,TTT,       &
+      SUBROUTINE CLOUD_JX (U0,SZA,RFL,SOLF,LPRTJ,PPP,ZZZ,TTT, HHH,  &
              DDD,RRR,OOO,   LWP,IWP,REFFL,REFFI, CLDF,CLDCOR,CLDIW, &
              AERSP,NDXAER,L1U,ANU,VALJXX,NJXU,                      &
              CLDFLAG,NRANDO,IRAN,LNRG,NICA,JCOUNT,                  &
@@ -142,7 +142,7 @@
       real*8,  intent(in), dimension(5,W_+W_r) :: RFL
       logical, intent(in)                    :: LPRTJ
       real*8,  intent(in), dimension(L1U+1)  :: PPP, ZZZ
-      real*8,  intent(in), dimension(L1U  )  :: TTT,DDD,RRR,OOO, LWP,IWP,REFFL,REFFI
+      real*8,  intent(in), dimension(L1U  )  :: TTT,HHH,DDD,RRR,OOO, LWP,IWP,REFFL,REFFI
       real*8,  intent(in), dimension(L1U,AN_):: AERSP
       integer, intent(in), dimension(L1U,AN_):: NDXAER
       real*8,  intent(in), dimension(L1U  )  :: CLDF
@@ -240,7 +240,7 @@
 !----all above have only a single, simple call for fast_JX------------
 !
 !-----------------------------------------------------------------------
-        call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
+        call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,  &
                   DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
                   AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
 !... capture cloud OD diagnostic
@@ -333,7 +333,7 @@
               endif
             enddo
 !
-            call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
+            call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,  &
                       DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
                       AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
 !... capture cloud OD diagnostic
@@ -380,7 +380,7 @@
                 endif
               enddo
 !
-              call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
+              call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,  &
                        DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
                        AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
 !... capture cloud OD diagnostic
@@ -438,7 +438,7 @@
                 enddo
                 QCAOD = QCAOD/WTQCA(N)
 !
-                call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
+                call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,  &
                          DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
                          AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
 !.sds.. capture cloud OD diagnostic
@@ -484,7 +484,7 @@
               endif
             enddo
 !
-            call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
+            call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,  &
                       DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
                       AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
 !... capture cloud OD diagnostic

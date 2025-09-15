@@ -5,7 +5,7 @@
 # 
 # !HELP:
 #
-#  For the mechanism   StratTrop_JPL19
+#  For the mechanism: Standard_h2o.txt
 #
 #  The GMI Mechanism Registry resource file provides names and units
 #  for the species in the GMI chemical mechanism. There is a different
@@ -89,12 +89,6 @@ HCFC142b   'mol mol-1'   'HCFC-142b (C2ClF2H3)'
 HCFC22     'mol mol-1'   'HCFC-22 (CClF2H)'                                                              
 HCl        'mol mol-1'   'Hydrochloric Acid'                                                             
 HCOOH      'mol mol-1'   'Formic acid, HC(=O)OH'                                                         
-HFC125     'mol mol-1'   'HFC-125, Pentafluoroethane'                                                    
-HFC134a    'mol mol-1'   'HFC-134a, CH2FCF3, 1,1,1,2-Tetrafluoroethane'                                  
-HFC143a    'mol mol-1'   'HFC-143a, 1,1,1-Trifluoroethane'                                               
-HFC152a    'mol mol-1'   'HFC-152a, 1,1-Difluoroethane'                                                  
-HFC23      'mol mol-1'   'HFC-23, Fluoroform'                                                            
-HFC32      'mol mol-1'   'HFC-32, Difluoromethane'                                                       
 HNO2       'mol mol-1'   'Nitrous acid'                                                                  
 HNO3       'mol mol-1'   'Nitric acid'                                                                   
 HNO4       'mol mol-1'   'Pernitric acid'                                                                

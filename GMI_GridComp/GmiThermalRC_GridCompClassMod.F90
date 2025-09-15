@@ -795,8 +795,9 @@ CONTAINS
        !===========================================
        ! Fixes for H2 - Provided by David Considine
        !===========================================
-       self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,:) = MXRH2
-       !=================
+       self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,k1:k1+1) = MXRH2
+!.sds       self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,:) = MXRH2
+      !=================
        ! end fixes for H2
        !=================
 

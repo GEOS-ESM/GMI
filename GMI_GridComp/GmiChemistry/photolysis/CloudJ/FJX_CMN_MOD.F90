@@ -115,6 +115,7 @@
       real*8  QRAYL(S_)
       ! SJSUB:  intended for breakdown of the super-bins (1:27) into smaller sub-bins.
       real*8  SJSUB(S_,15)
+      real*8  QH2O(W_)    ! QH2O: H2O UV-blue cross-sections (290-350 nm)
       real*8  QO2(W_,3)   ! QO2: O2 cross-sections
       real*8  QO3(W_,3)   ! QO3: O3 cross-sections
       real*8  Q1D(W_,3)   ! Q1D: O3 => O(1D) quantum yield

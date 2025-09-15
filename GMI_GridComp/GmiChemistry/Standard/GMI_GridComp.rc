@@ -1,7 +1,7 @@
 #==================================
 # Resource file for GMI parameters.
 #==================================
-# Mechanism: StratTrop_Minimal
+# Mechanism: StratTrop_JPL19
 #==================================
 
         #############################
@@ -81,7 +81,7 @@ pr_const: T
 pr_surf_emiss: T
 pr_emiss_3d: T
 # only set TRUE if you need QQJ, QQK exports:
-pr_qqjk: F
+pr_qqjk: T
 pr_noon: F
 pr_local: F
 do_ftiming: F
@@ -114,7 +114,7 @@ do_simpledep: F
 
 do_emission: T
 do_dust_emiss: F
-Diurnal_Emission_Species: 8
+Diurnal_Emission_Species: 10
 
         ##################################################################################
         # Are emissions provided per m^2 (by area) or per gridbox?  Default: by area = T
@@ -131,15 +131,23 @@ emiss_conv_flag: 0
 semiss_inchem_flag: 0
 emissionSpeciesNames::
 ALD2_biom
+ALK4_biom
 C2H6_biom
+PRPE_biom
 C3H8_biom
 CH2O_biom
 MEK_biom
 CO_biom
 NO_biom
+SO2_FIRES-FLUX
+NO_air
 ALD2_biof
+ALK4_fosf
+ALK4_biof
 C2H6_fosf
 C2H6_biof
+PRPE_fosf
+PRPE_biof
 C3H8_fosf
 C3H8_biof
 CH2O_biof
@@ -149,10 +157,26 @@ CO_fosf
 CO_biof
 NO_fosf
 NO_biof
-NO_air
+SO2_NONENERGY-FLUX
+SO2_ENERGY-FLUX
+SO2_SHIPPING-FLUX
+SO2_AIRCRAFT-FLUX
+CH2BR2_FLUX
+CHBR3_FLUX
 ::
 
 emissionSpeciesLayers::
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+72
 1
 1
 1
@@ -173,13 +197,15 @@ emissionSpeciesLayers::
 1
 1
 72
+1
+1
 ::
 
-#emissionPointFilenames::
-#SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
-##SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
-##H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
-#::
+emissionPointFilenames::
+SO2:volcano:ExtData/chemistry/CARN/v202401/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
+#SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
+#H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
+::
 # NOTE: Units for the volcano point source files: kg(S)/s
 #       Units that GMI wants                    : kg(SO2)/s
 #       GMI does the conversion in Refresh_Daily within the Emission section
@@ -249,8 +275,6 @@ chem_cycle: 1.0d0
 do_smv_reord: F
 do_wetchem: F
 loss_opt: 0
-do_AerDust_Calc: T
-AerDust_Effect_opt: 0
 
         ###########################################################
         # GHG and ODS surface source gases
@@ -302,17 +326,17 @@ forcedBcSpeciesNames::
 #CH3Cl
 #CH4
 #N2O
-#xxx
-#xxx
-#xxx
-#xxx
-#xxx
-#xxx
+#HFC23
+#HFC32
+#HFC125
+#HFC134A
+#HFC143A
+#HFC152A
 #xxx
 #xxx
 ::
 
-# The xxx entries above are for HFC23 HFC32 HFC125 HFC134a HFC143a HFC152a SF6 and CO2
+# The xxx entries above are for SF6 and CO2
 
         ###########################################################
         # GHG and ODS surface source gases - read with ExtData
@@ -324,17 +348,17 @@ extdataBcSpeciesNames::
 CFC11
 CFC12
 CFC113
-# CFC114
-# CFC115
+CFC114
+CFC115
 CCl4
 CH3CCl3
 HCFC22
 HCFC141b
 HCFC142b
 CF2ClBr
-# CF2Br2
+CF2Br2
 CF3Br
-# H2402
+H2402
 CH3Br
 CH3Cl
 CH4
@@ -368,6 +392,7 @@ sad_opt: 2
 #       3: (OBSOLETE)  read in lbssad zonal average fields
 #       4:  lbssad provided by AGCM (ExtData)
 #       5:  lbssad provided by CARMA SO4SAREA
+#       6:  lbssad provided by GOCART2G    -> HISTORY must include SO4SAREA from SU
 #     ----------------------------------------------
 #     (as listed in GmiSAD_GridCompClassMod.F90)
 
@@ -390,7 +415,6 @@ lbssad_opt: 4
 phot_opt: 3
 
 do_clear_sky: F
-do_CCM_OptProps: F
 
 #     --------------------------------------------------------
 #     uvalbedo_opt
@@ -437,36 +461,35 @@ do_ozone_inFastJX: F
 # cross section file: ExtData/g5chem/x/photolysis/FastJX/xsec_jx_jpl10update2_JNOx1_0.dat
 
 ## For FastJX 6.5 & JPL10
- fastj_opt: 4
- cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65wSO4_jpl10update2_JNOx1_0.dat
-# cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65_jpl10update2_JNOx1_0.dat
-# rate_file not needed for FastJX6.5; new approach only differs by roundoff
-# rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_124spc_jx_gmiv2.dat
-# rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_119spc_jx_gmiv3.dat
- T_O3_climatology_file: ExtData/g5chem/x/atms_jx_o3andtemp.dat
+# fastj_opt: 4
+# cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65wSO4_jpl10update2_JNOx1_0.dat
+## cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65_jpl10update2_JNOx1_0.dat
+## rate_file not needed for FastJX6.5; new approach only differs by roundoff
+## rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_124spc_jx_gmiv2.dat
+## rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_119spc_jx_gmiv3.dat
+# T_O3_climatology_file: ExtData/g5chem/x/atms_jx_o3andtemp.dat
 
-##
 ##... For CloudJ (FastJX 7.4) & JPL10
-# fastj_opt: 5
-### CloudJ_cldflag options:
-###   1: clear sky
-###   2: grid-box avg clouds cloud: fract*(in cloud ODs) (minamal overlap?)
-###   3: cloud-fract**3/2*(in cloud ODs) (random overlap) CLOSEST TO FastJX65
-###   4: NOT ALLOWED
-###   5: Random select NRANDO ICA's (Independent Column Atmos.) from all
-###   6: Use all (up to 4) quadrature cloud cover QCAs (mid-pts of bin)
-###   7: RECOMMENDED - Use all (up to 4) QCAs (average clouds within each Q-bin)
-###   8: Calculate Js for ALL ICAs (up to 20,000 per cell!)
-# CloudJ_cldflag:  7
-# cross_section_file:       ExtData/g5chem/x/photolysis/CloudJ/FJX_spec_Standard.dat
-# cloud_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-cld.dat
-# ssa_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-ssa.dat
-# aer_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-aer.dat
-# UMaer_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-UMa.dat
-# GMI_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/GMI_scat-aer.dat
-# T_O3_climatology_file:    ExtData/g5chem/x/photolysis/CloudJ/atmos_std.dat
-# H2O_CH4_climatology_file: ExtData/g5chem/x/photolysis/CloudJ/atmos_h2och4.dat
-##
+ fastj_opt: 5
+## CloudJ_cldflag options:
+##   1: clear sky
+##   2: grid-box avg clouds cloud: fract*(in cloud ODs) (minamal overlap?)
+##   3: cloud-fract**3/2*(in cloud ODs) (random overlap) CLOSEST TO FastJX65
+##   4: NOT ALLOWED
+##   5: Random select NRANDO ICA's (Independent Column Atmos.) from all
+##   6: Use all (up to 4) quadrature cloud cover QCAs (mid-pts of bin)
+##   7: RECOMMENDED - Use all (up to 4) QCAs (average clouds within each Q-bin)
+##   8: Calculate Js for ALL ICAs (up to 20,000 per cell!)
+ CloudJ_cldflag:  7
+ cross_section_file:       ExtData/g5chem/x/photolysis/CloudJ/FJX_spec_Standard.dat
+ cloud_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-cld.dat
+ ssa_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-ssa.dat
+ aer_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-aer.dat
+ UMaer_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-UMa.dat
+ GMI_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/GMI_scat-aer.dat
+ T_O3_climatology_file:    ExtData/g5chem/x/photolysis/CloudJ/atmos_std.dat
+ H2O_CH4_climatology_file: ExtData/g5chem/x/photolysis/CloudJ/atmos_h2och4.dat
+#
 
  #################################
  # Copy GMI H2O back to GEOS ?
@@ -487,24 +510,38 @@ HCl_limit: 5.0
 
 stOX_loss_reactions::
 # loss of O3, O1D or NO2
-  QQJ002  1.0   'O3 + hv = O + O2'
-  QQJ006  1.0   'NO2 + hv = NO + O'
-  QQK002  1.0   'O + O3 = 2 O2'
-  QQK004  1.0   'O1D + O2 = O + O2'
-  QQK005  2.0   'O1D + O3 = 2 O2'
-  QQK006  2.0   'O1D + O3 = 2 O + O2'
-  QQK007  1.0   'H2O + O1D = 2 OH'
-  QQK008  1.0   'H2 + O1D = H + OH'
-  QQK025  1.0   'O3 + OH = HO2 + O2'
-  QQK026  1.0   'HO2 + O3 = 2 O2 + OH'
-  QQK027  2.0   'NO2 + O3 = NO3 + O2'
-  QQK048  1.0   'NO2 + O = NO + O2'
-  QQK050  1.0   'NO2 + OH = HNO3'
-  QQK054  1.0   'HO2 + NO2 = HNO4'
-  QQK060  1.0   'NO2 + NO3 = N2O5'
-  QQK154  0.9   'ISOP + O3 =  0.90 CH2O +  0.05 CO +  0.06 HO2 +  0.39 MACR +  0.16 MVK +  0.10 O3 +  0.27 OH +  0.07 PRPE'
-  QQK110  1.0   'MCO3 + NO2 = PAN'
-  QQK207  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3'
+  QQJ003  1.0   'O3 + hv = O + O2'
+  QQJ004  1.0   'O3 + hv = O1D + O2'
+  QQJ007  1.0   'NO2 + hv = NO + O'
+  QQK003  1.0   'O + O3 = 2 O2'
+  QQK005  1.0   'N2 + O1D = N2 + O'
+  QQK006  1.0   'O1D + O2 = O + O2'
+  QQK007  2.0   'O1D + O3 = 2 O2'
+  QQK008  2.0   'O1D + O3 = 2 O + O2'
+  QQK009  1.0   'H2O + O1D = 2 OH'
+  QQK010  1.0   'H2 + O1D = H + OH'
+  QQK024  1.0   'H + O3 = O2 + OH'
+  QQK032  1.0   'O3 + OH = HO2 + O2'
+  QQK033  1.0   'HO2 + O3 = 2 O2 + OH'
+  QQK041  1.0   'NO + O3 = NO2 + O2'
+  QQK042  2.0   'NO2 + O3 = NO3 + O2'
+  QQK056  1.0   'NO2 + O = NO + O2'
+  QQK057  1.0   'NO2 + O = NO3'
+  QQK061  1.0   'N + NO2 = N2O + O'
+  QQK062  1.0   'NO2 + OH = HNO3'
+  QQK066  1.0   'HO2 + NO2 = HNO4'
+  QQK072  1.0   'NO2 + NO3 = N2O5'
+  QQK078  1.0   'Cl + O3 = ClO + O2'
+  QQK099  1.0   'Br + O3 = BrO + O2'
+  QQK173  1.0   'ISOP + O3 =  0.83 CH2O +  0.41 CO +  0.01 H2O2 +  0.58 HCOOH +  0.16 HO2 +  0.42 MACR +  0.41 MO2 +  0.18 MVK +  0.28 OH'
+  QQK181  1.0   'MACR + O3 =  0.12 CH2O +  0.12 CO +  0.88 HCOOH +  0.12 MCO3 +  0.88 MGLY +  0.12 OH'
+  QQK184  1.0   'MAO3 + NO2 = PMN'
+  QQK190  1.0   'MCO3 + NO2 = PAN'
+  QQK197  0.8   'MVK + O3 =  0.04 ALD2 +  0.80 CH2O +  0.05 CO +  0.06 HO2 +  0.82 MGLY +  0.20 O3 +  0.08 OH'
+  QQK215  1.0   'O3 + PRPE =  0.12 ACTA +  0.50 ALD2 +  0.50 CH2O +  0.10 CH4 +  0.56 CO +  0.22 HCOOH +  0.28 HO2 +  0.28 MO2 +  0.36 OH'
+  QQK235  1.0   'NO2 + RCO3 = PPN'
+  QQK287  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3'
+  QQK295  1.0   'O3 + SO2 = H2SO4'
 ::
 
-OCS_JRATE: QJ073
+OCS_JRATE: QJ075
