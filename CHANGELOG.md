@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
 - Added GitHub Actions workflow for CI builds
 - Added minimal strat chem mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism StratTrop_Minimal
+- Added "Standard" mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism Standard
+- Added meso_phot routine to add Lyan-alpha photolysis
 
 ### Changed
 
@@ -32,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pyro  mechanism: Changed Thermal reaction ClONO2 + HCl = Cl2 + HNO3 - replaced product HNO3 with N2O5/2.0
 - Pyro  mechanism: Changed the CARN volcano file to be the version from 2024
 - Pyro  mechanism: Set default lbssad_opt to 6  (from GOCART2G)
+- Pyro  mechanism: added another het reaction
 
 ### Removed
 
