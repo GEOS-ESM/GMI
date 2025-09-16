@@ -13,7 +13,7 @@
 !
 !  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Thu Jul 24 18:59:05 2025
+!  Setkin files generated: Tue Aug 26 20:52:13 2025
 !
 !=======================================================================
 
@@ -543,7 +543,8 @@
      & 'HCl + HOBr = BrCl + H2O' /
 
       data (lqkchem(kmg_i), kmg_i=321,330) / &
-     & 'ClONO2 + HCl = Cl2 +  0.50 N2O5', &
+     & 'ClONO2 = HNO3 + HOCl', &
+     & 'ClONO2 + HCl = Cl2 + HNO3', &
      & 'HCl + HOCl = Cl2 + H2O', &
      & 'HCl + HOBr = BrCl + H2O', &
      & 'N2O5 = 2 HNO3', &
@@ -551,10 +552,10 @@
      & 'HO2 =  0.50 H2O', &
      & 'NO2 =  0.50 HNO2 +  0.50 HNO3', &
      & 'NO3 = HNO3', &
-     & 'N2O5 = 2 HNO3', &
-     & 'DMS + OH = SO2' /
+     & 'N2O5 = 2 HNO3' /
 
-      data (lqkchem(kmg_i), kmg_i=331,337) / &
+      data (lqkchem(kmg_i), kmg_i=331,338) / &
+     & 'DMS + OH = SO2', &
      & 'DMS + NO3 = HNO3 + SO2', &
      & 'O + SO2 = H2SO4', &
      & 'OH + SO2 = H2SO4', &

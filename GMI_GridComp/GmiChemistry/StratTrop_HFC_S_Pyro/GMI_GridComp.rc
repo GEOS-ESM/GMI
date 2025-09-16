@@ -245,7 +245,7 @@ monotconv_infile_name: ExtData/g5chem/x/GMI_MONOT_convTable.asc
 do_gcr: T
 gcr_infile_name: ExtData/g5chem/x/gcr/GCR_1970-2025_33.nc 
 do_solar_cycle: T
-sc_infile_name: ExtData/g5chem/x/solar_cycle/solar_cycle_NRL_1882_present_fill2100.asc
+sc_infile_name: ExtData/g5chem/x/solar_cycle/solar_cycle_NRL-v03_1882_2024_fill2100_FJX+MESO.asc
 
         ######################################
         #     Lightning related variables
@@ -276,7 +276,7 @@ do_smv_reord: F
 loss_opt: 0
 do_AerDust_Calc: T
 AerDust_Effect_opt: 0
-do_StratPyroHetChem: T   # HISTORY must include CA.brSAREA and CA.brREFF from CA.br
+do_StratPyroHetChem: F   # HISTORY must include CA.brSAREA and CA.brREFF from CA.br
 
 
         ###########################################################
@@ -399,7 +399,7 @@ sad_opt: 2
 #     ----------------------------------------------
 #     (as listed in GmiSAD_GridCompClassMod.F90)
 
-lbssad_opt: 6
+lbssad_opt: 4
 
         ##############################
         # Photolysis related variables
@@ -485,7 +485,7 @@ do_ozone_inFastJX: F
 ###   7: RECOMMENDED - Use all (up to 4) QCAs (average clouds within each Q-bin)
 ###   8: Calculate Js for ALL ICAs (up to 20,000 per cell!)
 # CloudJ_cldflag:  7
-# cross_section_file:       ExtData/g5chem/x/photolysis/CloudJ/FJX_spec_JNOx1_0.dat
+# cross_section_file:       ExtData/g5chem/x/photolysis/CloudJ/FJX_spec_Standard.dat
 # cloud_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-cld.dat
 # ssa_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-ssa.dat
 # aer_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-aer.dat

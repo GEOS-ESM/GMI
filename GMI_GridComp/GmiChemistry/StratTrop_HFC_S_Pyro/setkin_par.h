@@ -12,7 +12,7 @@
 !
 !  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Thu Jul 24 18:59:05 2025
+!  Setkin files generated: Tue Aug 26 20:52:13 2025
 !
 !========1=========2=========3=========4=========5=========6=========7==
 
@@ -24,7 +24,7 @@
 
       parameter (NSP   = 130)
       parameter (NUM_J =  76)
-      parameter (NUM_K = 337)
+      parameter (NUM_K = 338)
 
 !.... Species affiliations and assignments
 

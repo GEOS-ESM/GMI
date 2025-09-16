@@ -22,7 +22,7 @@
 !
 !  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Thu Jul 24 18:59:05 2025
+!  Setkin files generated: Tue Aug 26 20:52:13 2025
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
@@ -1447,87 +1447,92 @@
       rcarr(320,:) = skice_hcl_hobr (temperature  & 
      &           ,pressure ,sad_ice ,specarr(  51,:) ,ptrop)
 !
-!....           ClONO2 + HCl = Cl2 +  0.50 N2O5
+!....           ClONO2 = HNO3 + HOCl
 !
-      rcarr(321,:) = skpyro_clono2_hcl (temperature  & 
+      rcarr(321,:) = skpyro_clono2 (temperature  & 
+     &           ,adcol ,pressure ,sad_pyro ,specarr( 51,:) ,water ,ptrop)
+!
+!....           ClONO2 + HCl = Cl2 + HNO3
+!
+      rcarr(322,:) = skpyro_clono2_hcl (temperature  & 
      &           ,adcol ,pressure ,sad_pyro ,specarr(    33,:) ,specarr(  51,:) ,water  & 
      &           ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
-      rcarr(322,:) = skpyro_hocl_hcl (temperature  & 
+      rcarr(323,:) = skpyro_hocl_hcl (temperature  & 
      &           ,adcol ,pressure ,sad_pyro ,specarr(  64,:) ,specarr( 51,:) ,water  & 
      &           ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
-      rcarr(323,:) = skpyro_hobr_hcl (temperature  & 
+      rcarr(324,:) = skpyro_hobr_hcl (temperature  & 
      &           ,adcol ,pressure ,sad_pyro ,specarr(  63,:) ,specarr( 51,:) ,water  & 
      &           ,ptrop)
 !
 !....           N2O5 = 2 HNO3
 !
-      rcarr(324,:) = skpyro_n2o5 (temperature ,pressure ,sad_pyro ,ptrop)
+      rcarr(325,:) = skpyro_n2o5 (temperature ,pressure ,sad_pyro ,ptrop)
 !
 !....           NO3 + NO3 = 2 NO2 + O2
 !
-      rcarr(325,:) = skarr(  8.500D-13 ,2450.0D+00 ,temperature)
+      rcarr(326,:) = skarr(  8.500D-13 ,2450.0D+00 ,temperature)
 !
 !....           HO2 =  0.50 H2O
 !
-      rcarr(326,:) = sktrs_ho2 (temperature, & 
+      rcarr(327,:) = sktrs_ho2 (temperature, & 
      &            sadcol2, adcol, radA, NSADaer, NSADdust, cPBLcol, pressure)
 !
 !....           NO2 =  0.50 HNO2 +  0.50 HNO3
 !
-      rcarr(327,:) = sktrs_no2 (temperature, & 
+      rcarr(328,:) = sktrs_no2 (temperature, & 
      &            sadcol2, adcol, radA, NSADaer,NSADdust,ptrop, pressure)
 !
 !....           NO3 = HNO3
 !
-      rcarr(328,:) = sktrs_no3 (temperature, & 
+      rcarr(329,:) = sktrs_no3 (temperature, & 
      &            sadcol2, adcol, radA,NSADaer,NSADdust,ptrop, pressure)
 !
 !....           N2O5 = 2 HNO3
 !
-      rcarr(329,:) = sktrs_n2o5 (temperature, & 
+      rcarr(330,:) = sktrs_n2o5 (temperature, & 
      &           sadcol2,adcol,radA,FRH,NSADaer,NSADdust, ptrop, pressure)
 !
 !....           DMS + OH = SO2
 !
-      rcarr(330,:) = skoh_dms (temperature, oxygen, adcol)
+      rcarr(331,:) = skoh_dms (temperature, oxygen, adcol)
 !
 !....           DMS + NO3 = HNO3 + SO2
 !
-      rcarr(331,:) = skarr(  1.900D-13 ,-530.0D+00 ,temperature)
+      rcarr(332,:) = skarr(  1.900D-13 ,-530.0D+00 ,temperature)
 !
 !....           O + SO2 = H2SO4
 !
-      rcarr(332,:) = sktroe(  1.800D-33 ,-2.00D0 & 
+      rcarr(333,:) = sktroe(  1.800D-33 ,-2.00D0 & 
      &                     , 4.200D-14 ,-1.80D0 ,0.0D0 &
      &                     ,temperature ,adcol)
 !
 !....           OH + SO2 = H2SO4
 !
-      rcarr(333,:) = sktroe(  2.900D-31 ,4.10D0 & 
+      rcarr(334,:) = sktroe(  2.900D-31 ,4.10D0 & 
      &                     , 1.700D-12 ,-0.20D0 ,0.0D0 &
      &                     ,temperature ,adcol)
 !
 !....           H2O2 + SO2 = H2SO4
 !
-      rcarr(334,:) = skso2h2o2 (temperature, pressure, lwc, fcld)
+      rcarr(335,:) = skso2h2o2 (temperature, pressure, lwc, fcld)
 !
 !....           O3 + SO2 = H2SO4
 !
-      rcarr(335,:) = skarr(  3.000D-12 ,7000.0D+00 ,temperature)
+      rcarr(336,:) = skarr(  3.000D-12 ,7000.0D+00 ,temperature)
 !
 !....           O + OCSg = CO + SO2
 !
-      rcarr(336,:) = skarr(  2.100D-11 ,2200.0D+00 ,temperature)
+      rcarr(337,:) = skarr(  2.100D-11 ,2200.0D+00 ,temperature)
 !
 !....           OCSg + OH = SO2
 !
-      rcarr(337,:) = skarr(  7.200D-14 ,1070.0D+00 ,temperature)
+      rcarr(338,:) = skarr(  7.200D-14 ,1070.0D+00 ,temperature)
 !
 !....          End thermal rate constants
 !
@@ -4308,6 +4313,108 @@
 !
         END FUNCTION skice_hcl_hobr
 !
+!.... skpyro_clono2 (temperature ,adcol ,pressure ,sad_pyro ,specarr(HCl,:) ,water ,ptrop)
+!
+!_6_
+!
+!.... (6) 
+!
+        FUNCTION skpyro_clono2 (tk,ad,pr,sad,hcl,h2o,ptrop)
+          real*8, OPTIONAL :: ptrop
+          real*8  tk(:) ,ad(:) ,pr(:) ,sad(:) ,h2o(:) ,hcl(:)
+          real*8, DIMENSION (size(tk)) :: skpyro_clono2
+          real*8  adrop ,alpha ,ksur ,minconc ,pi ,ro
+          real*8  adivl(size(tk)) ,ah2o(size(tk)) ,avgvel(size(tk))  &
+     &     ,fterm(size(tk))  &
+     &     ,gamma(size(tk)) ,gam0(size(tk)) ,gcalc(size(tk))  &
+     &     ,gprob_hcl(size(tk)) ,gprob_tot(size(tk)) ,gsurf(size(tk))  &
+     &     ,hstar(size(tk))  &
+     &     ,ph2o(size(tk)) ,phcl(size(tk)) ,prate(size(tk))  &
+     &     ,tk_150(size(tk))
+!
+          pi = acos(-1.0d0)
+!
+!=======================================================================
+!     ClONO2 + stratospheric sulfate aerosol = HOCl + HNO3
+!=======================================================================
+!
+!.... First order reaction rate constant
+!.... PSC 3/30/99
+!
+!....   NOTE: alpha is modified from 0.3 in Table 2, JPC,
+!....         Hanson and Ravi, 98, 5734, 1994 to 1.0 based on
+!....         Ravi and Hanson, 101, pg 3887, JGR, 1996.
+!
+          minconc = 1.0d0
+          alpha   = 1.0d0
+          ksur    = 576.0d0
+          ro      = 2000.0d0
+          adrop   = 1.0d-05
+!
+!....    NOTE: Partial pressure of HCl and H2O (in atmospheres)
+!
+          ph2o(:) = ((h2o(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+!
+          where( hcl(:) <= minconc )
+            phcl = ((1.0d0 / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          elsewhere
+            phcl = ((hcl(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          end where
+!
+!....    NOTE: Activity of H2O not allowed to exceed 1.1
+!....          ah2o and Hstar taken from Table 2, JPC,
+!....          Hanson and Ravi, 98, 5734, 1994
+!
+          ah2o(:) = 1013.25d0 * ph2o(:) / 10.0d0**(9.217d0 - (2190.0d0 / (tk(:) - 12.7d0)))
+!
+          where( ah2o(:) > 1.1d0)
+            ah2o = 1.1d0
+          end where
+!
+          tk_150(:) = tk(:)
+!
+          where( tk(:) < 150.0d0 )
+            tk_150 = 150.0d0
+          endwhere
+!
+          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!
+          gsurf(:) = ah2o(:) * ksur * hstar(:) * phcl(:)
+!
+          prate(:) = ro * hstar(:) * phcl(:) / ah2o(:)
+!
+          gam0(:)  = 1.18d-04 + (9.1d-03 * ah2o(:)) + (0.5d0 * ah2o(:)**2.0d0)
+!
+          gcalc(:) = gam0(:) * sqrt(1.0d0 + prate(:))
+!
+          adivl(:) = adrop / (1.4d-06 * sqrt(1.0d0 / ah2o(:)))
+!
+          fterm(:) = ((exp(adivl(:)) + exp(-adivl(:))) /  &
+     &                (exp(adivl(:)) - exp(-adivl(:)))) -  &
+     &                (1.0d0 / adivl(:))
+!
+!....   NOTE: gprob_tot is the overall uptake coeff for ClONO2
+!
+          gprob_tot(:) = 1.0d0 / (1.0d0 / (gsurf(:) + fterm(:) * gcalc(:)) + 1.0d0 / alpha)
+!
+          gprob_hcl(:) = gprob_tot(:) * (gsurf(:) + fterm(:) * gcalc(:) * prate(:) /  &
+     &                   (1.0d0 + prate(:))) / (gsurf(:) + fterm(:) * gcalc(:))
+!
+          gamma = gprob_tot(:) - gprob_hcl(:)
+!
+          avgvel = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+     &                   (pi * mw(ICLONO2)))**0.5d0
+!
+          skpyro_clono2 = 0.25d0 * gamma * avgvel * sad
+!
+          where( sad < 0.0d0 ) skpyro_clono2   = 0.0d0
+!
+          if ( present(ptrop) ) then
+            where( pr > ptrop ) skpyro_clono2 = 0.0d0
+          end if
+!
+        END FUNCTION skpyro_clono2
+!
 !.... skpyro_clono2_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(ClONO2,:) ,specarr( HCl,:) ,water ,ptrop)
 !
 !_2_
@@ -4329,7 +4436,7 @@
 !
 !=======================================================================
 !     ClONO2 + HCl on stratospheric pyroCb aerosol = Cl2 + 0.5 N2O5
-!.old..     ClONO2 + HCl on stratospheric pyroCb aerosol = Cl2 + HNO3
+!.also for..     ClONO2 + HCl on stratospheric pyroCb aerosol = Cl2 + HNO3
 !=======================================================================
 !
 !.... First order reaction rate constant

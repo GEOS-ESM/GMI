@@ -81,7 +81,7 @@ pr_const: T
 pr_surf_emiss: T
 pr_emiss_3d: T
 # only set TRUE if you need QQJ, QQK exports:
-pr_qqjk: F
+pr_qqjk: T
 pr_noon: F
 pr_local: F
 do_ftiming: F
@@ -202,7 +202,7 @@ emissionSpeciesLayers::
 ::
 
 emissionPointFilenames::
-SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
+SO2:volcano:ExtData/chemistry/CARN/v202401/sfc/so2_volcanic_emissions_Carns.%y4%m2%d2.rc
 #SO2:SO2:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
 #H2O:H2O:/discover/nobackup/pcolarco/fvInput/pointwise_sources/hunga_tonga/so2_volcanic_emissions_TongaMIP_exp2.GMI.%y4%m2%d2.rc
 ::
@@ -221,7 +221,7 @@ SO2:volcano:ExtData/chemistry/CARN/v202106/sfc/so2_volcanic_emissions_Carns.%y4%
 # Ship Emissions requires SHIP_NO in ExtData:
 do_ShipEmission: T
 doMEGANemission: T
-doMEGANviaHEMCO: F
+doMEGANviaHEMCO: T
 
 isop_scale::
 0.7d0
@@ -245,7 +245,7 @@ monotconv_infile_name: ExtData/g5chem/x/GMI_MONOT_convTable.asc
 do_gcr: T
 gcr_infile_name: ExtData/g5chem/x/gcr/GCR_1970-2025_33.nc 
 do_solar_cycle: T
-sc_infile_name: ExtData/g5chem/x/solar_cycle/solar_cycle_NRL_1882_present_fill2100.asc
+sc_infile_name: ExtData/g5chem/x/solar_cycle/solar_cycle_NRL-v03_1882_2024_fill2100_FJX+MESO.asc
 
         ######################################
         #     Lightning related variables
@@ -273,9 +273,8 @@ do_chem_grp: T
 synoz_threshold: 150.0d-9
 chem_cycle: 1.0d0
 do_smv_reord: F
+do_wetchem: F
 loss_opt: 0
-do_AerDust_Calc: T
-AerDust_Effect_opt: 0
 
         ###########################################################
         # GHG and ODS surface source gases
@@ -464,36 +463,35 @@ do_ozone_inFastJX: F
 # cross section file: ExtData/g5chem/x/photolysis/FastJX/xsec_jx_jpl10update2_JNOx1_0.dat
 
 ## For FastJX 6.5 & JPL10
- fastj_opt: 4
- cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65wSO4_jpl10update2_JNOx1_0.dat
-# cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65_jpl10update2_JNOx1_0.dat
-# rate_file not needed for FastJX6.5; new approach only differs by roundoff
-# rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_124spc_jx_gmiv2.dat
-# rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_119spc_jx_gmiv3.dat
- T_O3_climatology_file: ExtData/g5chem/x/atms_jx_o3andtemp.dat
+# fastj_opt: 4
+# cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65wSO4_jpl10update2_JNOx1_0.dat
+## cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65_jpl10update2_JNOx1_0.dat
+## rate_file not needed for FastJX6.5; new approach only differs by roundoff
+## rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_124spc_jx_gmiv2.dat
+## rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_119spc_jx_gmiv3.dat
+# T_O3_climatology_file: ExtData/g5chem/x/atms_jx_o3andtemp.dat
 
-##
 ##... For CloudJ (FastJX 7.4) & JPL10
-# fastj_opt: 5
-### CloudJ_cldflag options:
-###   1: clear sky
-###   2: grid-box avg clouds cloud: fract*(in cloud ODs) (minamal overlap?)
-###   3: cloud-fract**3/2*(in cloud ODs) (random overlap?) 
-###   4: NOT ALLOWED
-###   5: Random select NRANDO ICA's (Independent Column Atmos.) from all
-###   6: Use all (up to 4) quadrature cloud cover QCAs (mid-pts of bin)
-###   7: RECOMMENDED - Use all (up to 4) QCAs (average clouds within each Q-bin)
-###   8: Calculate Js for ALL ICAs (up to 20,000 per cell!)
-# CloudJ_cldflag:  7
-# cross_section_file:       ExtData/g5chem/x/photolysis/CloudJ/FJX_spec_JNOx1_0.dat
-# cloud_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-cld.dat
-# ssa_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-ssa.dat
-# aer_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-aer.dat
-# UMaer_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-UMa.dat
-# GMI_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/GMI_scat-aer.dat
-# T_O3_climatology_file:    ExtData/g5chem/x/photolysis/CloudJ/atmos_std.dat
-# H2O_CH4_climatology_file: ExtData/g5chem/x/photolysis/CloudJ/atmos_h2och4.dat
-##
+ fastj_opt: 5
+## CloudJ_cldflag options:
+##   1: clear sky
+##   2: grid-box avg clouds cloud: fract*(in cloud ODs) (minamal overlap?)
+##   3: cloud-fract**3/2*(in cloud ODs) (random overlap) CLOSEST TO FastJX65
+##   4: NOT ALLOWED
+##   5: Random select NRANDO ICA's (Independent Column Atmos.) from all
+##   6: Use all (up to 4) quadrature cloud cover QCAs (mid-pts of bin)
+##   7: RECOMMENDED - Use all (up to 4) QCAs (average clouds within each Q-bin)
+##   8: Calculate Js for ALL ICAs (up to 20,000 per cell!)
+ CloudJ_cldflag:  7
+ cross_section_file:       ExtData/g5chem/x/photolysis/CloudJ/FJX_spec_Standard.dat
+ cloud_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-cld.dat
+ ssa_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-ssa.dat
+ aer_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-aer.dat
+ UMaer_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-UMa.dat
+ GMI_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/GMI_scat-aer.dat
+ T_O3_climatology_file:    ExtData/g5chem/x/photolysis/CloudJ/atmos_std.dat
+ H2O_CH4_climatology_file: ExtData/g5chem/x/photolysis/CloudJ/atmos_h2och4.dat
+#
 
  #################################
  # Copy GMI H2O back to GEOS ?
