@@ -1,7 +1,7 @@
-Modeler input mechanism:        Standard_h2o.txt
+Modeler input mechanism:        Standard.txt
 Principal reaction reference:   GMI_reactions_JPL19.db
 Species nomenclature:           GMI_species.db
-Mechanism timestamp:            Wed Aug 20 21:51:37 2025
+Mechanism timestamp:            Wed Sep 17 16:30:54 2025
 
 Species indices:
   1: A3O2

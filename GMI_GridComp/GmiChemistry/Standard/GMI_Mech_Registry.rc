@@ -5,7 +5,7 @@
 # 
 # !HELP:
 #
-#  For the mechanism: Standard_h2o.txt
+#  For the mechanism: Standard.txt
 #
 #  The GMI Mechanism Registry resource file provides names and units
 #  for the species in the GMI chemical mechanism. There is a different

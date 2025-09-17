@@ -16,9 +16,9 @@
 !   a gas). There is also a Henry's law constant and oxidizing potential for
 !   each species.
 !
-!  Input mechanism:        Standard_h2o.txt
+!  Input mechanism:        Standard.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Wed Aug 20 21:51:37 2025
+!  Setkin files generated: Wed Sep 17 16:30:54 2025
 !
 !=======================================================================
 

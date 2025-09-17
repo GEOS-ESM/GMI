@@ -20,9 +20,9 @@
 !   rcarr       : cm3 molecule-1 s-1 - rate constant values in units as
 !                 appropriate
 !
-!  Input mechanism:        Standard_h2o.txt
+!  Input mechanism:        Standard.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Wed Aug 20 21:51:37 2025
+!  Setkin files generated: Wed Sep 17 16:30:54 2025
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &

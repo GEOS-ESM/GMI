@@ -306,7 +306,7 @@ CONTAINS
    INTEGER :: ilo_gl, ihi_gl, julo_gl, jvlo_gl, jhi_gl
    INTEGER :: gmi_nborder
    INTEGER :: NMR      ! number of species from the GMI_Mech_Registry.rc
-   INTEGER :: inyr,inmon,iscyr
+   INTEGER :: inyr,inmon,solar_index,first_year_in_file
 !
    REAL, dimension(2628)     :: s_cycle_dates    ! 2628 months : 1882 - 2100
    REAL, dimension(W_ ,2628) :: s_cycle          ! 2628 months : 1882 - 2100
@@ -805,14 +805,15 @@ CONTAINS
 !... figure out index for solar cycle array from year and month
      inyr = int(nymd/10000)
      inmon = int(nymd/100)-100*inyr
-     iscyr = nint(((inyr+inmon/12.0)-s_cycle_dates(1))*12.)+1
+     first_year_in_file = nint( s_cycle_dates(1) )
+     solar_index = (inyr - first_year_in_file)*12 + inmon
 
      IF( MAPL_AM_I_ROOT() ) THEN
-       PRINT *,"Solar cycle: ",s_cycle_dates(iscyr),s_cycle(:,iscyr)
-       PRINT *,"Lyman-alpha cycle: ",s_cycle_dates(iscyr),lym_cycle(:,iscyr)
+       PRINT *,"Solar cycle: ",s_cycle_dates(solar_index),s_cycle(:,solar_index)
+       PRINT *,"Lyman-alpha cycle: ",s_cycle_dates(solar_index),lym_cycle(:,solar_index)
      ENDIF
-     self%JXbundle%fjx_solar_cycle_param(:) = s_cycle(:,iscyr)
-     self%JXbundle%lym_solar_cycle_param(:) = lym_cycle(:,iscyr)
+     self%JXbundle%fjx_solar_cycle_param(:) = s_cycle(:,solar_index)
+     self%JXbundle%lym_solar_cycle_param(:) = lym_cycle(:,solar_index)
    else
      self%JXbundle%fjx_solar_cycle_param(:) = 1.000
      self%JXbundle%lym_solar_cycle_param(:) = 1.000
