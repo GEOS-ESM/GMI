@@ -88,6 +88,7 @@
    LOGICAL :: do_qqjk_inchem
    LOGICAL :: do_qqjk_reset
    LOGICAL :: pr_qqjk
+   LOGICAL :: do_tran_h2
    LOGICAL :: do_AerDust_Calc
    LOGICAL :: do_LBSplusBCOC_SAD, do_StratPyroHetChem
    INTEGER :: phot_opt
@@ -494,6 +495,13 @@ CONTAINS
 
     allocate(self%mapSpecies(NSP))
     self%mapSpecies(:) = speciesReg_for_CCM(lchemvar, NSP, bgg%reg%vname, bxx%reg%vname )
+!... if mesospheric chem then BC for H2 is applied like a source gas
+    self%do_tran_h2 = .false.
+    do ib=1,NUM_K
+      if(lqkchem(ib).eq.'H + HO2 = H2 + O2') then
+        self%do_tran_h2 = .true.
+      endif
+    enddo
 
   RETURN
 
@@ -792,14 +800,12 @@ CONTAINS
        self%SpeciesConcentration%concentration(INITROGEN)%pArray3D(:,:,:) =  &
            self%SpeciesConcentration%concentration(IMGAS)%pArray3D(:,:,:) * MXRN2
 
-       !===========================================
-       ! Fixes for H2 - Provided by David Considine
-       !===========================================
-       self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,k1:k1+1) = MXRH2
-!.sds       self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,:) = MXRH2
-      !=================
-       ! end fixes for H2
-       !=================
+!... BCs for H2 - like source gas if have mesospheric reactions, otherwise entire domain fixed
+       if(self%do_tran_h2) then 
+         self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,k1:k1+1) = MXRH2
+       else
+         self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,:) = MXRH2
+       endif
 
        ! If CARMA is providing stratospheric SAD and REFF, update sadcol2(iSO4)
        !   and radA(iSO4)
