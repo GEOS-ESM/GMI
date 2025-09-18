@@ -81,7 +81,7 @@ pr_const: T
 pr_surf_emiss: T
 pr_emiss_3d: T
 # only set TRUE if you need QQJ, QQK exports:
-pr_qqjk: T
+pr_qqjk: F
 pr_noon: F
 pr_local: F
 do_ftiming: F
@@ -221,7 +221,7 @@ SO2:volcano:ExtData/chemistry/CARN/v202401/sfc/so2_volcanic_emissions_Carns.%y4%
 # Ship Emissions requires SHIP_NO in ExtData:
 do_ShipEmission: T
 doMEGANemission: T
-doMEGANviaHEMCO: T
+doMEGANviaHEMCO: F
 
 isop_scale::
 0.7d0

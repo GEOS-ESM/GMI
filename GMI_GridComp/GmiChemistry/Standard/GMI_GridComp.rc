@@ -81,7 +81,7 @@ pr_const: T
 pr_surf_emiss: T
 pr_emiss_3d: T
 # only set TRUE if you need QQJ, QQK exports:
-pr_qqjk: T
+pr_qqjk: F
 pr_noon: F
 pr_local: F
 do_ftiming: F
