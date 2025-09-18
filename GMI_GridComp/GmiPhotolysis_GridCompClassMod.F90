@@ -133,7 +133,7 @@
     character (len=MAX_LENGTH_VAR_NAME)  :: qj_var_name
     integer             :: phot_opt
     integer             :: fastj_opt
-    logical             :: do_clear_sky
+    logical             :: do_clear_sky, do_LymanAlpha
     real*8              :: fastj_offset_sec
 
     real*8              :: synoz_threshold
@@ -306,11 +306,13 @@ CONTAINS
    INTEGER :: ilo_gl, ihi_gl, julo_gl, jvlo_gl, jhi_gl
    INTEGER :: gmi_nborder
    INTEGER :: NMR      ! number of species from the GMI_Mech_Registry.rc
-   INTEGER :: inyr,inmon,iscyr
+   INTEGER :: inyr,inmon,solar_index,first_year_in_file
 !
    REAL, dimension(2628)     :: s_cycle_dates    ! 2628 months : 1882 - 2100
    REAL, dimension(W_ ,2628) :: s_cycle          ! 2628 months : 1882 - 2100
+   REAL, dimension(5 ,2628) :: lym_cycle         ! 2628 months : 1882 - 2100
    REAL(r8), POINTER         :: fjx_solar_cycle_param(:)
+   REAL(r8), POINTER         :: lym_solar_cycle_param(:)
 
    INTEGER :: loc_proc, locGlobProc, commu_slaves
    LOGICAL :: one_proc, rootProc
@@ -446,6 +448,10 @@ CONTAINS
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%fastj_offset_sec, &
      &                label   = "fastj_offset_sec:", &
      &                default = 0.0d0, rc=STATUS )
+
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_LymanAlpha, label="do_LymanAlpha:", &
+     &                       default=.true., rc=STATUS)
+
       VERIFY_(STATUS)
 !
 !... CloudJ_cldflag = 1 ! clear sky
@@ -642,7 +648,7 @@ CONTAINS
       !=================================================================
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_AerDust_Calc, label="do_AerDust_Calc:", &
-     &                       default=.false., rc=STATUS)
+     &                       default=.true., rc=STATUS)
 
       !=================================================================
       ! AerDust_Effect_opt is used to select if the radiative effects
@@ -702,7 +708,6 @@ CONTAINS
 !         self%num_qjo = self%num_qjo + 1
 !         self%qj_labels(self%num_qjo)   = 'optical depth'
 !      end if
-
 
 !     -------------------------------------------------------------------
 !     synoz_threshold:  chemistry turned off where synoz > this threshold
@@ -795,19 +800,23 @@ CONTAINS
 !... solar cycle parameter
    if(self%do_solar_cycle) then
 
-     CALL readSolarCycleData( s_cycle_dates, s_cycle, self%sc_infile_name )
+     CALL readSolarCycleData( s_cycle_dates, s_cycle, lym_cycle, self%sc_infile_name )
 
 !... figure out index for solar cycle array from year and month
      inyr = int(nymd/10000)
      inmon = int(nymd/100)-100*inyr
-     iscyr = nint(((inyr+inmon/12.0)-s_cycle_dates(1))*12.)+1
+     first_year_in_file = nint( s_cycle_dates(1) )
+     solar_index = (inyr - first_year_in_file)*12 + inmon
 
      IF( MAPL_AM_I_ROOT() ) THEN
-       PRINT *,"Solar cycle: ",s_cycle_dates(iscyr),s_cycle(:,iscyr)
+       PRINT *,"Solar cycle: ",s_cycle_dates(solar_index),s_cycle(:,solar_index)
+       PRINT *,"Lyman-alpha cycle: ",s_cycle_dates(solar_index),lym_cycle(:,solar_index)
      ENDIF
-     self%JXbundle%fjx_solar_cycle_param(:) = s_cycle(:,iscyr)
+     self%JXbundle%fjx_solar_cycle_param(:) = s_cycle(:,solar_index)
+     self%JXbundle%lym_solar_cycle_param(:) = lym_cycle(:,solar_index)
    else
      self%JXbundle%fjx_solar_cycle_param(:) = 1.000
+     self%JXbundle%lym_solar_cycle_param(:) = 1.000
    endif
 
 ! Grid box surface area, m^{2}
@@ -1514,7 +1523,7 @@ CONTAINS
                  self%optDepth, self%eRadius, self%tArea, self%odAer,      &
                  relativeHumidity, self%odMdust, self%dust, self%wAersl,   &
                  self%dAersl, humidity, num_AerDust, self%phot_opt,        &
-                 self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, &
+                 self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, self%do_LymanAlpha, &
                  self%do_AerDust_Calc, self%do_ozone_inFastJX,             &
                  self%do_synoz, self%qj_timpyr, IO3, IH2O, ISYNOZ,         &
                  nymd, nhms, self%pr_diag, loc_proc,   &

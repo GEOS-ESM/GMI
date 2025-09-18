@@ -57,7 +57,7 @@
       real*8, intent(in), dimension(k1:k2)   :: CH4_ij, H2O_ij(k1:k2)  ! mixing ratio for CH4 & H2O
       real*8, intent(in), dimension(k1:k2), optional :: ozone_ij      ! mixing ratio for ozone
       real*8, intent(out), dimension(k1:k2)                    :: overheadO3col_ij
-      real*8, intent(out), dimension(k1:k2,num_qjs) :: qjgmi_ij
+      real*8, intent(inout), dimension(k1:k2,num_qjs) :: qjgmi_ij
       real*8, intent(inout), dimension(k1:k2,NSADaer*nrh_b)    :: ODAER_ij
       real*8, intent(inout), dimension(k1:k2,NSADaer)          :: HYGRO_ij
       real*8, intent(inout), dimension(k1:k2,2)                :: ODcAER_ij
@@ -74,7 +74,7 @@
       real*8, dimension(1:k2-k1+2,AN_) :: AERSP, aerOD_out
       real*8, dimension(W_)        :: SOLF
       real*8, dimension(0:k2-k1+2) :: PPP,ZZZ
-      real*8, dimension(1:k2-k1+2) :: TTT, DDD, RRR, OOO
+      real*8, dimension(1:k2-k1+2) :: TTT, DDD, RRR, OOO, HHH
       real*8, dimension(1:k2-k1+2) :: LWP, IWP, REFFL, REFFI, cldOD_out
       real*8, dimension(1:k2-k1+1,num_qjs) :: VALJXX
       real*8, dimension(5,W_+W_r)  :: RFL
@@ -269,12 +269,15 @@
 !---set O3
 !... gridbox ozone (vmr?)
       if (present(ozone_ij)) then
-        OOO(1:k2-k1+1) = ozone_ij(k1:k2) * DDD(k1:k2)
+        OOO(1:k2-k1+1) = ozone_ij(k1:k2) * DDD(1:k2-k1+1)
         OOO(k2-k1+2) = ozone_ij(k2) * DDD(k2-k1+2)
       else
 !... read in Michael's T and O3 climotology
         call ACLIM_FJX (lat_ij, MONTH, PPP, TTT, OOO, L_+1)
       endif
+!... H2O for flux attenuation (molecules/cm^3)
+      HHH(1:k2-k1+1) = h2o_ij(k1:k2) * DDD(1:k2-k1+1)
+      HHH(k2-k1+2)   = h2o_ij(k2)    * DDD(k2-k1+2)
 !
 !... set to 18 to turn off LW fluxes
       NSBIN = 18
@@ -289,8 +292,8 @@
         colch4(k2+1) = CH4_ij(k2) * 1.0d9 
         colo2(:)  = MXRO2 * DDD(:)
         colh2o(1:k2-k1+1) = H2O_IJ(k1:k2)         !H2O in kg/kg
-        colh2o(k2+1) = H2O_IJ(k2)
-        coldry(:) = DDD(:) - colh2o(:)
+!.sds        colh2o(k2+1) = H2O_IJ(k2)
+        coldry(:) = DDD(:) - HHH(:)
       endif
 !
 !!! set up aerosols
@@ -767,7 +770,7 @@
 !
 !=======================================================================
 !
-      call CLOUD_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT,  &
+      call CLOUD_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT, HHH, &
              DDD, RRR, OOO, LWP, IWP, REFFL, REFFI, CLF, CLDCOR, CLDIW,  &
              AERSP, IDXAER, LTOP, num_aer, VALJXX, num_qjs,  &
              TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT, cldOD_out, aerOD_out)

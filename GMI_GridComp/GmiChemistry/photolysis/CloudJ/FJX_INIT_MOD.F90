@@ -55,7 +55,6 @@
 !
       integer  JXUNIT, J, RANSEED
 !
-!.sds      write(6,'(a)') 'Fast-J ver-7.4 initialization'
 !
       if (W_ .ne. 18) call EXITC(' INIT_JX: invalid no. wavelengths')
 !
@@ -190,6 +189,7 @@
 !     WL       Centres of wavelength bins - 'effective wavelength'
 !     FL       Solar flux incident on top of atmosphere (cm-2.s-1)
 !     QRAYL    Rayleigh parameters (effective cross-section) (cm2)
+!     QH2O     H2O cross-sections,  UV-blue absorption, 290-350 nm
 !     QO2      O2 cross-sections
 !     QO3      O3 cross-sections
 !     Q1D      O3 => O(1D) quantum yield
@@ -232,37 +232,30 @@
 !----w-params:  1=w-eff  2=w-bins, 3=solar(photons), 4=solar(W/m2), 4=Y-PAR,  5=Rayleigh, 6=SJ sub-bins
 !... w-eff 
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
       read (NUN,'(5x,6e10.3)',err=4)    (WL(IW),IW=1,NSSS)
 !
 !... w-bins
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
       read (NUN,'(5x,6e10.3)',err=4)    (WBIN(IW),IW=1,NSSS)
 !
 !... SPhot 
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
       read (NUN,'(5x,6e10.3)',err=4)    (FL(IW),IW=1,NSSS)
 !
 !... SWatt 
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
       read (NUN,'(5x,6e10.3)',err=4)    (FW(IW),IW=1,NSSS)
 !
 !... Y-PAR 
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
       read (NUN,'(5x,6e10.3)',err=4)    (FP(IW),IW=1,NSSS)
 !
 !... Raylay
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
       read (NUN,'(5x,6e10.3)',err=4)    (QRAYL(IW),IW=1,NSSS)
 !
 !... SJbins
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
       do I = 1,NSSS
         SJSUB(I, 1)=   1.0d0
         SJSUB(I, 2:15)=0.0d0
@@ -282,7 +275,6 @@
       TITLEJX(1) = TIT_J1S
       TITLEJL(1) = TIT_J1L
       LQQ(1) = 3
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
 !
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
       read (NUN,'(a1,f3.0,1x,6e10.3/5x,6e10.3/5x,6e10.3)',err=4) SQQ(2),TQQ(1,2), (QO3(IW,1),IW=1,NWWW)
@@ -295,7 +287,6 @@
       TITLEJX(2) = TIT_J1S
       TITLEJL(2) = TIT_J1L
       LQQ(2) = 3
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
 !
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
       read (NUN,'(a1,f3.0,1x,6e10.3/5x,6e10.3/5x,6e10.3)',err=4) SQQ(3),TQQ(1,3), (Q1D(IW,1),IW=1,NWWW)
@@ -308,7 +299,6 @@
       TITLEJX(3) = TIT_J1S
       TITLEJL(3) = TIT_J1L
       LQQ(3) = 3
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
 !
 !---Read remaining species:  X-sections at 1-2-3 T_s
 !---read in 1 to 3 X-sects per J-value (JJ)
@@ -316,7 +306,6 @@
 !-- read new Xsection block
     3 continue
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
       if (TIT_J1S .eq. 'endofJ') goto 1
 !---try to add a new Xsect
     2 continue
@@ -328,9 +317,11 @@
       read (NUN,'(a1,f3.0,1x,6e10.3/5x,6e10.3/5x,6e10.3)',err=4)    &
           SQQ(JJ),TQQ(LQ,JJ),(QQQ(IW,LQ,JJ),IW=1,NWWW)
       LQQ(JJ) = LQ
+!
+!---save H2O X-sects for column OD
+      if (TIT_J1S .eq. 'H2O') QH2O(:) = QQQ(:,LQ,JJ)
 !try to read a 2nd Temperature or Pressure
       read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds      write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
 !
       if (TIT_J1S .eq. 'endofJ') goto 1
       if (TIT_J1S .eq. TITLEJX(JJ)) then
@@ -340,7 +331,6 @@
         LQQ(JJ) = LQ
 !try to read a 3rd Temperature or Pressure
         read (NUN,'(a6,1x,a16,1x,a120)',err=4) TIT_J1S,TIT_J1L,TIT_J1N
-!.sds        write(6,'(1x,a6,1x,a16,a8,a120)') TIT_J1S,TIT_J1L,' notes:',TIT_J1N   !print
         if (TIT_J1S .eq. 'endofJ') goto 1
         if (TIT_J1S .eq. TITLEJX(JJ)) then
           LQ = 3
@@ -386,12 +376,6 @@
         NJX = JJ
       endif
 !
-!print-----
-!.sds      do J = 1,NJX
-!.sds        write(6,'(a8,i5,2x,a6,2x,a16,2x,a1,i3,2x,3f6.1)') &
-!.sds          ' X-sects',J,TITLEJX(J),TITLEJL(J),SQQ(J),LQQ(J),(TQQ(I,J),I=1,LQQ(J))
-!.sds      enddo
-!
 !---need to check that TQQ (= T(K) or p(hPa)) is monotonically increasing:
       do J = 1,NJX
         if ((LQQ(J).eq.3) .and. (TQQ(2,J).ge.TQQ(3,J))) then
@@ -425,7 +409,6 @@
         do IW = 19,27
           FL(IW) = 0.d0
         enddo
-!.sds        write(6,'(a)')  'Solar fluxes > 778 nm are dropped'
       endif
 !
       close(NUN)
@@ -463,10 +446,8 @@
       open (NUN,FILE=NAMFIL,status='old',form='formatted',err=4)
 !
       read (NUN,'(a80)',err=4) TITLE0
-!.sds      write(6,'(a80)') TITLE0                                  !print----
       read (NUN,'(i4)')  NCC
       read (NUN,'(i4)')  MCC
-!.sds      write(6,'(2i6,a)') NCC,MCC,' types of clouds & #Reff'   !print----
       read (NUN,*)
       read (NUN,*)
       read (NUN,*)
@@ -475,7 +456,6 @@
 !
       do K = 1,NCC
         read (NUN,'(a12,f8.5)',err=4) TITLCC(K),DCC(K)
-!.sds        write(6,'(a,i4,1x,a12,f8.5)') 'Cloud#',K,TITLCC(K),DCC(K)  !print----
         do J = 12,NS2
           do I = 1,MCC
             read (NUN,'(i2,1x,2f5.3,2f6.3,e8.1,f6.3,f8.5,7f6.3)',err=4) &
@@ -510,7 +490,6 @@
     2 continue
       close(NUN)
 !
-!.sds      write(6,'(a,2f9.5,i5)') ' ATAU/ATAU0/JMX',ATAU,ATAU0,JTAUMX   !print----
 !
       END SUBROUTINE RD_CLD
 !EOP
@@ -546,15 +525,12 @@
       open (NUN,FILE=NAMFIL,status='old',form='formatted',err=4)
 !
       read (NUN,'(a120)',err=4) TITLE0
-!.sds      write(6,'(a120)') TITLE0                              !print----
       read (NUN,*)
       read (NUN,'(i4)')  NSS
       read (NUN,*)
-!.sds      write(6,'(i6,a)') NSS, ' types of strat sulf aerosols'             !print----
 !
       do K = 1,NSS
         read (NUN,'(a12,5f8.2)') TITLSS(K),RSS(K),GSS(K),DSS(K),TSS(K),WSS(K)
-!.sds        write(6,'(i4,1x,a12,2f10.4,2f8.1)') K,TITLSS(K),RSS(K),DSS(K),TSS(K),WSS(K)
 !
         do J = 5,NS2
           read(NUN,'(i2,2f8.4,e8.1,2f8.5,7f6.3)') JSS,WJSS,XNDR,XNDI,QSS(J,K),SSS(J,K),(PSS(I,J,K), I=2,8)
@@ -617,7 +593,6 @@
 !
       read (NUN,'(a120)',err=4) TITLE0
 !print----
-!.sds      write(6,'(a120)') TITLE0
       read (NUN,*)
       read (NUN,*)
       do J = 1,A_
@@ -633,7 +608,6 @@
           enddo
           NAA = J
 !print----
-!.sds          write(6,'(i5,1x,a12,1x,7f7.3,1x,a80)') J,TITLAAJ,RAAJ,DAAJ,(QAA(K,J),K=1,5),TITLE0
         else
           goto 2
         endif
@@ -672,7 +646,6 @@
 !
       read (NUN,'(a)',err=4) TITLE0
 !print----
-!.sds      write(6,'(a120)') TITLE0
       read(NUN,'(5x,10f5.0)',err=4) WMM
 !
 !---33 Different UM Aerosol Types:  SULF, SS-1,-2,-3,-4, DD-1,-2,-3,-4,
@@ -702,7 +675,6 @@
       enddo
 !
 !print----
-!.sds      write(6,'(7(i5,1x,a4))') (L,TITLUM(L), L=1,33)
       goto 2
     4 continue
       call EXITC(' RD_UM: error in read')
@@ -867,7 +839,6 @@
 !.       open (NUNIT,file=NAMFIL,status='old',form='formatted')
 !. !
 !.       read (NUNIT,'(a)') CLINE
-!. !.sds      write(6,'(a)') CLINE
 !.       do J = 1,JVN_
 !.         read (NUNIT,'(i4,1x,a50,4x,f5.3,2x,a6)') JJ,T_REACT,F_FJX,T_FJX
 !.         if (JJ .gt. JVN_) exit

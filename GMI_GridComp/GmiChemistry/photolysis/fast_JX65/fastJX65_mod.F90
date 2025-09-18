@@ -77,7 +77,7 @@
 !
 ! !OUTPUT PARAMETERS:
       real*8,  intent(out) :: overheadO3col_ij(k1:k2)
-      real*8,  intent(out) :: qjgmi_ij(k1:k2, num_qjs)
+      real*8,  intent(inout) :: qjgmi_ij(k1:k2, num_qjs)
       real*8,  intent(out) :: optdepth_ij(k1:k2) ! optical depth in box   (unitless) [od]
 !
 ! !LOCAL VARIABLES:

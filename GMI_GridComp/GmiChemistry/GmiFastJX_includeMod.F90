@@ -10,6 +10,7 @@ TYPE t_fastJXbundle
 !... solar cycle capability
 
        REAL*8 :: fjx_solar_cycle_param(W_)
+       REAL*8 :: lym_solar_cycle_param(5)
 
 !----------------------------------------------------------------------------
 

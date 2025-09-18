@@ -222,8 +222,8 @@
 !            enddo
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE PHOTO_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT, DDD,  &
-                           RRR, OOO, LWP, IWP, REFFL, REFFI,               &
+      SUBROUTINE PHOTO_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT, HHH,  &
+                           DDD, RRR, OOO, LWP, IWP, REFFL, REFFI,          &
                            AERSP, NDXAER, L1U, ANU, VALJXX, NJXU, LDARK,   &
                            cldOD_out, aerOD_out)
 !-----------------------------------------------------------------------
@@ -242,6 +242,7 @@
 !   PPP    - edge pressures
 !   ZZZ    - edge heights
 !   TTT    - temperatures
+! HHH(1:L_+1)  H2O molecules per cm2 in each layer (column)
 !   DDD    - column density - delp*MASFAC (molecules/cm3?)
 !   RRR    - Relative humidity (%)
 !   OOO    - ozone
@@ -280,7 +281,7 @@
 !
       logical, intent(in)                    :: LPRTJ
       real*8,  intent(in), dimension(L1U+1)  :: PPP, ZZZ
-      real*8,  intent(in), dimension(L1U  )  :: TTT,DDD,RRR,OOO,  &
+      real*8,  intent(in), dimension(L1U  )  :: TTT,HHH, DDD,RRR,OOO,  &
                                                 LWP,IWP,REFFL,REFFI
       real*8,  intent(in), dimension(L1U,AN_):: AERSP
       integer, intent(in), dimension(L1U,AN_):: NDXAER
@@ -295,7 +296,7 @@
 !-----------------------------------------------------------------------
 !--------key LOCAL atmospheric data needed to solve plane-parallel J----
 !-----these are dimensioned JXL_, and must have JXL_ .ge. L_
-      real*8, dimension(JXL1_+1) :: TTJ,DDJ,OOJ,ZZJ
+      real*8, dimension(JXL1_+1) :: TTJ,HHJ,DDJ,OOJ,ZZJ
       real*8, dimension(JXL1_+1) :: PPJ,RELH
       integer,dimension(JXL2_+1) :: JXTRA
 !
@@ -386,6 +387,7 @@
         TTJ(L) = TTT(L)
         DDJ(L) = DDD(L)
         OOJ(L) = OOO(L)
+        HHJ(L) = HHH(L) !h2o molecule/cm3?
       enddo
       PPJ(L1U+1) = 0.d0
       TTJ(L1U+1) = TTJ(L1U)/2.0d0
@@ -574,6 +576,8 @@
           call X_interp (TTTX,XQO3, TQQ(1,2),QO3(K,1), TQQ(2,2),QO3(K,2),TQQ(3,2),QO3(K,3), LQQ(2))
           ODABS = XQO3*OOJ(L) + XQO2*DDJ(L)*0.20948d0
           OD(K,L)  = OD(K,L)  + ODABS
+!---Add H2O UV absorption (Fast-J bins only 1:18)
+          OD(K,L)  = OD(K,L)  + QH2O(K)*HHJ(L)
         enddo
 !
 !---renormalize the SLEG array by OD - note that SSA is included in SLEG and not used further

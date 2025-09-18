@@ -10,9 +10,9 @@
 !   This include file sets symbolic constants for the photochemical
 !   mechanism.
 !
-!  Chemistry input file:    StratTrop_HFC_S_Pyro.txt
+!  Chemistry input file:    Standard.txt
 !  Reaction dictionary:     GMI_reactions_JPL19.db
-!  Setkin files generated:  Tue Aug 26 20:52:13 2025
+!  Setkin files generated:  Wed Sep 17 16:30:54 2025
 !
 !========1=========2=========3=========4=========5=========6=========7==
 
@@ -22,10 +22,10 @@
      & ,SK_ITHERM &
      & ,SK_NACT
 
-      parameter (SK_IGAS   = 129)
-      parameter (SK_IPHOT  =  76)
-      parameter (SK_ITHERM = 338)
-      parameter (SK_NACT   = 125)
+      parameter (SK_IGAS   = 123)
+      parameter (SK_IPHOT  =  81)
+      parameter (SK_ITHERM = 297)
+      parameter (SK_NACT   = 119)
 
 !                                  --^--
 
