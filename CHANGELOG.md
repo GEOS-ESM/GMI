@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed support for Aerosols coming from old GOCART
 - Eliminated chem_mask_klo/chem_mask_khi variables in GMI, not needed nor supported
 - Removed the trap for high values of RCOOH, no longer an issue
+- Removed all references to BCRealTime and usingGOCART_"XX" variables, not used
 
 ### Deprecated
 
