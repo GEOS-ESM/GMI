@@ -81,11 +81,6 @@
 ! -------------------------------------------------------------------------------
    LOGICAL :: gotImportRst
 
-! Set BCRealTime = .TRUE. when boundary conditions 
-! must be for exact year of current calendar date.
-! -------------------------------------------------
-   LOGICAL :: BCRealTime
-
 ! Perhaps GMICHEM is the AERO_PROVIDER
 ! ------------------------------------
    LOGICAL :: AM_I_AERO_PROVIDER    ! Even if another GC is the real AERO_PROVIDER, set this TRUE to have GMI export the AERO state, etc.
@@ -402,15 +397,6 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%verbose, &
      &           label="verbose:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-
-      !-------------------------------------------
-      ! Should BC files have current date and time?
-      ! Useful for mission support and replays.
-      !--------------------------------------------
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%BCRealTime, &
-     &           label="BCRealTime:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
       
       !-----------------------------

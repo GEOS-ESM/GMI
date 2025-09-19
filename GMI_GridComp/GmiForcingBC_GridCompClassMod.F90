@@ -76,11 +76,6 @@
 ! -------------------------------------------------------------------------------
    LOGICAL :: gotImportRst
 
-! Set BCRealTime = .TRUE. when boundary conditions 
-! must be for exact year of current calendar date.
-! -------------------------------------------------
-   LOGICAL :: BCRealTime
-
     integer             :: forc_bc_opt
     integer             :: fbc_j1
     integer             :: fbc_j2
