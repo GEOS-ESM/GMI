@@ -120,11 +120,6 @@
 ! -------------------------------------------------------------------------------
      LOGICAL :: gotImportRst
 
-! Set BCRealTime = .TRUE. when boundary conditions 
-! must be for exact year of current calendar date.
-! -------------------------------------------------
-     LOGICAL :: BCRealTime
-
 ! Daily and monthly emissions
 ! ---------------------------
      INTEGER :: num_diurnal_emiss
@@ -420,15 +415,6 @@
               label="met_opt:", default = 3, rc=STATUS )
     VERIFY_(STATUS)
 
-
-!-------------------------------------------
-! Should BC files have current date and time?
-! Useful for mission support and replays.
-!--------------------------------------------
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%BCRealTime, &
-     &           label="BCRealTime:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
      
       if (self%do_gcr) call INIT_GCR_DIAG(i1,i2,j1,j2,1,km)
       
