@@ -81,11 +81,6 @@
 ! -------------------------------------------------------------------------------
    LOGICAL :: gotImportRst
 
-! Set BCRealTime = .TRUE. when boundary conditions 
-! must be for exact year of current calendar date.
-! -------------------------------------------------
-   LOGICAL :: BCRealTime
-
 ! Perhaps GMICHEM is the AERO_PROVIDER
 ! ------------------------------------
    LOGICAL :: AM_I_AERO_PROVIDER    ! Even if another GC is the real AERO_PROVIDER, set this TRUE to have GMI export the AERO state, etc.
@@ -404,15 +399,6 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%verbose, &
      &           label="verbose:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-
-      !-------------------------------------------
-      ! Should BC files have current date and time?
-      ! Useful for mission support and replays.
-      !--------------------------------------------
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%BCRealTime, &
-     &           label="BCRealTime:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
       
       !-----------------------------
@@ -1262,7 +1248,7 @@ CONTAINS
 !  Exports not part of internal state
 !  ----------------------------------
    REAL, POINTER, DIMENSION(:,:) :: SZAPHOT
-   REAL, POINTER, DIMENSION(:,:,:) :: FJXCLDOD, FJXFCLD, DUSTOD, DUSTSA
+   REAL, POINTER, DIMENSION(:,:,:) :: FJXCLDOD, FJXFCLD, AEROOD, DUSTOD, DUSTSA
    REAL, POINTER, DIMENSION(:,:,:) :: SO4OD, SO4HYGRO, SO4SA
    REAL, POINTER, DIMENSION(:,:,:) :: BCOD, BCHYGRO, BCSA
    REAL, POINTER, DIMENSION(:,:,:) :: OCOD, OCHYGRO, OCSA
@@ -2697,7 +2683,7 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
        kReverse = k2-k+k1
        IF(ASSOCIATED( FJXCLDOD))  FJXCLDOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 1)
        IF(ASSOCIATED(  FJXFCLD))   FJXFCLD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 2)
-!      IF(ASSOCIATED(         ))          (i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 3)
+       IF(ASSOCIATED(   AEROOD))    AEROOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 3)
        IF(ASSOCIATED(   DUSTOD))    DUSTOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 4)
        IF(ASSOCIATED(   DUSTSA))    DUSTSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 5)
        IF(ASSOCIATED(    SO4OD))     SO4OD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 6)
@@ -2889,6 +2875,8 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
    CALL MAPL_GetPointer(expChem, FJXCLDOD, 'FJXCLDOD', RC=STATUS)
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(expChem,  FJXFCLD,  'FJXFCLD', RC=STATUS)
+   VERIFY_(STATUS)
+   CALL MAPL_GetPointer(expChem,   AEROOD,   'AEROOD', RC=STATUS)
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(expChem,   DUSTOD,   'DUSTOD', RC=STATUS)
    VERIFY_(STATUS)

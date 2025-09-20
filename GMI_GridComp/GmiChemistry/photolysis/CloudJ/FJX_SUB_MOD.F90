@@ -333,6 +333,8 @@
       real*8   ODRRTM,FRRTM
 !-----------------------------------------------------------------------
 !.sds..
+      integer  :: k400_photopt(1)
+      real*8, ALLOCATABLE :: del400(:)
       integer, parameter :: k400=17
       real*8, parameter :: ZERO=0.0d0
 !.sds.. end
@@ -353,12 +355,30 @@
 !
 !.sds
       aerOD_out(:,:) = 0.0d0
+      if(do_CCM_OptProps) then
+        ALLOCATE(del400(num_CCM_WL))
+        del400(:) = abs(CCM_WL(:)-400.0)
+        k400_photopt = minloc(del400)
+        if(k400_photopt(1).lt.1.or.k400_photopt(1).gt.num_CCM_WL) stop
+!... must be 8 coefs
+        if(num_CCM_mom.ne.8) then
+          print *,'Number of Legendre coefs not correct from AERO_Provider: ',num_CCM_mom
+          stop
+        endif
+      endif
 !---check for dark conditions SZA > 98.0 deg => tan ht = 63 km
 !                        or         99.0                 80 km
       if (SZA .gt. SZAMAX) then
         LDARK = .true.
 !.sds.. calc aerosol OD diagnostics for nighttime too AOD diagnostic
-        if(.not.do_CCM_OptProps) then
+        if(do_CCM_OptProps) then
+!.sds... send aerosol optical depth of 400nm back for diagnostic output
+          do M = 1,ANU
+            do L = 1,LU
+              aerOD_out(L,M) = CCM_OPTX(k400_photopt(1),L,M)
+            enddo
+          enddo
+        else
           do L = 1,L1U
             RH = RRR(L)
             do M = 1,ANU
@@ -530,26 +550,13 @@
 !---  UMich aerosols use relative humidity (RH)
 !.sds... what if CCM provides aerosol optical characteristics
         if(do_CCM_OptProps) then
-          if(num_CCM_mom.ne.8) then
-            print *,'Number of Legendre coefs not correct from AERO_Provider: ',num_CCM_mom
-            stop
-          endif
           do M = 1,ANU
             !... accumulate
             do K = 1,NS2
 !.sds...
 !---Pick nearest Mie wavelength to get scattering properites------------
               JMIE = minloc(abs(CCM_WL(:)-WL(K)))
-!. debug
-              if(JMIE(1).lt.1.or.JMIE(1).gt.num_CCM_WL) then
-                print *,'sdspj-1: ',m,k,num_CCM_WL,JMIE
-                print *,'sdspj-2: ',m,k,CCM_WL
-                print *,'sdspj-3: ',m,k,WL
-                print *,'sdspj-4: ',m,k,shape(CCM_OPTX)
-                print *,'sdspj-5: ',m,k,shape(CCM_SSALB)
-                print *,'sdspj-6: ',m,k,shape(CCM_SSLEG)
-                stop
-              endif
+              if(JMIE(1).lt.1.or.JMIE(1).gt.num_CCM_WL) stop
 !
               OD(K,L)  = OD(K,L)  + CCM_OPTX(JMIE(1),L,M)
               SSA(K,L) = SSA(K,L) + CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)
@@ -558,12 +565,13 @@
               enddo
             enddo
 !.sds... send aerosol optical depth of 400nm back for diagnostic output
-            aerOD_out(L,M) = CCM_OPTX(k400,M,L)
+            aerOD_out(L,M) = CCM_OPTX(k400_photopt(1),L,M)
           enddo
 !.sds...
 !... CloudJ provided optical characteristics
         else
           RH = RRR(L)
+          aerOD_out(L,1) = 0.0
           do M = 1,ANU
             PATH = AERSP(L,M)
             if (PATH .gt. 0.d0) then
@@ -600,10 +608,7 @@
                 enddo
               enddo
 !.sds... send aerosol optical depth of 400nm back for diagnostic output
-              aerOD_out(L,M) = OPTX(k400)
-!
-            else
-              aerOD_out(L,M) = 0.0d0
+              aerOD_out(L,1) = aerOD_out(L,1)+OPTX(k400)
 !.sds... end
             endif
 !

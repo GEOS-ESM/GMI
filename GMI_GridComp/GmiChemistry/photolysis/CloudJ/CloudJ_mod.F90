@@ -31,8 +31,8 @@
                    press3e_ij, pctm_ij, kel_ij,                   &
                    surf_alb_ij, qjgmi_ij, relHumidity_ij,         &
                    overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,    &
-                   do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij,      &
-                   fjx_solar_cycle_param, &
+                   do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, aerOD_ij, eradius_ij, tArea_ij,      &
+                   fjx_solar_cycle_param, num_AerDust, &
                    do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL_ij, &
                    CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij, &
                    CH4_ij, H2O_ij, ozone_ij)
@@ -48,7 +48,7 @@
 !---------------key params in/out of CLOUD_J-------------------------
       integer, intent(in) :: k1, k2, num_qjs
       integer, intent(in) :: jday, month_gmi, cldflag
-      integer, intent(in) :: AerDust_Effect_opt
+      integer, intent(in) :: AerDust_Effect_opt, num_AerDust
       logical, intent(in) :: do_clear_sky, do_AerDust_Calc
       real*8, intent(in) :: lat_ij  !... grid point latitude (degrees)
       real*8, intent(in) :: time_sec, SZA_ij, pctm_ij, surf_alb_ij
@@ -76,6 +76,7 @@
       real*8, intent(inout), dimension(k1:k2,NSADdust)         :: ODMDUST_ij
       real*8, intent(inout), dimension(k1:k2,NSADdust+NSADaer) :: ERADIUS_ij, TAREA_ij
       real*8, intent(inout), dimension(k1:k2)                  :: cldOD_ij
+      real*8, intent(inout), dimension(k1:k2,num_AerDust-2)    :: aerOD_ij
 !
       logical, parameter           :: LPRTJ=.false.
       integer                      :: TCLDFLAG, NRANDO, IRAN, LNRG
@@ -792,23 +793,30 @@
              CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij, cldOD_out, aerOD_out)
 !     
 !... send CLOUD_JX calcd cloud optical depth of 400nm back for diagnostic output w no FJX top layer
-     cldOD_ij(k1:k2) = cldOD_out(1:k2-k1+1)
+      cldOD_ij(k1:k2) = cldOD_out(1:k2-k1+1)
 !
 !... send aerosol optical depth of 400nm back for diagnostic output
-     num_aer = 0
-     do N=1,NSADdust
-       num_aer = num_aer+1
-       ODMDUST_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
-     enddo
-     do N=1,NSADaer
-        num_aer = num_aer+1
-        ODAER_ij(k1:k2,N)  = aerOD_out(1:k2-k1+1,num_aer)
-     enddo
+      if(do_CCM_OptProps) then
+!.sds... send aerosol optical depth of 400nm back for diagnostic output
+        do N = 1,num_CCM_aers
+          aerOD_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,N)
+        enddo
+      else
+        num_aer = 0
+        do N=1,NSADdust
+          num_aer = num_aer+1
+          ODMDUST_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
+        enddo
+        do N=1,NSADaer
+          num_aer = num_aer+1
+          ODAER_ij(k1:k2,N)  = aerOD_out(1:k2-k1+1,num_aer)
+        enddo
 !... add in hydrophobic BC and OC
-     do N=1,2
-        num_aer = num_aer+1
-        ODcAER_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
-     enddo
+        do N=1,2
+          num_aer = num_aer+1
+          ODcAER_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
+        enddo
+      endif
 !... map FastJX's Jrates to our order
       kall = k2-k1+1
       do n=1,num_qjs

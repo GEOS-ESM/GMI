@@ -19,25 +19,6 @@ met_opt: 3
 metdata_name_org: GMAO
 metdata_name_model: GEOS-5
 
-        #############################################
-        # Should BC files have current date and time?
-        # Useful for mission support and replays.
-        #############################################
-
-BCRealTime: F
-
-        #############################################################
-        # Import predicted dust and aerosols from GOCART. Switches 
-        # are independent. Set all F if GMICHEM or GOCART.data is
-	# the AERO_PROVIDER.
-        #############################################################
-
-usingGOCART_BC: F
-usingGOCART_DU: F
-usingGOCART_OC: F
-usingGOCART_SS: F
-usingGOCART_SU: F
-
         ##################################################################
         # What is the name of the importrestart file? If this file does
         # not exist, species will "freewheel" through the first time step.

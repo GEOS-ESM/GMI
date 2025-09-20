@@ -211,6 +211,7 @@
   SZAPHOT  	    | deg            | xy  |   |    |	|   |	  | solar_zenith_angle_for_GMIchem_photolysis
   FJXCLDOD   	    | 1              | xyz | C |    |	|   |	  | FastJX_cloud_optical_depth_(400_nm - daylight only)
   FJXFCLD    	    | 1              | xyz | C |    |	|   |	  | FastJX_cloud_fraction
+  AEROOD   	    | 1              | xyz | C |    |	|   |	  | aerosol_optical_depth_(400_nm)
   DUSTOD   	    | 1              | xyz | C |    |	|   |	  | dust_optical_depth_(400_nm)
   DUSTSA   	    | cm+2 cm-3      | xyz | C |    |	|   |	  | dust_surface_area
   SO4OD   	    | 1              | xyz | C |    |	|   |	  | sulfate_optical_depth_(400_nm)

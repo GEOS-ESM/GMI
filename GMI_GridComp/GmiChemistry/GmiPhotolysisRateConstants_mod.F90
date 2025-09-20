@@ -183,6 +183,7 @@
       real*8  :: overheadO3col_ij (k1:k2), overheadO2col_ij (k1:k2)
       real*8  ::           kel_ij (k1:k2)
       real*8  ::         cldOD_ij (k1:k2)
+      real*8  ::         aerOD_ij (k1:k2,num_AerDust-2)
       real*8  :: gridBoxHeight_ij (k1:k2)
       real*8  ::         ozone_ij (k1:k2)
       real*8  ::           ch4_ij (k1:k2)
@@ -382,6 +383,7 @@
 !... use CloudJ (aka FastJX7.4)
             elseif (fastj_opt == 5) then
                cldOD_ij(:)     = MAPL_UNDEF
+               aerOD_ij(:,:)   = MAPL_UNDEF
                eradius_ij(:,:) = 0.0d0
                tArea_ij(:,:)   = 0.0d0
 !
@@ -395,8 +397,8 @@
                          pres3e(il,ij,k1-1:k2), pctm2(il,ij), kel_ij,                         &
                          surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),         &
                          overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,         &
-                         do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij, &
-                         JXbundle%fjx_solar_cycle_param,                                      &
+                         do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, aerOD_ij, eradius_ij, tArea_ij, &
+                         JXbundle%fjx_solar_cycle_param, num_AerDust,                         &
                          do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL_ij,   &
                          CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij,                             &
                          CH4_ij, H2O_ij)
@@ -410,8 +412,8 @@
                          pres3e(il,ij,k1-1:k2), pctm2(il,ij), kel_ij,                         &
                          surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),         &
                          overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,         &
-                         do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij, &
-                         JXbundle%fjx_solar_cycle_param,                                      &
+                         do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, aerOD_ij, eradius_ij, tArea_ij, &
+                         JXbundle%fjx_solar_cycle_param, num_AerDust,                         &
                          do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL_ij,   &
                          CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij,                             &
                          CH4_ij, H2O_ij, ozone_ij)
@@ -419,34 +421,64 @@
 !
                eradius(il,ij,:,:) = eradius_ij(:,:)
                tArea(il,ij,:,:)   = tArea_ij(:,:)
+!... if aero_provider supplies optical properties
+               if(do_CCM_OptProps) then
+                 optDepth(il,ij,:,:) = 0.0d0
+                 do N = 1, min(num_CCM_aers,num_AerDust-2)
+!.!. temp diags
+!.                   optDepth(il,ij,:,4)  = CCM_SSLEG_ij(1,1,k1:k2,1)
+!.                   optDepth(il,ij,:,5)  = CCM_SSLEG_ij(2,1,k1:k2,1)
+!.                   optDepth(il,ij,:,6)  = CCM_SSLEG_ij(3,1,k1:k2,1)
+!.                   optDepth(il,ij,:,7)  = CCM_SSLEG_ij(4,1,k1:k2,1)
+!.                   optDepth(il,ij,:,8)  = CCM_SSLEG_ij(5,1,k1:k2,1)
+!.                   optDepth(il,ij,:,9)  = CCM_SSLEG_ij(6,1,k1:k2,1)
+!.                   optDepth(il,ij,:,10) = CCM_SSLEG_ij(7,1,k1:k2,1)
+!.                   optDepth(il,ij,:,11) = CCM_SSLEG_ij(8,1,k1:k2,1)
+!.                   optDepth(il,ij,:,12) = CCM_SSALB_ij  (1,k1:k2,1)
+!.                   optDepth(il,ij,:,13) = CCM_SSALB_ij  (2,k1:k2,1)
+!.                   optDepth(il,ij,:,14) = CCM_SSALB_ij  (3,k1:k2,1)
+!.                   optDepth(il,ij,:,15) = CCM_SSALB_ij  (4,k1:k2,1)
+!.                   optDepth(il,ij,:,16) = CCM_SSALB_ij  (5,k1:k2,1)
+!.                   optDepth(il,ij,:,17) = CCM_OPTX_ij   (1,k1:k2,1)
+!.                   optDepth(il,ij,:,18) = CCM_OPTX_ij   (2,k1:k2,1)
+!.                   optDepth(il,ij,:,19) = CCM_OPTX_ij   (3,k1:k2,1)
+!.                   optDepth(il,ij,:,20) = CCM_OPTX_ij   (4,k1:k2,1)
+!.                   optDepth(il,ij,:,21) = CCM_OPTX_ij   (5,k1:k2,1)
+!.                   optDepth(il,ij,:,22) = CCM_SSALB_ij  (2,k1:k2,1)
+!.                   optDepth(il,ij,:,22) = CCM_SSALB_ij  (3,k1:k2,1)
+!.correct line
+                   optDepth(il,ij,:,3) = optDepth(il,ij,:,3) + aerOD_ij(1:k2-k1+1,N)
+                 enddo
+               else
 !... Dust surface areas - optDepth(5)
-               do N = 1, NSADdust
-                 optDepth(il,ij,:,5) = optDepth(il,ij,:,5) + tArea(il,ij,:,N)
-               enddo
+                 do N = 1, NSADdust
+                   optDepth(il,ij,:,5) = optDepth(il,ij,:,5) + tArea(il,ij,:,N)
+                 enddo
 !... wAersl and dAersl aerosol diagnostics
-               do N = 1, NSADaer
+                 do N = 1, NSADaer
 !... hydrophilic hygroscopic growth diagnostic  - optDepth(7,10,13,16,19,22)
-                 optDepth(il,ij,:,4+3*N) = optDepth(il,ij,:,4+3*N) + HYGRO_ij(:,N)
-               enddo
+                   optDepth(il,ij,:,4+3*N) = optDepth(il,ij,:,4+3*N) + HYGRO_ij(:,N)
+                 enddo
 !... hydrophilic surface areas diagnostic - optDepth(8,11,14,17,20)
-               do N = 1, NSADaer
-		 optDepth(il,ij,:,5+3*N) = optDepth(il,ij,:,5+3*N) + tArea(il,ij,:,NSADdust+N)
-               enddo
+                 do N = 1, NSADaer
+		   optDepth(il,ij,:,5+3*N) = optDepth(il,ij,:,5+3*N) + tArea(il,ij,:,NSADdust+N)
+                 enddo
 !
 !... Dust optical depths - optDepth(4)
-               do N = 1, NSADdust
-                 optDepth(il,ij,:,4) = optDepth(il,ij,:,4) + ODMDUST_ij(:,N)
-               enddo
+                 do N = 1, NSADdust
+                   optDepth(il,ij,:,4) = optDepth(il,ij,:,4) + ODMDUST_ij(:,N)
+                 enddo
 !
 !... hydrophilic aerosol optical depths diagnostic - optDepth(6,9,12,15,18)
-               do N = 1, NSADaer
-                 optDepth(il,ij,:,3+3*N) = optDepth(il,ij,:,3+3*N) + ODAER_ij(:,N)
-               enddo
+                 do N = 1, NSADaer
+                   optDepth(il,ij,:,3+3*N) = optDepth(il,ij,:,3+3*N) + ODAER_ij(:,N)
+                 enddo
 !
 !...  add in hydrophobic carbon (BC/OC) optical depths - optDepth(9,12)
-               do N = 2,3
-                 optDepth(il,ij,:,3+3*N) = optDepth(il,ij,:,3+3*N) + ODcAER_ij(:,N-1)
-               enddo
+                 do N = 2,3
+                   optDepth(il,ij,:,3+3*N) = optDepth(il,ij,:,3+3*N) + ODcAER_ij(:,N-1)
+                 enddo
+               endif
 !... convert cloud optical depth from in-cloud to gridbox average
                where(cldOD_ij(:).le.5.0d5) cldOD_ij(:) = cldOD_ij(:)*totalCloudFraction(il,ij,:)
 !... end CloudJ stuff
