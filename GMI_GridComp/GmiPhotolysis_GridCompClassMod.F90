@@ -2083,14 +2083,6 @@ CONTAINS
         call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=1, __RC__)
 
         N = self%JXbundle%num_CCM_aers
-        
-!... debug sds
-!    if(mapl_am_i_root()) then
-!      print *,'sds gmibeg BundlePrint','******************'
-!      call ESMF_StatePrint ( aero_state )
-!      print *,'sds gmiend BundlePrint******************'
-!    endif
-!... debug sds
 
       ! Loop over wavelengths
         do M = 1,self%JXbundle%num_CCM_WL
@@ -2144,13 +2136,6 @@ CONTAINS
 !
              do imom = 1, 8
                self%JXbundle%CCM_SSLEG(imom,M,:,:,km:1:-1,N) = PTR4D(:,:,1:km,imom)
-!.debug
-!               if(MAPL_AM_I_ROOT()) print '(''GMIleg: '',3i3,6e12.3)', imom,M,N &
-!               print '(''GMIleg: '',3i3,6e12.3)', imom,M,N &
-!                 , maxval(self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N)) &
-!                 , minval(self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N)) &
-!                 , maxval(PTR4D(:,:,:,imom)) &
-!                 , minval(PTR4D(:,:,:,imom))
 !.
                self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N) = self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N) &
                                                          /self%JXbundle%CCM_SSALB(M,:,:,:,N)
@@ -2165,19 +2150,6 @@ CONTAINS
       ! reset callback
         call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=0, __RC__)
 !
-!.test!  w(nm)    Q    r-eff  ss-alb  pi(0) pi(1) pi(2) pi(3) pi(4) pi(5) pi(6) pi(7)
-!.test! 24 S70(rvm) Trop sulfate at RH=70 (n@400=1.36 log-norm: r=.07um/sigma=2.0)
-!.test!  600  1.2726  0.241  1.0000  1.000 2.254 2.782 2.632 2.298 1.874 1.488 1.167
-!.test
-!.test            self%JXbundle%CCM_SSLEG(1,M,:,:,1:km,N) = 1.000
-!.test            self%JXbundle%CCM_SSLEG(2,M,:,:,1:km,N) = 2.254
-!.test            self%JXbundle%CCM_SSLEG(3,M,:,:,1:km,N) = 2.782
-!.test            self%JXbundle%CCM_SSLEG(4,M,:,:,1:km,N) = 2.632
-!.test            self%JXbundle%CCM_SSLEG(5,M,:,:,1:km,N) = 2.298
-!.test            self%JXbundle%CCM_SSLEG(6,M,:,:,1:km,N) = 1.874
-!.test            self%JXbundle%CCM_SSLEG(7,M,:,:,1:km,N) = 1.488
-!.test            self%JXbundle%CCM_SSLEG(8,M,:,:,1:km,N) = 1.167
-!.test
       endif
 !   CASE("GMICHEM")
 !... could I pull out calc of this in CloudJ to new routine?
