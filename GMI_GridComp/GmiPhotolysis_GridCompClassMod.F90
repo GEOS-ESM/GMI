@@ -2377,10 +2377,10 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
                            self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
                           ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
 !... code
-     where (press3c(i1:i2,j1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
-        self%pyro_sa(:,:,:) = 0.0d0
-        self%pyro_optDepth(:,:,:) = 0.0d0
-      end where
+!     where (press3c(i1:i2,j1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
+!        self%pyro_sa(:,:,:) = 0.0d0
+!        self%pyro_optDepth(:,:,:) = 0.0d0
+!      end where
      CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
      CALL MAPL_MaxMin('GMI: PyroCb_optDepth:', self%pyro_optDepth)
 !
