@@ -2105,7 +2105,7 @@ CONTAINS
            VERIFY_(AS_STATUS)
            VERIFY_(STATUS)
 
-!          SSA as provided by callback is actually the scattering; normalize later
+!          SSA as provided by callback is actually the scattering and used that
            call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol' &
                  , value=aerophot, __RC__)
            if (aerophot /= '') then
@@ -2124,10 +2124,10 @@ CONTAINS
 !... put floor on CCM_SSALB and CCM_OPTX
            where(self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N).lt.1e-5) &
              self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = 1e-5
-           where(self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N).lt.1e-3) &
-             self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = 1e-3
+           where(self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N).lt.1e-5) &
+             self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = 1e-5
 !
-!... Hard-wired for 8 moments; these are provided by callback weighted by scattering; normalize at end
+!... Hard-wired for 8 moments; these are provided by callback weighted by scattering and used that way
            call ESMF_AttributeGet(aero_state, name='legendre_coefficients_of_p11_for_photolysis' &
                  , value=aerophot, __RC__)
 !
@@ -2136,15 +2136,8 @@ CONTAINS
 !
              do imom = 1, 8
                self%JXbundle%CCM_SSLEG(imom,M,:,:,km:1:-1,N) = PTR4D(:,:,1:km,imom)
-!.
-               self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N) = self%JXbundle%CCM_SSLEG(imom,M,:,:,:,N) &
-                                                         /self%JXbundle%CCM_SSALB(M,:,:,:,N)
              end do
            endif
-
-!          Normalize SSA
-!          Should protect against small value of AOD with a where?           
-!.          self%JXbundle%CCM_SSALB = self%JXbundle%CCM_SSALB / self%JXbundle%CCM_OPTX
 
         enddo
       ! reset callback

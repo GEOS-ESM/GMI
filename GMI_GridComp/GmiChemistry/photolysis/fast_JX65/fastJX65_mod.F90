@@ -1295,9 +1295,9 @@ do L = 1, L1_
               if(JMIE(1).lt.1.or.JMIE(1).gt.num_CCM_WL) stop
 !
               OD(K,L)  = OD(K,L)  + CCM_OPTX(JMIE(1),L,M)
-              SSA(K,L) = SSA(K,L) + CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)
+              SSA(K,L) = SSA(K,L) + CCM_SSALB(JMIE(1),L,M)  !*CCM_OPTX(JMIE(1),L,M)
               do I = 1,8
-                SLEG(I,K,L)=SLEG(I,K,L) + CCM_SSLEG(I,JMIE(1),L,M)*CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)
+                SLEG(I,K,L)=SLEG(I,K,L) + CCM_SSLEG(I,JMIE(1),L,M)  !*CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)
               enddo
             enddo
 !.sds... send aerosol optical depth of 400nm back for diagnostic output

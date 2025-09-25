@@ -390,7 +390,7 @@
 !... GMI hydrophobic aerosol AOD calc
                   if (NAER.gt.2000) then
                     call OPTICgmi (OPTX,SSALB,SSLEG, PATH,ZERO,NAER-1000)
-!... GMI hydrophillic aerosol AOD calc
+!... GMI hydrophilic aerosol AOD calc
                   else
                     call OPTICgmi (OPTX,SSALB,SSLEG, PATH,RH,NAER)
                   endif
@@ -559,9 +559,9 @@
               if(JMIE(1).lt.1.or.JMIE(1).gt.num_CCM_WL) stop
 !
               OD(K,L)  = OD(K,L)  + CCM_OPTX(JMIE(1),L,M)
-              SSA(K,L) = SSA(K,L) + CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)
+              SSA(K,L) = SSA(K,L) + CCM_SSALB(JMIE(1),L,M)  !*CCM_OPTX(JMIE(1),L,M)
               do I = 1,8
-                SLEG(I,K,L)=SLEG(I,K,L) + CCM_SSLEG(I,JMIE(1),L,M)*CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)
+                SLEG(I,K,L)=SLEG(I,K,L) + CCM_SSLEG(I,JMIE(1),L,M)  !*CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)
               enddo
             enddo
 !.sds... send aerosol optical depth of 400nm back for diagnostic output
