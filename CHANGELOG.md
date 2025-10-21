@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed typo in skohmek (resolving artifacts at lid)          [Pyro and JPL19 mechanisms]
 - Fixed Phot reaction OCSg + hv = CO + SO2  (SO2 was missing) [Pyro  mechanism]
 - Corrected the use of PyroCB OptDepth - now add to all the RH bins for BC
+- Fixed LBS reactions in the Standard Mech (gamma values had been missing) [Standard mechanism]
+- Revised an array-size, in CloudJ  [Minimal mechanism]
 
 ### Added
 
