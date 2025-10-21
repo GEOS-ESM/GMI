@@ -565,11 +565,11 @@
       end if 
 
       if ( a2 .LE. v2(index_of_min) ) then
-        t=1.0
+        u=1.0
         i2a = index_of_min   ! used in the term that gets cancelled out
         i2b = index_of_min
       else if ( a2 .GE. v2(index_of_max) ) then
-        t=1.0
+        u=1.0
         i2a = index_of_max   ! used in the term that gets cancelled out
         i2b = index_of_max
       else

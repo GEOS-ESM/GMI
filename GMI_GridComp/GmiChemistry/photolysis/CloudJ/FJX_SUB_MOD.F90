@@ -2172,6 +2172,8 @@
 !
       if (NJXU .lt. NJX) call EXITC(' JRATET:  CTM has not enough J-values dimensioned')
 !
+      VALJL(:,:) = 0.d0
+!
       do L = 1,LU
 !
 !---need temperature, pressure, and density at mid-layer (for some quantum yields):

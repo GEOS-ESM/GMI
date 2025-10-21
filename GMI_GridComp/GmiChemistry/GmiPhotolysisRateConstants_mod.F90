@@ -382,7 +382,7 @@
 !... hydrophilic hygroscopic growth diagnostic  - optDepth(7,10,13,16,19,22)
                  optDepth(il,ij,:,4+3*N) = optDepth(il,ij,:,4+3*N) + HYGRO_ij(:,N)
                enddo
-!... hydrophilic surface areas diagnostic - optDepth(8,11,14,17,20)
+!... hydrophilic surface areas diagnostic - optDepth(8,11,14,17,20,23)
                do N = 1, NSADaer
 		 optDepth(il,ij,:,5+3*N) = optDepth(il,ij,:,5+3*N) + tArea(il,ij,:,NSADdust+N)
                enddo
@@ -392,7 +392,7 @@
                  optDepth(il,ij,:,4) = optDepth(il,ij,:,4) + ODMDUST_ij(:,N)
                enddo
 !
-!... hydrophilic aerosol optical depths diagnostic - optDepth(6,9,12,15,18)
+!... hydrophilic aerosol optical depths diagnostic - optDepth(6,9,12,15,18,21)
                do N = 1, NSADaer
                  optDepth(il,ij,:,3+3*N) = optDepth(il,ij,:,3+3*N) + ODAER_ij(:,N)
                enddo

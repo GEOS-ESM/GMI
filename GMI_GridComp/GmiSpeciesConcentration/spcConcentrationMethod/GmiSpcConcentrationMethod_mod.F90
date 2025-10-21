@@ -529,7 +529,7 @@
     Allocate(self%concentration(numSpecies))
     do ic = 1, numSpecies
        Allocate(self%concentration(ic)%pArray3D(i1:i2, ju1:j2, k1:k2))
-!       self%concentration(ic)%pArray3D(i1:i2, ju1:j2, k1:k2) = 0.0d0
+                self%concentration(ic)%pArray3D(i1:i2, ju1:j2, k1:k2) = 0.0d0
     end do
     return
   end subroutine Allocate_concentration
