@@ -78,7 +78,7 @@
 !
       real*8, DIMENSION (npres0) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
 !... effective radii of stratospheric aerosols
-!      real*8 reff_lbs, reff_sts, reff_nat, reff_ice, reff_pyro
+      real*8 reff_lbs   ! reff_sts, reff_nat, reff_ice, reff_pyro
 !
       mw(:) = mw_data(:)
 
@@ -97,11 +97,11 @@
       oxygen(:)   = adcol(:) * MXRO2
       water(:)    = specarr(49 ,:)
 !... * 0.0d0
-!      reff_lbs  = 0.221d-4
-!      reff_sts  = 0.221d-4
-!      reff_nat  = 0.221d-4
-!      reff_ice  = 0.221d-4
-!      reff_pyro = 0.221d-4
+      reff_lbs  = 0.221d-4
+!     reff_sts  = 0.221d-4
+!     reff_nat  = 0.221d-4
+!     reff_ice  = 0.221d-4
+!     reff_pyro = 0.221d-4
 !
       sad_lbs(:)  = sadcol(ILBSSAD, :)
       sad_sts(:)  = sadcol(ISTSSAD, :)
@@ -1185,6 +1185,11 @@
 !....           OH + VRP =  1.19 CO +  0.53 HO2 +  0.53 MCO3 +  0.19 MGLY +  0.19 OH
 !
       rcarr(259,:) = skarr(  2.000D-12 ,-70.0D+00 ,temperature)
+!
+!... function to calc SO4 percent weight and gammas for ClONO2 + LBs het reacs
+      gammas_code = sk_clono2_gammas (temperature, adcol, pressure &
+                    , specarr(iclono2,:), specarr(ihcl,:), specarr(ih2o,:) &
+                    , FRH, reff_lbs, wt_h2so4, g_clono2, g_clono2_h2o, g_clono2_hcl, g_hocl_hcl)
 !
 !....           N2O5 = 2 HNO3
 !
@@ -2574,6 +2579,174 @@
       skvro2_no  = k4 * EXP( b0 / tk ) * k3
       skvro2_no  = MAX( skvro2_no, 0.0d0 )
       END FUNCTION skvro2_no
+!
+!.... sk_clono2_gammas (temperature ,adcol ,pressure ,specarr(ClONO2,:) ,specarr(HCl,:) ,water ,wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl)
+!
+!_13_
+!
+!.... JPL 19-5
+!
+      FUNCTION sk_clono2_gammas (tk, ad, pr, clono2, hcl, h2o, FRH, reff &
+                  , wt_h2so4, g_clono2, g_clono2_h2o, g_clono2_hcl, g_hocl_hcl)
+!
+!... Following: Shi, Q., et al, JGR, V106, D20, pp24,259-24,274, OCTOBER 27, 2001.
+!
+  use ieee_arithmetic
+!... return value
+      real*8  sk_clono2_gammas
+!... input variables
+      real*8  tk(:), ad(:), pr(:), clono2(:), hcl(:), h2o(:), FRH(:), reff
+!... output variables
+      real*8, DIMENSION (size(tk)) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
+!
+!... local variables
+      real*8, DIMENSION (size(tk)) :: p_clono2, p_hcl, aw, y1, y2, m, tmp, wt, p0_h2o, p_h2o
+      real*8, DIMENSION (size(tk)) :: a1, b1, c1, d1, a2, b2, c2, d2
+      real*8, DIMENSION (size(tk)) :: Z1, Z2, Z3, rho, M_h2so4, chi, T0, A, nu, alphaH
+      real*8, DIMENSION (size(tk)) :: S_clono2, H_clono2, D_clono2, k_hydr, gamma_h2o
+      real*8, DIMENSION (size(tk)) :: H_hcl, k_hcl, l_clono2, f_clono2, gamma_clono2_rxn, gamma_hcl
+      real*8, DIMENSION (size(tk)) :: gamma_s, F_hcl, gamma_prime_s, gamma_prime_hcl, gamma_b
+      real*8, DIMENSION (size(tk)) :: D_hocl, k_hocl_hcl, H_hocl, l_hocl, f_hocl, gamma_hocl_rxn
+      integer :: l
+      real*8  :: Rgas
+!
+!
+      sk_clono2_gammas = 999.0
+!
+!... H2SO4 weight% calc from T and rel hum
+      p_clono2(:) = (clono2(:)/ad(:)) * pr(:)/1013.25d0   ! hPa -> Atm
+      p_hcl(:)    = (hcl(:)   /ad(:)) * pr(:)/1013.25d0   ! hPa -> Atm
+      p_h2o(:)    = (h2o(:)   /ad(:)) * pr(:)             ! hPa
+!... [HCL] and [ClONO2] must be gt 0.0, use floor of 1e-30
+      where(p_clono2.lt.1.0d-20) p_clono2 = 1.0d-20
+      where(p_hcl   .lt.1.0d-20) p_hcl    = 1.0d-20
+!
+!... H2O saturation partial pressure (hPa)
+      p0_h2o(:) = exp(18.452406985 - 3505.1578807/tk(:) &
+                   - 330918.55082/(tk(:)**2) &
+                   + 12725068.262/(tk(:)**3) )
+      aw(:) = p_h2o(:)/p0_h2o(:)
+!      aw(:) = FRH(:)
+!
+      do l=1,size(tk) 
+        if(aw(l) .le. 0.05) then
+           a1(l) = 12.37208932
+           b1(l) = -0.16125516114
+           c1(l) = -30.490657554
+           d1(l) = -2.1133114241
+           a2(l) = 13.455394705
+           b2(l) = -0.1921312255
+           c2(l) = -34.285174607
+           d2(l) = -1.7620073078
+         elseif(aw(l) .le. 0.85) then
+!         elseif(aw(l) .gt. 0.05 .and. aw(l) .le. 0.85) then
+           a1(l) = 11.820654354
+           b1(l) = -0.20786404244
+           c1(l) = -4.807306373
+           d1(l) = -5.1727540348
+           a2(l) = 12.891938068
+           b2(l) = -0.23233847708
+           c2(l) = -6.4261237757
+           d2(l) = -4.9005471319 
+         else
+           a1(l) = -180.06541028
+           b1(l) = -0.38601102592
+           c1(l) = -93.317846778
+           d1(l) = 273.88132245
+           a2(l) = -176.95814097
+           b2(l) = -0.36257048154
+           c2(l) = -90.469744201
+           d2(l) = 267.45509988
+         endif
+       enddo
+        
+      y1(:) = a1(:)*aw(:)**b1(:) + c1(:)*aw(:) + d1(:)
+      y2(:) = a2(:)*aw(:)**b2(:) + c2(:)*aw(:) + d2(:)
+      m(:) = y1(:) + (tk(:)-190.0d0)*(y2(:)-y1(:))/70.0d0
+!... keep m >= 0.0
+      where(m(:).lt.0.0d0) m(:) = 0.0d0
+!... H2SO4 weight percentage
+      wt_h2so4(:) = (9800.0d0*m(:)) / (98.0d0*m(:) + 1000.0d0)
+      where(wt_h2so4(:).lt.30.0d0) wt_h2so4(:) = 30.0d0
+      where(wt_h2so4(:).gt.80.0d0) wt_h2so4(:) = 80.0d0
+      wt(:) = wt_h2so4(:)
+!
+!... Parameters for the H2SO4 Solution
+      Z1(:) = 0.12364 - 5.6d-7*tk(:)**2
+      Z2(:) = -0.02954 + 1.814d-7*tk(:)**2
+      Z3(:) = 2.343d-3 - 1.487d-6*tk(:) - 1.324d-8*tk(:)**2
+!... H2SO4 solution density (g/cm^3)
+      rho(:) = 1 + Z1(:)*m(:) + Z2(:)*m(:)**1.5 + Z3(:)*m(:)**2
+
+!... H2SO4 Molarity  (mol/L)
+      M_h2so4(:) = rho(:)*wt(:)/9.8
+!... H2SO4 Mole Fraction
+      chi(:) = wt(:)/(wt(:) + (100.0-wt(:))*98.0/18.0)
+!... H2SO4 solution viscosity (cP)
+      A(:)  = 169.5  + 5.18*wt(:)  - 0.0825*wt(:)**2 + 3.27d-3*wt(:)**3
+      T0(:) = 144.11 + 0.166*wt(:) - 0.0150*wt(:)**2 + 2.18d-4*wt(:)**3
+      tmp(:) = (448.0/(tk(:) - T0(:)))
+!... limit tmp to prevent overflow
+      where((tk(:)-T0(:)).lt.1.0)  tmp(:) = 1.0
+      where( tmp(:)      .gt.15.0) tmp(:) = 15.0
+!
+      nu(:) = A(:) * tk(:)**(-1.43) * exp(tmp(:))
+!... acid activity in molarity
+      alphaH(:) = exp(60.51 - 0.095*wt(:) + 0.0077*wt(:)**2 - 1.61d-5*wt(:)**3 &
+        - (1.76 + 2.52d-4*wt(:)**2)*sqrt(tk(:)) + (-805.89 + 253.05*wt(:)**0.076)/sqrt(tk(:)) )
+!
+!... Uptake Parameters
+      S_clono2(:) = 0.306 + 24.0/tk(:)
+      H_clono2(:) = 1.6d-6*exp(4710./tk(:))*exp(-S_clono2(:)*M_h2so4(:))
+      D_clono2(:) = 5.0d-8*tk(:)/nu(:)
+      k_hydr(:) = (1.95d10*exp(-2800.0/tk(:)))*aw(:) &
+                  + (1.22d12*exp(-6200.0/tk(:)))*alphaH(:)*aw(:)
+      Rgas = 0.082
+      gamma_h2o(:) = 4.0*H_clono2(:)*Rgas*tk(:)*sqrt(D_clono2(:)*k_hydr(:)) &
+                     / (1474.0*sqrt(tk(:)))
+
+!... 
+      H_hcl(:) = (0.094 - 0.61*chi(:) + 1.2*chi(:)**2) &
+                 * exp(-8.68 + (8515.0 - 10718.0*chi(:)**0.7)/tk(:))
+      k_hcl(:) = 7.9d11*alphaH(:)*D_clono2(:)*H_hcl(:)*p_hcl(:)
+!
+      l_clono2(:) = sqrt(D_clono2(:)/(k_hydr(:)+k_hcl(:)))
+      f_clono2(:) = 1.0/(TANH(reff/l_clono2(:))) - l_clono2(:)/reff
+      gamma_clono2_rxn(:) = f_clono2(:)*gamma_h2o(:)*sqrt(1.0+k_hcl(:)/k_hydr(:))
+!
+      gamma_hcl(:) = gamma_clono2_rxn(:)*k_hcl(:)/(k_hcl(:)+k_hydr(:))
+!
+      gamma_s(:) = 66.12*exp(-1374.0/tk(:))*H_clono2(:)*H_hcl(:)*p_hcl(:)
+      F_hcl(:) = 1.0/(1.0+0.612*(gamma_s(:)+gamma_hcl(:))*p_clono2/p_hcl)
+      gamma_prime_s(:) = F_hcl(:)*gamma_s(:)
+      gamma_prime_hcl(:) = F_hcl(:)*gamma_hcl(:)
+      gamma_b(:) = gamma_prime_hcl(:) + gamma_clono2_rxn(:)*k_hydr(:)/(k_hcl(:)+k_hydr(:))
+! 
+      g_clono2(:) = 1.0/(1.0+1.0/(gamma_prime_s(:)+gamma_b(:)))
+!
+      g_clono2_hcl(:) = g_clono2(:) &
+                        * (gamma_prime_s(:)+gamma_prime_hcl(:)) &
+                         / (gamma_prime_s(:)+gamma_b(:))
+      g_clono2_h2o(:) = g_clono2(:)-g_clono2_hcl(:)      
+      where(g_clono2_h2o.lt.0.0d0) g_clono2_h2o = 0.0d0
+!
+!... now do HOCl+HCl uptake
+      D_hocl(:) = 6.4d-8*tk(:)/nu(:)
+      k_hocl_hcl(:) = 1.25d9*alphaH(:)*D_hocl(:)*H_hcl(:)*p_hcl(:)
+      H_hocl(:) = 1.91d-6*exp(5862.4/tk(:))*exp(-(0.0776+59.18/tk(:))*M_h2so4(:))
+      l_hocl(:) = sqrt(D_hocl(:)/k_hocl_hcl(:))
+      where(l_hocl(:).gt.1.0d1) l_hocl = 1.0d1
+      f_hocl(:) = 1.0/TANH(reff/l_hocl(:))-l_hocl(:)/reff
+      gamma_hocl_rxn(:) = f_hocl(:)*4.0*H_hocl(:)*Rgas*tk(:)*sqrt(D_hocl(:)*k_hocl_hcl(:)) &
+                          / (2009.0*sqrt(tk(:)))
+!... HOCl+HCl gamma
+      g_hocl_hcl(:) = 1.0/(1.0+1.0/(gamma_hocl_rxn(:)*F_hcl(:)))
+!
+      sk_clono2_gammas = 0.0
+!
+      return
+!
+      end FUNCTION sk_clono2_gammas
 !
 !.... sklbs_n2o5 (temperature ,pressure ,sad_lbs ,wt_h2so4 ,ptrop)
 !
