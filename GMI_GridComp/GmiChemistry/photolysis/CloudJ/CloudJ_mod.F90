@@ -76,7 +76,9 @@
       real*8, dimension(0:k2-k1+2) :: PPP,ZZZ
       real*8, dimension(1:k2-k1+2) :: TTT, DDD, RRR, OOO, HHH
       real*8, dimension(1:k2-k1+2) :: LWP, IWP, REFFL, REFFI, cldOD_out
-      real*8, dimension(1:k2-k1+1,num_qjs) :: VALJXX
+!     real*8, dimension(1:k2-k1+1,num_qjs) :: VALJXX
+      real*8, ALLOCATABLE          :: VALJXX(:,:)
+      integer                      :: NJX_BIG_ENOUGH    ! can hold # photolysis reactions or # cross-section species
       real*8, dimension(5,W_+W_r)  :: RFL
 !
 !-------------local use-----------------------
@@ -233,6 +235,11 @@
 ! NICA    = output - No. ICAs
 ! JCOUNT  = output
 !
+      NJX_BIG_ENOUGH = MAX( NUM_J, NJX )   ! NUM_J from setkin_par.h; NJX from FJX_CMN_MOD.F90
+      ALLOCATE(VALJXX(1:k2-k1+1,NJX_BIG_ENOUGH))
+
+!     PRINT*,'NUM_J, NJX, BIG_ENOUGH, num_qjs: ', NUM_J, NJX, NJX_BIG_ENOUGH, num_qjs 
+
       MONTH = month_gmi
       GMTAU = time_sec / SECPHR
 !
@@ -519,7 +526,10 @@
         enddo
 !
 !... remapped NSADaer (hydrophyllic)
-        do N=1,NSADaer
+!       do N=1,NSADaer
+!... MEM: We only have 5 entries (not 6) for gmiDAA, etc. as read from GMIscat-aer.dat
+!... MEM: More precisely, we have 5x7 entries for aerosols, instead of 6x7 (7 = # RH bins)
+        do N=1,Nwaer_
           num_aer = num_aer+1
           kdry = iDRYwaer(N)
           rho = gmiDAA(4,kdry)*1.0D+3
@@ -583,6 +593,12 @@
 !... end old method
 !
           enddo
+        enddo
+!
+!... to account for the fact that the previous loop could only be run for Nwaer_ iterations;
+!... when capturing diagnostics later, the code assumes NSADaer entries
+        do N=1,(NSADaer-Nwaer_)
+          num_aer = num_aer+1
         enddo
 !
 !... BCphobic Aerosols
@@ -772,7 +788,7 @@
 !
       call CLOUD_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT, HHH, &
              DDD, RRR, OOO, LWP, IWP, REFFL, REFFI, CLF, CLDCOR, CLDIW,  &
-             AERSP, IDXAER, LTOP, num_aer, VALJXX, num_qjs,  &
+             AERSP, IDXAER, LTOP, num_aer, VALJXX, NJX_BIG_ENOUGH,  &
              TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT, cldOD_out, aerOD_out)
 !     
 !... send CLOUD_JX calcd cloud optical depth of 400nm back for diagnostic output w no FJX top layer
@@ -824,6 +840,8 @@
             overheadO3col_ij(l) = overheadO3col_ij(l) + OOO(k-k1+1)
          end do
       end do
+!
+      DEALLOCATE(VALJXX)
 !
       return
 !
