@@ -949,9 +949,12 @@
       do jspc = 1, ischan
         do kloop = 1, ktloop
           cnew (kloop,jspc) = conc(kloop,jspc)
-          dtlos(kloop,jspc) = 0.0d0
+!         dtlos(kloop,jspc) = 0.0d0
         end do
       end do
+
+!     jspc of ischan+1 is possibly used below (line 1473, 1652)
+      dtlos(:,:) = 0.0d0
 
 
 !     ------------------------------------------------------------------

@@ -2126,37 +2126,26 @@ CONTAINS
   rc = 0
   SELECT CASE (TRIM(name))
    CASE ("EM_NO")
-    mw = mw_data(  INO)
     i =   INO
    CASE ("EM_CO")
-    mw = mw_data(  ICO)
     i =   ICO
    CASE ("EM_MEK")
-    mw = mw_data( IMEK)
     i =  IMEK
    CASE ("EM_PRPE")
-    mw = mw_data(IC3H6)
     i = IC3H6
    CASE ("EM_C2H6")
-    mw = mw_data(IC2H6)
     i = IC2H6
    CASE ("EM_C3H8")
-    mw = mw_data(IC3H8)
     i = IC3H8
    CASE ("EM_ALK4")
-    mw = mw_data(IALK4)
     i = IALK4
    CASE ("EM_ALD2")
-    mw = mw_data(IALD2)
     i = IALD2
    CASE ("EM_CH2O")
-    mw = mw_data(ICH2O)
     i = ICH2O
    CASE ("EM_ACET")
-    mw = mw_data(IACET)
     i = IACET
    CASE ("EM_CH4")
-    mw = mw_data( ICH4)
     i =  ICH4
    CASE ("EM_LGTNO")
     mw = mw_data(  INO)
@@ -2177,6 +2166,14 @@ CONTAINS
     STATUS = -1 
     VERIFY_(STATUS)
   END SELECT
+  if ( i .EQ. 0 ) then
+    PRINT *,TRIM(Iam)//": The species "//TRIM(name)//" is not in the mechanism"
+    STATUS = -1 
+    VERIFY_(STATUS)
+  endif
+  if ( i .GT. 0 ) then
+    mw = mw_data( i )
+  endif
   RETURN
   END SUBROUTINE getMW
 

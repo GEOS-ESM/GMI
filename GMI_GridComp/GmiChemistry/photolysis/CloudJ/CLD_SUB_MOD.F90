@@ -1092,9 +1092,12 @@
 !---find beginning/end of quad range, note NQ2 < NQ1 means nothing in that range
       I = 1
       do N = 1,NQDU
-        do while (OCOLS(I).lt.OD_QUAD(N) .and. I.le.NICA)
-          I = I+1
-        enddo
+        if ( I.le.NICA ) then
+          do while (OCOLS(I).lt.OD_QUAD(N))
+            I = I+1
+            if ( I.gt.NICA ) exit
+          enddo
+        endif
         NQ2(N) = I-1
       enddo
       NQ1(1) = 1

@@ -77,7 +77,7 @@
 !
       real*8, DIMENSION (npres0) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
 !... effective radii of stratospheric aerosols
-      real*8 reff_lbs, reff_sts, reff_nat, reff_ice, reff_soot
+      real*8 reff_lbs   ! reff_sts, reff_nat, reff_ice, reff_soot
 !
       mw(:) = mw_data(:)
 
@@ -97,10 +97,10 @@
       water(:)    = specarr(49 ,:)
 !... * 0.0d0
       reff_lbs  = 0.221d-4
-      reff_sts  = 0.221d-4
-      reff_nat  = 0.221d-4
-      reff_ice  = 0.221d-4
-      reff_soot = 0.221d-4
+!     reff_sts  = 0.221d-4
+!     reff_nat  = 0.221d-4
+!     reff_ice  = 0.221d-4
+!     reff_soot = 0.221d-4
 !
       sad_lbs(:)  = sadcol(ILBSSAD, :)
       sad_sts(:)  = sadcol(ISTSSAD, :)
@@ -2611,8 +2611,10 @@
 !... Following: Shi, Q., et al, JGR, V106, D20, pp24,259-24,274, OCTOBER 27, 2001.
 !
   use ieee_arithmetic
+!... return value
+      real*8  sk_clono2_gammas
 !... input variables
-      real*8  tk(:), ad(:), pr(:), clono2(:), hcl(:), h2o(:), FRH(:), sk_clono2_gammas
+      real*8  tk(:), ad(:), pr(:), clono2(:), hcl(:), h2o(:), FRH(:), reff
 !... output variables
       real*8, DIMENSION (size(tk)) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
 !
@@ -2625,7 +2627,7 @@
       real*8, DIMENSION (size(tk)) :: gamma_s, F_hcl, gamma_prime_s, gamma_prime_hcl, gamma_b
       real*8, DIMENSION (size(tk)) :: D_hocl, k_hocl_hcl, H_hocl, l_hocl, f_hocl, gamma_hocl_rxn
       integer :: l
-      real*8  :: Rgas, reff
+      real*8  :: Rgas
 !
 !
       sk_clono2_gammas = 999.0
