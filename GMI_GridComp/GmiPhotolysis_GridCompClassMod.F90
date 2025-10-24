@@ -181,6 +181,8 @@
 
     integer             :: AerDust_Effect_opt
     logical             :: do_AerDust_Calc
+    logical             :: do_CCM_OptProps
+
     character (len=MAX_LENGTH_FILE_NAME) :: AerDust_infile_name
     character (len=MAX_LENGTH_FILE_NAME) :: Dust_infile_name
     character (len=MAX_LENGTH_FILE_NAME) :: Aerosol_infile_name
@@ -330,6 +332,12 @@ CONTAINS
 ! ---------------------------------------
    REAL, POINTER, DIMENSION(:,:) :: cellArea
 
+! To interrogate GOCART2G rc
+! --------------------------
+   type (ESMF_Config) :: g2g_cfg      ! GOCART2G_GridComp.rc
+   integer :: n_wavelengths_profile, n_mom
+   real, allocatable :: wavelengths_profile(:)
+
 ! Work space
 ! ----------
    REAL, ALLOCATABLE :: var2D(:,:)
@@ -428,15 +436,17 @@ CONTAINS
      &                default = 4, rc=STATUS )
       VERIFY_(STATUS)
 
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_clear_sky, label="do_clear_sky:", &
-     &                       default=.false., rc=STATUS)
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_clear_sky,     label="do_clear_sky:",     &
+                             default=.false., rc=STATUS)
 
-      call ESMF_ConfigGetAttribute(gmiConfigFile, self%fastj_offset_sec, &
-     &                label   = "fastj_offset_sec:", &
-     &                default = 0.0d0, rc=STATUS )
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_CCM_OptProps,  label="do_CCM_OptProps:",  &
+                             default=.false., rc=STATUS)
 
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_LymanAlpha, label="do_LymanAlpha:", &
-     &                       default=.true., rc=STATUS)
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%fastj_offset_sec, label="fastj_offset_sec:", &
+                             default=0.0d0,   rc=STATUS)
+
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_LymanAlpha,    label="do_LymanAlpha:",    &
+                             default=.true.,  rc=STATUS)
 
       VERIFY_(STATUS)
 !
@@ -952,6 +962,33 @@ CONTAINS
          Allocate(self%tArea(i1:i2, ju1:j2, k1:k2, nSADdust+nSADaer))
          self%tArea = 0.0d0
 
+!... arrays needed for using aerosol optical properties from aerosol module
+         if(self%do_CCM_OptProps) then
+!
+!   Get information from GOCART2G_GridComp.rc
+!   -----------------------------------------
+           g2g_cfg = ESMF_ConfigCreate (__RC__)
+           call ESMF_ConfigLoadFile (g2g_cfg, 'GOCART2G_GridComp.rc', __RC__)
+           n_wavelengths_profile = ESMF_ConfigGetLen (g2g_cfg,label='aerosol_photolysis_wavelength_in_nm_from_LUT', __RC__)
+           allocate(wavelengths_profile(  n_wavelengths_profile), __STAT__)
+           call ESMF_ConfigGetAttribute (g2g_cfg, wavelengths_profile, label='aerosol_photolysis_wavelength_in_nm_from_LUT:', __RC__)
+           call ESMF_ConfigGetAttribute (g2g_cfg, n_mom, label='n_phase_function_moments_photolysis:', __RC__)
+           call ESMF_ConfigDestroy(g2g_cfg, __RC__)
+!
+           self%JXbundle%NUM_CCM_aers = 1
+           self%JXbundle%NUM_CCM_mom = n_mom
+           self%JXbundle%NUM_CCM_WL = n_wavelengths_profile
+           Allocate(self%JXbundle%CCM_WL(n_wavelengths_profile))
+           self%JXbundle%CCM_WL = wavelengths_profile
+           Allocate(self%JXbundle%CCM_SSALB(n_wavelengths_profile, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%CCM_SSALB = 0.0d0
+           Allocate(self%JXbundle%CCM_OPTX(n_wavelengths_profile, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%CCM_OPTX = 0.0d0
+           Allocate(self%JXbundle%CCM_SSLEG(n_mom, n_wavelengths_profile, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%CCM_SSLEG = 0.0d0
+           deallocate (wavelengths_profile)
+         endif
+
 !... G2G SO4volc
          Allocate(self%so4v_nden(i1:i2, ju1:j2, k1:k2), &
                   self%so4v_sa(i1:i2, ju1:j2, k1:k2), &
@@ -1220,7 +1257,7 @@ CONTAINS
 !  Exports not part of internal state
 !  ----------------------------------
    REAL, POINTER, DIMENSION(:,:) :: SZAPHOT
-   REAL, POINTER, DIMENSION(:,:,:) :: FJXCLDOD, FJXFCLD, DUSTOD, DUSTSA
+   REAL, POINTER, DIMENSION(:,:,:) :: FJXCLDOD, FJXFCLD, AEROOD, DUSTOD, DUSTSA
    REAL, POINTER, DIMENSION(:,:,:) :: SO4OD, SO4HYGRO, SO4SA
    REAL, POINTER, DIMENSION(:,:,:) :: BCOD, BCHYGRO, BCSA
    REAL, POINTER, DIMENSION(:,:,:) :: OCOD, OCHYGRO, OCSA
@@ -1461,6 +1498,15 @@ CONTAINS
    CALL Acquire_SU(STATUS)
    VERIFY_(STATUS)
 
+! Obtain aerosol optical properties from either 
+! aeroProvider
+! ----------------------------------------------
+   if(self%do_CCM_OptProps) then
+     if(MAPL_AM_I_ROOT()) print '(''Getting Aerosol Properties from '',a32)', TRIM(self%aeroProviderName)
+     CALL Acquire_OptProps(STATUS)
+     VERIFY_(STATUS)
+   endif
+
 ! Grab imports and do units conversions
 ! -------------------------------------
    CALL SatisfyImports(STATUS)
@@ -1518,7 +1564,7 @@ CONTAINS
                  self%pyro_nden, self%pyro_sa, self%pyro_sareff, self%pyro_saexist, self%pyro_optDepth, &
                  NUM_J, self%num_qjo, ilo, ihi, julo, jhi,                 &
                  i1, i2, ju1, j2, k1, k2, self%jNOindex, self%jNOamp,      &
-                 self%cldflag)
+                 self%cldflag, self%do_CCM_OptProps)
         endif
       END IF
 
@@ -1990,6 +2036,186 @@ CONTAINS
   RETURN
  END SUBROUTINE Acquire_OC
 
+!
+! !ROUTINE:  Acquire_OptProps
+!
+! !INTERFACE:
+
+  SUBROUTINE Acquire_OptProps(rc)
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(OUT) :: rc
+!
+! !DESCRIPTION:
+!
+!  Obtain aerosol optical properties from aeroProvider if desired
+!
+!EOP
+!---------------------------------------------------------------------------
+
+  CHARACTER(LEN=255) :: IAm
+  REAL*4, POINTER, DIMENSION(:,:,:)   :: PTR3D
+  REAL, POINTER, DIMENSION(:,:,:)     :: AS_PTR_AER, AS_PTR_RH, AS_PTR_PLE
+  REAL*4, POINTER, DIMENSION(:,:,:,:) :: PTR4D
+  character (len=ESMF_MAXSTR) :: aerophot
+  REAL :: qmin, qmax, value
+  integer :: N, M, STATUS, AS_STATUS, imom, ivalue
+  logical :: implements_aerosol_optics, prmaxmin
+  character*16 :: tmpstr
+
+
+  rc = 0
+  IAm = "Acquire_OptProps"
+
+  SELECT CASE (TRIM(self%aeroProviderName))
+
+    CASE("GOCART2G")
+      call ESMF_AttributeGet(aero_state, &
+         name='implements_aerosol_optics_method', &
+         value=implements_aerosol_optics,__RC__)
+      if (implements_aerosol_optics) then
+      ! set RH for aerosol optics
+        call ESMF_AttributeGet(aero_state, &
+              name='relative_humidity_for_aerosol_optics', value=aerophot, __RC__)
+        if(aerophot /= '') then
+           call MAPL_GetPointer(impChem,    AS_PTR_RH, 'RH2', __RC__)
+           call MAPL_GetPointer(aero_state, AS_PTR_AER, trim(aerophot), __RC__)
+           AS_PTR_AER = AS_PTR_RH
+        endif
+
+      ! set PLE for aerosol optics
+        call ESMF_AttributeGet(aero_state, name='air_pressure_for_aerosol_optics' &
+                               , value=aerophot,__RC__)
+        if (aerophot /= '') then
+           call MAPL_GetPointer(impChem,    AS_PTR_PLE, 'PLE', __RC__)
+           call MAPL_GetPointer(aero_state, AS_PTR_AER, trim(aerophot), __RC__)
+           AS_PTR_AER = AS_PTR_PLE
+        endif
+
+      ! Set callback to use photolysis table
+        call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=1, __RC__)
+
+        N = self%JXbundle%num_CCM_aers
+
+      ! Loop over wavelengths
+        do M = 1,self%JXbundle%num_CCM_WL
+
+           ivalue = self%JXbundle%CCM_WL(m)
+!           if(mapl_am_i_root()) print *,'Aero OptProp callback set up: ',m,ivalue
+           call ESMF_AttributeSet(aero_state, &
+              name='band_for_aerosol_optics', &
+              value=ivalue,__RC__)
+
+           ivalue = self%JXbundle%num_CCM_mom
+           call ESMF_AttributeSet(aero_state, &
+              name='n_phase_function_moments', &
+              value=ivalue,__RC__)
+
+         ! execute the aero provider's optics method
+           call ESMF_MethodExecute(aero_state, &
+              label="run_aerosol_optics", &
+              userRC=AS_STATUS, RC=STATUS)
+           VERIFY_(AS_STATUS)
+           VERIFY_(STATUS)
+
+!          SSA as provided by callback is actually the scattering and used that
+           call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol' &
+                 , value=aerophot, __RC__)
+           if (aerophot /= '') then
+             call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+             self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+           else
+             _FAIL(TRIM(Iam)//': Failed to get single_scattering_albedo_of_ambient_aerosol from aero_state')
+           endif
+
+           call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol' &
+                 , value=aerophot, __RC__)
+           if (aerophot /= '') then
+             call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+             self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+           else
+             _FAIL(TRIM(Iam)//': Failed to get extinction_in_air_due_to_ambient_aerosol from aero_state')
+           endif
+!
+!... put floor on CCM_SSALB and CCM_OPTX
+           where(self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N).lt.1e-5) &
+             self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = 1e-5
+           where(self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N).lt.1e-5) &
+             self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = 1e-5
+!
+!... Hard-wired for 8 moments; these are provided by callback weighted by scattering and used that way
+           call ESMF_AttributeGet(aero_state, name='legendre_coefficients_of_p11_for_photolysis' &
+                 , value=aerophot, __RC__)
+!
+           if (aerophot /= '') then
+             call MAPL_GetPointer(aero_state, PTR4D, trim(aerophot), __RC__)
+!
+             do imom = 1, 8
+               self%JXbundle%CCM_SSLEG(imom,M,:,:,km:1:-1,N) = PTR4D(:,:,1:km,imom)
+             end do
+           else
+             _FAIL(TRIM(Iam)//': Failed to get legendre_coefficients_of_p11_for_photolysis from aero_state')
+           endif
+
+        enddo
+      ! reset callback
+        call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=0, __RC__)
+!
+      endif
+!   CASE("GMICHEM")
+!... could I pull out calc of this in CloudJ to new routine?
+
+    CASE("CARMA")
+!      do M = 1,self%JXbundle%num_CCM_WL
+!        call ESMF_StateGet(aero_state, 'SSA', aerophot, __RC__)
+!        call ESMF_FieldGet( field=aerophot, farrayPtr=PTR3D, __RC__ )
+!        self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,1) = PTR3D(:,:,1:km)
+!
+!        call ESMF_StateGet(aero_state, 'EXT', aerophot, __RC__)
+!        call ESMF_FieldGet( field=aerophot, farrayPtr=PTR3D, __RC__ )
+!        self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,1) = PTR3D(:,:,1:km)
+!
+!        call ESMF_StateGet(aero_state, 'SLEG', aerophot, __RC__)
+!        call ESMF_FieldGet( field=aerophot, farrayPtr=PTR4D, __RC__ )
+!        self%JXbundle%CCM_SSLEG(:,M,:,:,km:1:-1,1) = PTR4D(:,:,:,1:km)
+!      enddo
+      self%JXbundle%CCM_SSALB(:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_OPTX (:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_SSLEG(:,:,:,:,:,:) = 0.0d0
+
+    CASE("none")
+      self%JXbundle%CCM_SSALB(:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_OPTX (:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_SSLEG(:,:,:,:,:,:) = 0.0d0
+
+    CASE DEFAULT
+      STATUS = 1
+      VERIFY_(STATUS)
+!
+    END SELECT
+!
+!... debug diags
+    prmaxmin = .true.
+    if(prmaxmin) then
+      do M = 1,self%JXbundle%num_CCM_WL
+        if(mapl_am_i_root()) print *,'Aero Opt Prop callback no: ',m
+        PTR3D = self%JXbundle%CCM_SSALB(m,:,:,:,1)
+        CALL pmaxmin('CCM_SSALB:', PTR3D, qmin, qmax, iXj, km, 1. )
+        PTR3D = self%JXbundle%CCM_OPTX(m,:,:,:,1)
+        CALL pmaxmin('CCM_OPTX:', PTR3D, qmin, qmax, iXj, km, 1. )
+        do N = 1,self%JXbundle%num_CCM_mom
+          PTR3D = self%JXbundle%CCM_SSLEG(N,m,:,:,:,1)
+          write(tmpstr,'(''CCM_SSLEG: '',i2.2)') n
+          CALL pmaxmin(tmpstr, PTR3D, qmin, qmax, iXj, km, 1. )
+        enddo
+      end do
+    endif
+
+  RETURN
+ END SUBROUTINE Acquire_OptProps
+
+
 !---------------------------------------------------------------------------
 ! NASA/GSFC, Global Modeling and Assimilation Office, Code 610.1, GEOS/DAS !
 !---------------------------------------------------------------------------
@@ -2284,7 +2510,8 @@ CONTAINS
 
   SUBROUTINE Acquire_Pyro(rc)
 !
-use fastJX65_mod             , only : getQAA_RAAinFastJX65
+use fastJX65_mod   , only : getQAA_RAAinFastJX65
+use CloudJ_mod     , only : GetQAA_inFastJX74
   
   IMPLICIT NONE
 
@@ -2303,9 +2530,11 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
 
 # include "gmi_AerDust_const.h"
   integer, parameter :: four = 4
-  REAL*8 :: raa_b(4, NP_b), qaa_b(4, NP_b)
+  REAL*8 :: raa_b(4, NP_b), qaa_b(4, NP_b)   ! these are only for FastJX65
+  REAL*8 :: qaa_ij                           ! use for FastJX74
 !
   CHARACTER(LEN=255) :: IAm
+  INTEGER :: status
   REAL, POINTER, DIMENSION(:,:,:) :: PTR3D
   REAL :: qmin,qmax
   
@@ -2350,16 +2579,32 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
 
      
 !... place holder for when optical depth is available    
-!... magic index 14+2 refers to the 2nd dust bin out of 7; see line 2214 in fastJX65_mod.F90
-     call  GetQAA_RAAinFastJX65 (RAA_b, QAA_b, four, NP_b)
-     self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
-                           self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
-                          ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
-!... code
-     where (pl(i1:i2,ju1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
-        self%pyro_sa(:,:,:) = 0.0d0
-        self%pyro_optDepth(:,:,:) = 0.0d0
-      end where
+     if(self%fastj_opt.eq.4) then
+       call  GetQAA_RAAinFastJX65 (RAA_b, QAA_b, four, NP_b)
+       !... magic index 4    refers to the 1000 nm wavelength
+       !... magic index 14+2 refers to the 2nd dust bin out of 7
+       !... see approx line 2214 in fastJX65_mod.F90
+       self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
+                             self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
+                            ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
+     elseif(self%fastj_opt.eq.5) then
+       PRINT*,'Need to get the right QAA value in Acquire_Pyro'
+       !... magic index 5    refers to the 1000 nm wavelength
+       !... magic index 12   refers to the 2nd dust bin out of 7
+       call  GetQAA_inFastJX74 (5, 12, qaa_ij, __RC__)
+       self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
+                             self%pyro_nden(:,:,:) * qaa_ij         /  &
+                            ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
+     else
+       self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
+                             self%pyro_nden(:,:,:) * 1.2426d0       /  &
+                            ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
+     end if
+!... code to zero out tropospheric PyroCb aerosol
+!    where (pl(i1:i2,ju1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
+!       self%pyro_sa(:,:,:) = 0.0d0
+!       self%pyro_optDepth(:,:,:) = 0.0d0
+!    end where
      CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
      CALL MAPL_MaxMin('GMI: PyroCb_optDepth:', self%pyro_optDepth)
 !
@@ -2439,7 +2684,7 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
        kReverse = k2-k+k1
        IF(ASSOCIATED( FJXCLDOD))  FJXCLDOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 1)
        IF(ASSOCIATED(  FJXFCLD))   FJXFCLD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 2)
-!      IF(ASSOCIATED(         ))          (i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 3)
+       IF(ASSOCIATED(   AEROOD))    AEROOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 3)
        IF(ASSOCIATED(   DUSTOD))    DUSTOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 4)
        IF(ASSOCIATED(   DUSTSA))    DUSTSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 5)
        IF(ASSOCIATED(    SO4OD))     SO4OD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 6)
@@ -2631,6 +2876,8 @@ use fastJX65_mod             , only : getQAA_RAAinFastJX65
    CALL MAPL_GetPointer(expChem, FJXCLDOD, 'FJXCLDOD', RC=STATUS)
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(expChem,  FJXFCLD,  'FJXFCLD', RC=STATUS)
+   VERIFY_(STATUS)
+   CALL MAPL_GetPointer(expChem,   AEROOD,   'AEROOD', RC=STATUS)
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(expChem,   DUSTOD,   'DUSTOD', RC=STATUS)
    VERIFY_(STATUS)

@@ -374,7 +374,7 @@ sad_opt: 2
 #       3: (OBSOLETE)  read in lbssad zonal average fields
 #       4:  lbssad provided by AGCM (ExtData)
 #       5:  lbssad provided by CARMA SO4SAREA
-#       6:  lbssad provided by GOCART2G AERO state (SAREA in SU and SU.volc) **
+#       6:  lbssad provided by GOCART2G AERO state (SO4SAREA in SU and SU.volc) **
 #
 #      ** -> include the GOCART2G fields in HISTORY to ensure that they are computed
 #     ----------------------------------------------
@@ -399,6 +399,7 @@ lbssad_opt: 4
 phot_opt: 3
 
 do_clear_sky: F
+do_CCM_OptProps: F
 
 #     --------------------------------------------------------
 #     uvalbedo_opt

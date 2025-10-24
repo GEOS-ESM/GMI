@@ -24,6 +24,10 @@
 !  Reaction dictionary:    GMI_reactions_JPL19.db
 !  Setkin files generated: Tue Aug 26 20:52:13 2025
 !
+!  Special edit (to be captured in KMG): Took ptrop out of consideration for  rcarr(#,:)
+!  where # = 321,322,323,324,325  (the skpyro calls)
+!  so the functions operate over the entire vertical domain
+!
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
      &  temperature,fcld,lwc,adcol,specarr,rcarr,radA,FRH)
@@ -1450,29 +1454,29 @@
 !....           ClONO2 = HNO3 + HOCl
 !
       rcarr(321,:) = skpyro_clono2 (temperature  & 
-     &           ,adcol ,pressure ,sad_pyro ,specarr( 51,:) ,water ,ptrop)
+     &           ,adcol ,pressure ,sad_pyro ,specarr( 51,:) ,water)
 !
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
       rcarr(322,:) = skpyro_clono2_hcl (temperature  & 
      &           ,adcol ,pressure ,sad_pyro ,specarr(    33,:) ,specarr(  51,:) ,water  & 
-     &           ,ptrop)
+     &           )
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
       rcarr(323,:) = skpyro_hocl_hcl (temperature  & 
      &           ,adcol ,pressure ,sad_pyro ,specarr(  64,:) ,specarr( 51,:) ,water  & 
-     &           ,ptrop)
+     &           )
 !
 !....           HCl + HOBr = BrCl + H2O
 !
       rcarr(324,:) = skpyro_hobr_hcl (temperature  & 
      &           ,adcol ,pressure ,sad_pyro ,specarr(  63,:) ,specarr( 51,:) ,water  & 
-     &           ,ptrop)
+     &           )
 !
 !....           N2O5 = 2 HNO3
 !
-      rcarr(325,:) = skpyro_n2o5 (temperature ,pressure ,sad_pyro ,ptrop)
+      rcarr(325,:) = skpyro_n2o5 (temperature ,pressure ,sad_pyro)
 !
 !....           NO3 + NO3 = 2 NO2 + O2
 !

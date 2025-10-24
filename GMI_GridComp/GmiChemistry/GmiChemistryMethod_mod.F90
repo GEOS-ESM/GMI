@@ -101,7 +101,7 @@
 !
     character (len=MAX_LENGTH_VAR_NAME)  :: qj_var_name
     integer             :: phot_opt
-    logical             :: do_clear_sky
+    logical             :: do_clear_sky, do_CCM_OptProps
 !
     logical             :: do_full_chem
     real*8 , pointer    :: mw (:) => null()
@@ -273,6 +273,20 @@
       call ESMF_ConfigGetAttribute(config, self%sad_opt, &
                       label   = "sad_opt:",              &
                       default = 0, __RC__ )
+
+!     ---------------------------
+!     Aerosol optical properties:
+!     ---------------------------
+
+!     ----------------------------------------------------
+!     do_CCM_OptProps
+!       F:  use old method of existing tables for aerosol optical properties
+!       T:  get aerosol optical properties from another module in CCM
+!     ----------------------------------------------------
+
+      call ESMF_ConfigGetAttribute(config, value=self%do_CCM_OptProps, &
+                      label   = "do_CCM_OptProps:", default = .false., __RC__ )
+
 
 !     =========       
 !     nlGmiPhotolysis 

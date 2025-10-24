@@ -39,13 +39,16 @@
 !
 ! !INTERFACE:
 !
-      subroutine controlFastJX65 (k1, k2, num_qjs,                       &
-     &                  month_gmi, jday, time_sec, SZA_ij, do_clear_sky, &
-     &                  tau_clw_ij, tau_cli_ij,                          &
-     &                  press3e_ij, pctm_ij, kel_ij,                     &
-     &                  surf_alb_ij, qjgmi_ij, relHumidity_ij,           &
-     &                  overheadO3col_ij, ODAER_ij, ODMDUST_ij,          &
-     &                  optdepth_ij, fjx_solar_cycle_param, ozone_ij)
+      subroutine controlFastJX65 (k1, k2, num_qjs,                          &
+                        month_gmi, jday, time_sec, SZA_ij, do_clear_sky,    &
+                        tau_clw_ij, tau_cli_ij,                             &
+                        press3e_ij, pctm_ij, kel_ij,                        &
+                        surf_alb_ij, qjgmi_ij, relHumidity_ij,              &
+                        overheadO3col_ij, ODAER_ij, ODMDUST_ij,             &
+                        aerOD_ij, num_AerDust, do_CCM_OptProps,             &
+                        num_CCM_WL, num_CCM_aers, num_CCM_mom,              &
+                        CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij, &
+                        optdepth_ij, fjx_solar_cycle_param, ozone_ij)
 !
 #include "parm_CTM_fastJX65.h"
 #include "cmn_JVdat_fastJX65.h"
@@ -74,11 +77,19 @@
       real*8, intent(in)    :: fjx_solar_cycle_param(W_)    ! solar cycle scalings
 !
       real*8, intent(in), optional :: ozone_ij(k1:k2)      ! mixing ratio for ozone
+      integer, intent(in) :: num_AerDust
+!... CCM provided aerosol optical characteristics
+      logical, intent(in) :: do_CCM_OptProps
+      integer, intent(in) :: num_CCM_WL, num_CCM_aers, num_CCM_mom
+      real*8,  intent(in), dimension(num_CCM_WL)                        :: CCM_WL_ij
+      real*8,  intent(in), dimension(num_CCM_WL, k1:k2+1, num_CCM_aers) :: CCM_SSALB_ij, CCM_OPTX_ij
+      real*8,  intent(in), dimension(num_CCM_mom, num_CCM_WL, k1:k2+1, num_CCM_aers) :: CCM_SSLEG_ij
 !
 ! !OUTPUT PARAMETERS:
       real*8,  intent(out) :: overheadO3col_ij(k1:k2)
       real*8,  intent(inout) :: qjgmi_ij(k1:k2, num_qjs)
       real*8,  intent(out) :: optdepth_ij(k1:k2) ! optical depth in box   (unitless) [od]
+      real*8,  intent(out) :: aerOD_ij(k1:k2, num_AerDust-2)    ! aerosol optical depth in box   (unitless) [od]
 !
 ! !LOCAL VARIABLES:
       real*8  ZPJ(k2-k1+1, num_qjs)    !2-D array of J's indexed to CTM chemistry!
@@ -87,19 +98,21 @@
       integer I,J,K,L,ILNG,JLAT,ODINDX, IDAY, il, ik, ic
       logical, save :: first = .true.
       logical :: rootProc
+      integer num_CCM_levs
 !EOP
 !---------------------------------------------------------------------------
 !BOC
-      ILNG                = I_
-      JLAT                = J_
-      L_                  = k2 - k1 + 1
-      JVL_                = k2
-      JVN_                = num_qjs
-      L1_                 = L_ + 1
-      L2_                 = 2 * L1_
-      MONTH               = month_gmi
-      IDAY                = jday
-      GMTAU               = time_sec / SecPerHour
+      ILNG         = I_
+      JLAT         = J_
+      L_           = k2 - k1 + 1
+      JVL_         = k2
+      JVN_         = num_qjs
+      L1_          = L_ + 1
+      L2_          = 2 * L1_
+      MONTH        = month_gmi
+      IDAY         = jday
+      GMTAU        = time_sec / SecPerHour
+      num_CCM_levs = L1_
 
       !XDGRD(I_)           = londeg_i
       !YDGRD(J_)           = latdeg_j
@@ -209,7 +222,10 @@
       ! FREFL: fraction of flux (energy-wtd) reflected (out)
       ! ZPJ:   2D array of J's indexed to CTM chemistry (out)
 
-      call PHOTOJ(GMTAU, IDAY, ILNG, JLAT, SOLF, SZA_ij, U0, FREFL, ZPJ, fjx_solar_cycle_param, optdepth_ij)
+      call PHOTOJ(GMTAU, IDAY, ILNG, JLAT, SOLF, SZA_ij, U0, FREFL, ZPJ &
+                   , do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL_ij &
+                   , CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij, num_CCM_levs &
+                   , fjx_solar_cycle_param, optdepth_ij, aerod_ij)
 
       ! Store the photolysis rate constants
       qjgmi_ij(:,:) = ZPJ(:,:)
@@ -1062,8 +1078,10 @@ end subroutine RD_PROF
 !<<<<<<<<<<<<<<<<<<<<<<<<end CTM-specific subroutines<<<<<<<<<<<<<<<<<<<
 !<<<<<<<<<<<<<<<<<<<<<begin CTM-fastJX linking subroutines<<<<<<<<<<<<<<
 !-----------------------------------------------------------------------
-subroutine PHOTOJ (UTIME, IDAY, ILNG, JLAT, SOLF, SZA_ij, U0, FREFL, &
- ZPJ, fjx_solar_cycle_param, OD600)
+subroutine PHOTOJ (UTIME, IDAY, ILNG, JLAT, SOLF, SZA_ij, U0, FREFL &
+ , ZPJ, do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL &
+ , CCM_SSALB, CCM_OPTX, CCM_SSLEG, num_CCM_levs &
+ , fjx_solar_cycle_param, OD600, aerOD_out)
 !-----------------------------------------------------------------------
 !
 !  PHOTOJ is the gateway to fast-JX calculations:
@@ -1084,14 +1102,22 @@ implicit none
 
 real (8) , intent (in) ::UTIME
 real (8) , intent (in) :: SZA_ij
-integer , intent (in) ::IDAY, ILNG, JLAT
+integer , intent (in) ::IDAY, ILNG, JLAT, num_CCM_levs
                                                !2-D array of J's indexed
+!... CCM provided aerosol optical characteristics
+      logical, intent(in) :: do_CCM_OptProps
+      integer, intent(in) :: num_CCM_WL, num_CCM_aers, num_CCM_mom
+      real*8,  intent(in), dimension(num_CCM_WL)    :: CCM_WL
+      real*8,  intent(in), dimension(num_CCM_WL, num_CCM_levs, num_CCM_aers) :: CCM_SSALB, CCM_OPTX
+      real*8,  intent(in), dimension(num_CCM_mom, num_CCM_WL, num_CCM_levs,  num_CCM_aers) :: CCM_SSLEG
+
 real (8) , intent (in) :: fjx_solar_cycle_param(W_)
 real (8) , intent (out) ::ZPJ (JVL_, JVN_)
                                                !fraction of energy refle
 
 real (8) , intent (out) ::FREFL, U0
 real (8) , intent (out) ::OD600 (L1_)
+real (8) , intent (out), dimension(L1_) :: aerOD_out
 !-----------------------------------------------------------------------
 !--------key amtospheric data needed to solve plane-parallel J---------
 real (8) , dimension (L1_ + 1) ::TTJ, DDJ, ZZJ, ZHL
@@ -1134,6 +1160,8 @@ real (8) :: XQO3, XQO2, DTAUC, WAVE, TTT
 real (8) :: ODaer
 real (8) :: SZA
 integer :: MS, MSOD, MSN
+!.sds
+      integer  :: k400_photopt(1), JMIE(1)
 !-----------------------------------------------------------------------
 ZPJ (:, :) = 0.d0
 FFF (:, :) = 0.d0
@@ -1201,18 +1229,18 @@ do L = 1, L1_
 !         NDCLD = CLDNDX (ILNG, JLAT, L)
 !         PATH = CLDLWP (ILNG, JLAT, L)
 !         DENS = PATH / ZH (ILNG, JLAT, L)
-           if (M .eq. 1) then
-              NDCLD = CLDWNDX (ILNG, JLAT, L)
-              ODCLD = CLDW (ILNG, JLAT, L)
-           else
-              NDCLD = CLDINDX (ILNG, JLAT, L)
-              ODCLD = CLDI (ILNG, JLAT, L)
-           endif
-           RH = RELH (L)
+          if (M .eq. 1) then
+            NDCLD = CLDWNDX (ILNG, JLAT, L)
+            ODCLD = CLDW (ILNG, JLAT, L)
+          else
+            NDCLD = CLDINDX (ILNG, JLAT, L)
+            ODCLD = CLDI (ILNG, JLAT, L)
+          endif
+          RH = RELH (L)
 ! endBian, 11/22/2011
-         if (ODCLD.gt.0.d0) then
+          if (ODCLD.gt.0.d0) then
             if (NDCLD.lt.4.or.NDCLD.gt.13) then
-                NDCLD = 9
+              NDCLD = 9
             endif
 !---now calculate cloud OD at 600 nm from mixed formulae:
             !REFF = RAA (NDCLD)
@@ -1231,30 +1259,56 @@ do L = 1, L1_
 !            do K = 1, 5
             do K = 1, numScat-1
 ! endBian, 11/22/2011
-               OD (K, L) = OD (K, L) + OPTX (K)
-               SSA (K, L) = SSA (K, L) + SSAX (K) * OPTX (K)
-               do I = 1, 8
-                  SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX(K)
-               enddo
+              OD (K, L) = OD (K, L) + OPTX (K)
+              SSA (K, L) = SSA (K, L) + SSAX (K) * OPTX (K)
+              do I = 1, 8
+                SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX(K)
+              enddo
             enddo
-         endif
+          endif
 !---use OD of clouds (not aerosols) at 600 nm to determine added layers
 ! begBian, 11/22/2011
-         enddo ! m
+        enddo ! m
 
 !         OD600 (L) = OD (4, L)
-         OD600 (L) = OD (3, L)
+        OD600 (L) = OD (3, L)
 ! endBian, 11/22/2011
 !---aerosols in layer: check aerosol index
 !---this uses data from climatology OR from current CTM (STT of aerosols
 !---FIND useful way to sum over different aerosol types!
 !
 !==============================================================
+!.sds... what if CCM provides aerosol optical characteristics
+        if(do_CCM_OptProps) then
+          k400_photopt = minloc( abs(CCM_WL(:)-400.0) )
+          if(k400_photopt(1).lt.1.or.k400_photopt(1).gt.num_CCM_WL) stop
+!
+          aerOD_out(L) = 0.0d0
+          do M = 1,num_CCM_aers
+!... accumulate
+            do K = 1,numScat-1
+!.sds...
+!---Pick nearest Mie wavelength to get scattering properites------------
+              JMIE = minloc(abs(CCM_WL(:)-WL(K)))
+              if(JMIE(1).lt.1.or.JMIE(1).gt.num_CCM_WL) stop
+!
+              OD(K,L)  = OD(K,L)  + CCM_OPTX(JMIE(1),L,M)
+              SSA(K,L) = SSA(K,L) + CCM_SSALB(JMIE(1),L,M)  !*CCM_OPTX(JMIE(1),L,M)
+              do I = 1,8
+                SLEG(I,K,L)=SLEG(I,K,L) + CCM_SSLEG(I,JMIE(1),L,M)  !*CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)
+              enddo 
+            enddo
+!.sds... send aerosol optical depth of 400nm back for diagnostic output
+           aerOD_out(L) = aerOD_out(L) + CCM_OPTX(k400_photopt(1),L,M)
+          enddo
+!.sds...
+!... CloudJ provided optical characteristics
+        else
 
         ! Loop over the no. of aerosol/cloud types supplied from CTM
 ! begBian, 11/22/2011
 !         do M = 1, MX
-         do M = 1, NSADdust+NSADaer
+          do M = 1, NSADdust+NSADaer
 !            NAER = AERindex (M)
 !            it = 3
 !            if (M .ge. it) then
@@ -1262,39 +1316,39 @@ do L = 1, L1_
 !            end if
 
 !... For mineral dust
-!            if ((M .gt. it) .and. (M .ge. it + NSADdust)) then
+!           if ((M .gt. it) .and. (M .ge. it + NSADdust)) then
             if (M .le. NSADdust) then
-                ODaer = OPTdust (L, M)
-                NAER = 14 + M
-                !NAER = M
-                call OPTICA (OPTX, SSAX, SLEGX, ODaer, RH, NAER)
-!                do K = 1, 5
-                do K = 1, numScat-1
-                   OD (K, L) = OD (K, L) + OPTX (K)
-                   SSA(K,L) = SSA(K,L) + SSAX(K) * OPTX(K)
-                   do I = 1, 8
-                      SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX (K)
-                   enddo
+              ODaer = OPTdust (L, M)
+              NAER = 14 + M
+             !NAER = M
+              call OPTICA (OPTX, SSAX, SLEGX, ODaer, RH, NAER)
+!             do K = 1, 5
+              do K = 1, numScat-1
+                OD (K, L) = OD (K, L) + OPTX (K)
+                SSA(K,L) = SSA(K,L) + SSAX(K) * OPTX(K)
+                do I = 1, 8
+                  SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX (K)
                 enddo
+              enddo
 !... For Trop sulfate at RH=0-90
             else
-                do MS = 1, NRH_b
-                   MSOD = (M-NSADdust-1)*5+MS
-                   MSN  = 14+NSADdust+(M-NSADdust-1)*7+MS
-                   !MSOD = (M-NSADdust-1)*NRH_b + MS
-                   !MSN  = NSADdust+(M-NSADdust-1)*NRH_b+MS
-                   ODaer = OPTaer (L, MSOD)
-                   NAER  = MSN
-                   call OPTICA (OPTX, SSAX, SLEGX, ODaer, RH, NAER)
-!                   do K = 1, 5
-                   do K = 1, numScat-1
-                      OD (K, L) = OD (K, L) + OPTX (K)
-                      SSA (K, L) = SSA (K, L) + SSAX (K) * OPTX (K)
-                      do I = 1, 8
-                         SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX (K)
-                      enddo
-                   enddo
+              do MS = 1, NRH_b
+                MSOD = (M-NSADdust-1)*5+MS
+                MSN  = 14+NSADdust+(M-NSADdust-1)*7+MS
+               !MSOD = (M-NSADdust-1)*NRH_b + MS
+               !MSN  = NSADdust+(M-NSADdust-1)*NRH_b+MS
+                ODaer = OPTaer (L, MSOD)
+                NAER  = MSN
+                call OPTICA (OPTX, SSAX, SLEGX, ODaer, RH, NAER)
+!               do K = 1, 5
+                do K = 1, numScat-1
+                  OD (K, L) = OD (K, L) + OPTX (K)
+                  SSA (K, L) = SSA (K, L) + SSAX (K) * OPTX (K)
+                  do I = 1, 8
+                    SLEG(I,K,L) = SLEG(I,K,L) + SLEGX(I,K) * SSAX(K) * OPTX (K)
+                  enddo
                 enddo
+              enddo
             endif
 !               PATH = AER1P_dust (L, M-it)
 !               call OPTICA (OPTX, SSAX, SLEGX, PATH, RH, NAER)
@@ -1329,20 +1383,20 @@ do L = 1, L1_
 !                  enddo
 !               enddo
 !            endif
-         enddo ! M
+          enddo ! M
 ! endBian, 11/22/2011
-
+        endif
 ! begBian, 11/22/2011
-!         do K = 1, 5
-         do K = 1, numScat-1
+!       do K = 1, 5
+        do K = 1, numScat-1
 ! endBian, 11/22/2011
-            if (OD (K, L) .gt.0.d0) then
-               SSA (K, L) = SSA (K, L) / OD (K, L)
-               do I = 1, 8
-                  SLEG (I, K, L) = SLEG (I, K, L) / OD (K, L)
-               enddo
-            endif
-         enddo
+          if (OD (K, L) .gt.0.d0) then
+            SSA (K, L) = SSA (K, L) / OD (K, L)
+            do I = 1, 8
+              SLEG (I, K, L) = SLEG (I, K, L) / OD (K, L)
+            enddo
+          endif
+        enddo
 
       enddo ! L
 !---can add aerosol OD at 600 nm to determine added layers, but not done

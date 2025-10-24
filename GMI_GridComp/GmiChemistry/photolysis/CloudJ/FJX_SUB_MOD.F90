@@ -225,6 +225,9 @@
       SUBROUTINE PHOTO_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT, HHH,  &
                            DDD, RRR, OOO, LWP, IWP, REFFL, REFFI,          &
                            AERSP, NDXAER, L1U, ANU, VALJXX, NJXU, LDARK,   &
+                           do_CCM_OptProps, num_CCM_WL, num_CCM_aers,      &
+                           num_CCM_mom,                                    &
+                           CCM_WL, CCM_SSALB, CCM_OPTX, CCM_SSLEG,         &
                            cldOD_out, aerOD_out)
 !-----------------------------------------------------------------------
 !
@@ -256,7 +259,7 @@
 !   ANU    - number of aerosol types
 !   VALJXX - calculated J-reates
 !   NJXU   - number of J rates
-!   LDARK  - 
+!   LDARK  - true if SZA .gt. SZAMAX
 !      call       SPHERE2 (U0,RAD,ZZJ,ZZHT,AMF2, L1U,JXL1_)
 !      subroutine SPHERE2 (U0,RAD,ZHL,ZZHT,AMF2, L1U,LJX1U)
 !     U0      cos(solar zenith angle)
@@ -265,6 +268,7 @@
 !     ZZHT    scale height (cm) used above top of CTM (ZHL(L_+1))
 !     L1U     dimension of CTM = levels +1 (L+1 = above-CTM level)
 !!
+      use MAPL
       implicit none
 !
 !.sds  added MAPL physical constants being used
@@ -283,6 +287,13 @@
       real*8,  intent(in), dimension(L1U+1)  :: PPP, ZZZ
       real*8,  intent(in), dimension(L1U  )  :: TTT,HHH, DDD,RRR,OOO,  &
                                                 LWP,IWP,REFFL,REFFI
+!... CCM provided aerosol optical characteristics
+      logical, intent(in) :: do_CCM_OptProps
+      integer, intent(in) :: num_CCM_WL, num_CCM_aers, num_CCM_mom
+      real*8,  intent(in), dimension(num_CCM_WL)    :: CCM_WL
+      real*8,  intent(in), dimension(num_CCM_WL, L1U, num_CCM_aers)    :: CCM_SSALB, CCM_OPTX
+      real*8,  intent(in), dimension(num_CCM_mom, num_CCM_WL, L1U,  num_CCM_aers) :: CCM_SSLEG
+
       real*8,  intent(in), dimension(L1U,AN_):: AERSP
       integer, intent(in), dimension(L1U,AN_):: NDXAER
 !
@@ -319,12 +330,13 @@
       real*8  FFF(W_,JXL_),VALJ(X_)
       real*8  VALJL(JXL_,X_) !2-D array of J_s returned by JRATET
 !
-      integer  LU,L2U, I,J,K,KR,KR0,JG,L,M, NAER
+      integer  LU,L2U, I,J,K,KR,KR0,JG,L,M, NAER, JMIE(1)
       integer  KDOKR(W_+W_r),LDOKR(W_+W_r)
       real*8   XQO3,XQO2,TTTX, ODKL, SWHEAT
       real*8   ODRRTM,FRRTM
 !-----------------------------------------------------------------------
 !.sds..
+      integer  :: k400_photopt(1)
       integer, parameter :: k400=17
       real*8, parameter :: ZERO=0.0d0
 !.sds.. end
@@ -337,40 +349,53 @@
       LU = L1U - 1
       L2U = LU + LU + 2
       VALJXX(:,:) = 0.d0
-!.sds
-      aerOD_out(:,:) = 0.0d0
 !
 !---special Cloud-J fixes to be able to run Solar-J code
       TAUG_RRTMG(:,:) = 0.d0   ! Cloud-J fix, values defined in Solar-J
       SJSUB(:,:) = 0.d0
       SJSUB(:,1) = 1.d0
 !
+!.sds
+      aerOD_out(:,:) = 0.0d0
+      if(do_CCM_OptProps) then
+        k400_photopt = minloc( abs(CCM_WL(:)-400.0) )
+        if(k400_photopt(1).lt.1.or.k400_photopt(1).gt.num_CCM_WL) stop
+!... must be 8 coefs
+        if(num_CCM_mom.ne.8) then
+          print *,'Number of Legendre coefs not correct from AERO_Provider: ',num_CCM_mom
+          stop
+        endif
+      endif
 !---check for dark conditions SZA > 98.0 deg => tan ht = 63 km
 !                        or         99.0                 80 km
       if (SZA .gt. SZAMAX) then
         LDARK = .true.
-!.sds.. changes
 !.sds.. calc aerosol OD diagnostics for nighttime too AOD diagnostic
-        do L = 1,L1U
-          RH = RRR(L)
-          do M = 1,ANU
-            PATH = AERSP(L,M)
-            if (PATH .gt. 0.d0) then
-              NAER = NDXAER(L,M)
+        if(do_CCM_OptProps) then
+!.sds... send aerosol optical depth of 400nm back for diagnostic output
+          aerOD_out( 1:LU, 1:ANU) = CCM_OPTX(k400_photopt(1), 1:LU, 1:ANU)
+        else
+          do L = 1,L1U
+            RH = RRR(L)
+            do M = 1,ANU
+              PATH = AERSP(L,M)
+              if (PATH .gt. 0.d0) then
+                NAER = NDXAER(L,M)
 !... GMI AOD calculation
-              if (NAER.gt.1000) then
+                if (NAER.gt.1000) then
 !... GMI hydrophobic aerosol AOD calc
-                if (NAER.gt.2000) then
-                  call OPTICgmi (OPTX,SSALB,SSLEG, PATH,ZERO,NAER-1000)
-!... GMI hydrophillic aerosol AOD calc
-                else
-                  call OPTICgmi (OPTX,SSALB,SSLEG, PATH,RH,NAER)
+                  if (NAER.gt.2000) then
+                    call OPTICgmi (OPTX,SSALB,SSLEG, PATH,ZERO,NAER-1000)
+!... GMI hydrophilic aerosol AOD calc
+                  else
+                    call OPTICgmi (OPTX,SSALB,SSLEG, PATH,RH,NAER)
+                  endif
+                  aerOD_out(L,M) = OPTX(k400)
                 endif
-                aerOD_out(L,M) = OPTX(k400)
               endif
-            endif
+            enddo
           enddo
-        enddo
+        endif
 !... set cloud OD to undefined at night
         cldOD_out(:) = MAPL_UNDEF
         return
@@ -520,51 +545,73 @@
 !---subroutines OPTICA & OPTICM return the same information:
 !---  PATH is the g/m2 in the layer, NAER in the cloud/aerosol index
 !---  UMich aerosols use relative humidity (RH)
-       RH = RRR(L)
-       do M = 1,ANU
-         PATH = AERSP(L,M)
-         if (PATH .gt. 0.d0) then
-           NAER = NDXAER(L,M)
+!.sds... what if CCM provides aerosol optical characteristics
+        if(do_CCM_OptProps) then
+          do M = 1,ANU
+            !... accumulate
+            do K = 1,NS2
+!.sds...
+!---Pick nearest Mie wavelength to get scattering properites------------
+              JMIE = minloc(abs(CCM_WL(:)-WL(K)))
+              if(JMIE(1).lt.1.or.JMIE(1).gt.num_CCM_WL) stop
+!
+              OD(K,L)  = OD(K,L)  + CCM_OPTX(JMIE(1),L,M)
+              SSA(K,L) = SSA(K,L) + CCM_SSALB(JMIE(1),L,M)  !*CCM_OPTX(JMIE(1),L,M)
+              do I = 1,8
+                SLEG(I,K,L)=SLEG(I,K,L) + CCM_SSLEG(I,JMIE(1),L,M)  !*CCM_SSALB(JMIE(1),L,M)*CCM_OPTX(JMIE(1),L,M)
+              enddo
+            enddo
+!.sds... send aerosol optical depth of 400nm back for diagnostic output
+            aerOD_out(L,M) = CCM_OPTX(k400_photopt(1),L,M)
+          enddo
+!.sds...
+!... CloudJ provided optical characteristics
+        else
+          RH = RRR(L)
+          aerOD_out(L,1) = 0.0
+          do M = 1,ANU
+            PATH = AERSP(L,M)
+            if (PATH .gt. 0.d0) then
+              NAER = NDXAER(L,M)
 !.sds.. changes
 !... GMI AOD calculation
-           if (NAER.gt.1000) then
+              if (NAER.gt.1000) then
 !... GMI hydrophobic aerosol AOD calc
-             if (NAER.gt.2000) then
-               call OPTICgmi (OPTX,SSALB,SSLEG, PATH, ZERO, NAER-1000)
+                if (NAER.gt.2000) then
+                  call OPTICgmi (OPTX,SSALB,SSLEG, PATH, ZERO, NAER-1000)
 !... GMI hydrophillic aerosol AOD calc
-             else
-               call OPTICgmi (OPTX,SSALB,SSLEG, PATH, RH  , NAER)
-             endif
+                else
+                  call OPTICgmi (OPTX,SSALB,SSLEG, PATH, RH  , NAER)
+                endif
 !.sds.. end
 !
 !... Michael's routines
-           else if (NAER.eq.1 .or. NAER.eq.2) then
+              else if (NAER.eq.1 .or. NAER.eq.2) then
 !... stratospheric sulfate
-             call OPTICS (OPTX,SSALB,SSLEG, PATH,NAER)
-           else if (NAER .gt. 2) then
+                call OPTICS (OPTX,SSALB,SSLEG, PATH,NAER)
+              else if (NAER .gt. 2) then
 !... hydrophobic aerosols
-             call OPTICA (OPTX,SSALB,SSLEG, PATH,RH, NAER)
+                call OPTICA (OPTX,SSALB,SSLEG, PATH,RH, NAER)
 !... hydrophilic aerosols
-           else if (NAER .lt. 0) then
-             call OPTICM (OPTX,SSALB,SSLEG, PATH,RH, -NAER)
-           endif
+              else if (NAER .lt. 0) then
+                call OPTICM (OPTX,SSALB,SSLEG, PATH,RH, -NAER)
+              endif
 !... accumulate
-           do K = 1,NS2
-             OD(K,L)  = OD(K,L)  + OPTX(K)
-             SSA(K,L) = SSA(K,L) + SSALB(K)*OPTX(K)
-             do I = 1,8
-               SLEG(I,K,L)=SLEG(I,K,L) + SSLEG(I,K)*SSALB(K)*OPTX(K)
-             enddo
-           enddo
+              do K = 1,NS2
+                OD(K,L)  = OD(K,L)  + OPTX(K)
+                SSA(K,L) = SSA(K,L) + SSALB(K)*OPTX(K)
+                do I = 1,8
+                  SLEG(I,K,L)=SLEG(I,K,L) + SSLEG(I,K)*SSALB(K)*OPTX(K)
+                enddo
+              enddo
 !.sds... send aerosol optical depth of 400nm back for diagnostic output
-           aerOD_out(L,M) = OPTX(k400)
-!
-         else
-           aerOD_out(L,M) = 0.0d0
+!             aerOD_out(L,1) = aerOD_out(L,1)+OPTX(k400)
+              aerOD_out(L,M) = OPTX(k400)
 !.sds... end
-         endif
+            endif
 !
-       enddo
+          enddo
+        endif
 !
 !----pull out 600-nm scattering profile for add layers.
         OD600(L) = OD(18,L)
@@ -2172,7 +2219,7 @@
 !
       if (NJXU .lt. NJX) call EXITC(' JRATET:  CTM has not enough J-values dimensioned')
 !
-      VALJL(:,:) = 0.d0
+      VALJL(:,:) = 0.d0   ! NJX may not cover the full extent of dimension 2, in loop at end
 !
       do L = 1,LU
 !

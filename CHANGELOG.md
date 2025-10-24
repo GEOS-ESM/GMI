@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added minimal strat chem mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism StratTrop_Minimal
 - Added "Standard" mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism Standard
 - Added meso_phot routine to add Lyan-alpha photolysis
+- Added callback functionality to get aerosol optical properties for photolysis from GOCART2G
 
 ### Changed
 
