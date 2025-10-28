@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+### Added
+### Changed
+### Removed
+### Deprecated
+
+## [1.5.0] - 2025-10-31
+
+### Fixed
 
 - Fixed a memory leak in GmiSAD
 - Fixed the diagnostic GMITTO3
