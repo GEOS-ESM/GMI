@@ -401,6 +401,9 @@ lbssad_opt: 4
 phot_opt: 3
 
 do_clear_sky: F
+do_LymanAlpha: T
+
+# To get Optical Properties from GOCART2G, set   n_phase_function_moments_photolysis = 8
 do_CCM_OptProps: F 
 
 #     --------------------------------------------------------

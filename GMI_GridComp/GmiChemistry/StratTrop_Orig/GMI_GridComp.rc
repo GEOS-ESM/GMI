@@ -213,7 +213,6 @@ do_gcr: T
 gcr_infile_name: ExtData/g5chem/x/gcr/GCR_1970-2025_33.nc 
 do_solar_cycle: T
 sc_infile_name: ExtData/g5chem/x/solar_cycle/solar_cycle_NRL-v03_1882_2024_fill2100_FJX+MESO.asc
-do_LymanAlpha: F
 
         ######################################
         #     Lightning related variables
@@ -386,6 +385,9 @@ lbssad_opt: 4
 phot_opt: 3
 
 do_clear_sky: F
+do_LymanAlpha: T
+
+# To get Optical Properties from GOCART2G, set   n_phase_function_moments_photolysis = 8
 do_CCM_OptProps: F
 
 #     --------------------------------------------------------

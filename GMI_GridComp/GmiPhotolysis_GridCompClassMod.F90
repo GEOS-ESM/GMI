@@ -2588,7 +2588,7 @@ use CloudJ_mod     , only : GetQAA_inFastJX74
                              self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
                             ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
      elseif(self%fastj_opt.eq.5) then
-       PRINT*,'Need to get the right QAA value in Acquire_Pyro'
+!      PRINT*,'Need to get the right QAA value in Acquire_Pyro'
        !... magic index 5    refers to the 1000 nm wavelength
        !... magic index 12   refers to the 2nd dust bin out of 7
        call  GetQAA_inFastJX74 (5, 12, qaa_ij, __RC__)
