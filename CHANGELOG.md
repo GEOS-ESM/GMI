@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added pyroCb chemistry mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism StratTrop_HFC_S_Pyro
 - Added coupling of GOCART provided SU and BR surface area density and effective radius to chemistry through aerosol state
+  NOTE: do_StratPyroHetChem is 'F' by default; this option requires a GOCART2G feature branch
 - Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
 - Added GitHub Actions workflow for CI builds
 - Added minimal strat chem mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism StratTrop_Minimal
@@ -39,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pyro  mechanism: Changed the CARN volcano file to be the version from 2024
 - Pyro  mechanism: Set default lbssad_opt to 6  (from GOCART2G)
 - Pyro  mechanism: added another het reaction
+- Changed the default Photolysis scheme to be CloudJ.
 
 ### Removed
 
