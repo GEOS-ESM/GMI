@@ -2579,26 +2579,26 @@
       skvro2_no  = k4 * EXP( b0 / tk ) * k3
       skvro2_no  = MAX( skvro2_no, 0.0d0 )
       END FUNCTION skvro2_no
-!
+!     
 !.... sk_clono2_gammas (temperature ,adcol ,pressure ,specarr(ClONO2,:) ,specarr(HCl,:) ,water ,wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl)
-!
+!                   
 !_13_
 !
 !.... JPL 19-5
-!
+!     
       FUNCTION sk_clono2_gammas (tk, ad, pr, clono2, hcl, h2o, FRH, reff &
                   , wt_h2so4, g_clono2, g_clono2_h2o, g_clono2_hcl, g_hocl_hcl)
 !
 !... Following: Shi, Q., et al, JGR, V106, D20, pp24,259-24,274, OCTOBER 27, 2001.
-!
+!    
   use ieee_arithmetic
 !... return value
       real*8  sk_clono2_gammas
-!... input variables
+!... input variables 
       real*8  tk(:), ad(:), pr(:), clono2(:), hcl(:), h2o(:), FRH(:), reff
 !... output variables
       real*8, DIMENSION (size(tk)) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
-!
+!     
 !... local variables
       real*8, DIMENSION (size(tk)) :: p_clono2, p_hcl, aw, y1, y2, m, tmp, wt, p0_h2o, p_h2o
       real*8, DIMENSION (size(tk)) :: a1, b1, c1, d1, a2, b2, c2, d2
@@ -2628,7 +2628,7 @@
       aw(:) = p_h2o(:)/p0_h2o(:)
 !      aw(:) = FRH(:)
 !
-      do l=1,size(tk) 
+      do l=1,size(tk)
         if(aw(l) .le. 0.05) then
            a1(l) = 12.37208932
            b1(l) = -0.16125516114
@@ -2647,7 +2647,7 @@
            a2(l) = 12.891938068
            b2(l) = -0.23233847708
            c2(l) = -6.4261237757
-           d2(l) = -4.9005471319 
+           d2(l) = -4.9005471319
          else
            a1(l) = -180.06541028
            b1(l) = -0.38601102592
@@ -2659,7 +2659,7 @@
            d2(l) = 267.45509988
          endif
        enddo
-        
+
       y1(:) = a1(:)*aw(:)**b1(:) + c1(:)*aw(:) + d1(:)
       y2(:) = a2(:)*aw(:)**b2(:) + c2(:)*aw(:) + d2(:)
       m(:) = y1(:) + (tk(:)-190.0d0)*(y2(:)-y1(:))/70.0d0
@@ -2727,7 +2727,7 @@
       g_clono2_hcl(:) = g_clono2(:) &
                         * (gamma_prime_s(:)+gamma_prime_hcl(:)) &
                          / (gamma_prime_s(:)+gamma_b(:))
-      g_clono2_h2o(:) = g_clono2(:)-g_clono2_hcl(:)      
+      g_clono2_h2o(:) = g_clono2(:)-g_clono2_hcl(:)
       where(g_clono2_h2o.lt.0.0d0) g_clono2_h2o = 0.0d0
 !
 !... now do HOCl+HCl uptake
