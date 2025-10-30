@@ -19,25 +19,6 @@ met_opt: 3
 metdata_name_org: GMAO
 metdata_name_model: GEOS-5
 
-        #############################################
-        # Should BC files have current date and time?
-        # Useful for mission support and replays.
-        #############################################
-
-BCRealTime: F
-
-        #############################################################
-        # Import predicted dust and aerosols from GOCART. Switches 
-        # are independent. Set all F if GMICHEM or GOCART.data is
-	# the AERO_PROVIDER.
-        #############################################################
-
-usingGOCART_BC: F
-usingGOCART_DU: F
-usingGOCART_OC: F
-usingGOCART_SS: F
-usingGOCART_SU: F
-
         ##################################################################
         # What is the name of the importrestart file? If this file does
         # not exist, species will "freewheel" through the first time step.
@@ -114,7 +95,7 @@ do_simpledep: F
 
 do_emission: T
 do_dust_emiss: F
-Diurnal_Emission_Species: 9
+Diurnal_Emission_Species: 10
 
         ##################################################################################
         # Are emissions provided per m^2 (by area) or per gridbox?  Default: by area = T
@@ -139,6 +120,7 @@ CH2O_biom
 MEK_biom
 CO_biom
 NO_biom
+SO2_FIRES-FLUX
 NO_air
 ALD2_biof
 ALK4_fosf
@@ -156,7 +138,6 @@ CO_fosf
 CO_biof
 NO_fosf
 NO_biof
-SO2_FIRES-FLUX
 SO2_NONENERGY-FLUX
 SO2_ENERGY-FLUX
 SO2_SHIPPING-FLUX
@@ -175,8 +156,8 @@ emissionSpeciesLayers::
 1
 1
 1
-72
 1
+72
 1
 1
 1
@@ -245,7 +226,7 @@ monotconv_infile_name: ExtData/g5chem/x/GMI_MONOT_convTable.asc
 do_gcr: T
 gcr_infile_name: ExtData/g5chem/x/gcr/GCR_1970-2025_33.nc 
 do_solar_cycle: T
-sc_infile_name: ExtData/g5chem/x/solar_cycle/solar_cycle_NRL_1882_present_fill2100.asc
+sc_infile_name: ExtData/g5chem/x/solar_cycle/solar_cycle_NRL-v03_1882_2024_fill2100_FJX+MESO.asc
 
         ######################################
         #     Lightning related variables
@@ -393,6 +374,9 @@ sad_opt: 2
 #       3: (OBSOLETE)  read in lbssad zonal average fields
 #       4:  lbssad provided by AGCM (ExtData)
 #       5:  lbssad provided by CARMA SO4SAREA
+#       6:  lbssad provided by GOCART2G AERO state (SO4SAREA in SU and SU.volc) **
+#
+#      ** -> include the GOCART2G fields in HISTORY to ensure that they are computed
 #     ----------------------------------------------
 #     (as listed in GmiSAD_GridCompClassMod.F90)
 
@@ -415,6 +399,10 @@ lbssad_opt: 4
 phot_opt: 3
 
 do_clear_sky: F
+do_LymanAlpha: T
+
+# To get Optical Properties from GOCART2G, set   n_phase_function_moments_photolysis = 8
+do_CCM_OptProps: F 
 
 #     --------------------------------------------------------
 #     uvalbedo_opt
@@ -460,37 +448,37 @@ do_ozone_inFastJX: F
 ## For FastJX & JPL10
 # cross section file: ExtData/g5chem/x/photolysis/FastJX/xsec_jx_jpl10update2_JNOx1_0.dat
 
-## For FastJX 6.5 & JPL10
- fastj_opt: 4
- cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65wSO4_jpl10update2_JNOx1_0.dat
-# cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65_jpl10update2_JNOx1_0.dat
-# rate_file not needed for FastJX6.5; new approach only differs by roundoff
-# rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_124spc_jx_gmiv2.dat
-# rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_119spc_jx_gmiv3.dat
- T_O3_climatology_file: ExtData/g5chem/x/atms_jx_o3andtemp.dat
+### For FastJX 6.5 & JPL10
+# fastj_opt: 4
+# cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65wSO4_jpl10update2_JNOx1_0.dat
+## cross_section_file: ExtData/g5chem/x/photolysis/FastJX_6.5/xsec_jx65_jpl10update2_JNOx1_0.dat
+## rate_file not needed for FastJX6.5; new approach only differs by roundoff
+## rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_124spc_jx_gmiv2.dat
+## rate_file: ExtData/g5chem/x/photolysis/FastJX/ratec_119spc_jx_gmiv3.dat
+# T_O3_climatology_file: ExtData/g5chem/x/atms_jx_o3andtemp.dat
 
-##
-##... For CloudJ (FastJX 7.4) & JPL10
-# fastj_opt: 5
-### CloudJ_cldflag options:
-###   1: clear sky
-###   2: grid-box avg clouds cloud: fract*(in cloud ODs) (minamal overlap?)
-###   3: cloud-fract**3/2*(in cloud ODs) (random overlap?) 
-###   4: NOT ALLOWED
-###   5: Random select NRANDO ICA's (Independent Column Atmos.) from all
-###   6: Use all (up to 4) quadrature cloud cover QCAs (mid-pts of bin)
-###   7: RECOMMENDED - Use all (up to 4) QCAs (average clouds within each Q-bin)
-###   8: Calculate Js for ALL ICAs (up to 20,000 per cell!)
-# CloudJ_cldflag:  7
-# cross_section_file:       ExtData/g5chem/x/photolysis/CloudJ/FJX_spec_JNOx1_0.dat
-# cloud_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-cld.dat
-# ssa_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-ssa.dat
-# aer_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-aer.dat
-# UMaer_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-UMa.dat
-# GMI_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/GMI_scat-aer.dat
-# T_O3_climatology_file:    ExtData/g5chem/x/photolysis/CloudJ/atmos_std.dat
-# H2O_CH4_climatology_file: ExtData/g5chem/x/photolysis/CloudJ/atmos_h2och4.dat
-##
+#
+#... For CloudJ (FastJX 7.4) & JPL10
+ fastj_opt: 5
+## CloudJ_cldflag options:
+##   1: clear sky
+##   2: grid-box avg clouds cloud: fract*(in cloud ODs) (minamal overlap?)
+##   3: cloud-fract**3/2*(in cloud ODs) (random overlap) CLOSEST TO FastJX65
+##   4: NOT ALLOWED
+##   5: Random select NRANDO ICA's (Independent Column Atmos.) from all
+##   6: Use all (up to 4) quadrature cloud cover QCAs (mid-pts of bin)
+##   7: RECOMMENDED - Use all (up to 4) QCAs (average clouds within each Q-bin)
+##   8: Calculate Js for ALL ICAs (up to 20,000 per cell!)
+ CloudJ_cldflag:  7
+ cross_section_file:       ExtData/g5chem/x/photolysis/CloudJ/FJX_spec_Standard.dat
+ cloud_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-cld.dat
+ ssa_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-ssa.dat
+ aer_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-aer.dat
+ UMaer_scat_file:          ExtData/g5chem/x/photolysis/CloudJ/FJX_scat-UMa.dat
+ GMI_scat_file:            ExtData/g5chem/x/photolysis/CloudJ/GMI_scat-aer.dat
+ T_O3_climatology_file:    ExtData/g5chem/x/photolysis/CloudJ/atmos_std.dat
+ H2O_CH4_climatology_file: ExtData/g5chem/x/photolysis/CloudJ/atmos_h2och4.dat
+#
 
  #################################
  # Copy GMI H2O back to GEOS ?

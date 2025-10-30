@@ -23,7 +23,7 @@
         ISTSSAD  = 2,        & ! index for supercooled ternary sulfate SADs
         INATSAD  = 3,        & ! index for "NAT" SADs
         IICESAD  = 4,        & ! index for ice   SADs
-        ISOOTSAD = 5           ! index for soot  SADs
+        IPYROSAD = 5           ! index for Pyro  SADs
 
 ! Indices for NSADdust  (value in setkin_par.h):
 !  ????

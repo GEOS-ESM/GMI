@@ -1,3 +1,5 @@
+#include "MAPL_Generic.h"
+
 !---------------------------------------------------------------------------
 !BOC
       module CloudJ_mod
@@ -10,12 +12,14 @@
         USE GMI_CMN_MOD
 !.sds  added MAPL physical constants being used
         use MAPL_ConstantsMod, only: MAPL_PI, MAPL_PI_R8
+        use MAPL
 !.sds  added LDRADIUS[3,4] to GEOS_UtilitiesMod.F90
 !       use GEOS_UtilsMod, only: LDRADIUS3, LDRADIUS4
 !
         public :: controlFastJX74
         public :: initializeFastJX74
         public :: RD_gmi
+        public :: GetQAA_inFastJX74
 !
 !---------------------------------------------------------------------------
       contains
@@ -23,15 +27,19 @@
 !
 !>>>>>>>>  Cloud-J version 8.0   new lower albedo can be angle/wavelength dependent
 !
-      subroutine controlFastJX74 (k1, k2, chem_mask_khi, lat_ij, num_qjs, &
-     &                  month_gmi, jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij, &
-     &                  SZA_ij, cloudfrac_ij, qi_ij, ql_ij, ri_ij, rl_ij, &
-!    &                  cnv_frc_ij, frland_ij, &
-     &                  press3e_ij, pctm_ij, kel_ij,                   &
-     &                  surf_alb_ij, qjgmi_ij, relHumidity_ij,         &
-     &                  overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,    &
-     &                  do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij,      &
-     &                  fjx_solar_cycle_param, CH4_ij, H2O_ij, ozone_ij)
+      subroutine controlFastJX74 (k1, k2, lat_ij, num_qjs, &
+                   month_gmi, jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij,  &
+                   SZA_ij, cloudfrac_ij, qi_ij, ql_ij, ri_ij, rl_ij,                    &
+!                  cnv_frc_ij, frland_ij,                                               &
+                   press3e_ij, pctm_ij, kel_ij,                                         &
+                   surf_alb_ij, qjgmi_ij, relHumidity_ij,                               &
+                   overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,         &
+                   do_AerDust_Calc, AerDust_Effect_opt,                                 &
+                   cldOD_ij, aerOD_ij, eradius_ij, tArea_ij,                            &
+                   fjx_solar_cycle_param, num_AerDust,                                  &
+                   do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom,              &
+                   CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij,                  &
+                   CH4_ij, H2O_ij, ozone_ij)
 !
 ! USES:
 !
@@ -42,9 +50,9 @@
 # include "gmi_time_constants.h"
 # include "setkin_par.h"
 !---------------key params in/out of CLOUD_J-------------------------
-      integer, intent(in) :: k1, k2, num_qjs, chem_mask_khi
+      integer, intent(in) :: k1, k2, num_qjs
       integer, intent(in) :: jday, month_gmi, cldflag
-      integer, intent(in) :: AerDust_Effect_opt
+      integer, intent(in) :: AerDust_Effect_opt, num_AerDust
       logical, intent(in) :: do_clear_sky, do_AerDust_Calc
       real*8, intent(in) :: lat_ij  !... grid point latitude (degrees)
       real*8, intent(in) :: time_sec, SZA_ij, pctm_ij, surf_alb_ij
@@ -57,13 +65,20 @@
       real*8, intent(in), dimension(k1:k2)   :: CH4_ij, H2O_ij(k1:k2)  ! mixing ratio for CH4 & H2O
       real*8, intent(in), dimension(k1:k2), optional :: ozone_ij      ! mixing ratio for ozone
       real*8, intent(out), dimension(k1:k2)                    :: overheadO3col_ij
-      real*8, intent(out), dimension(k1:chem_mask_khi,num_qjs) :: qjgmi_ij
+      real*8, intent(inout), dimension(k1:k2,num_qjs) :: qjgmi_ij
       real*8, intent(inout), dimension(k1:k2,NSADaer*nrh_b)    :: ODAER_ij
       real*8, intent(inout), dimension(k1:k2,NSADaer)          :: HYGRO_ij
       real*8, intent(inout), dimension(k1:k2,2)                :: ODcAER_ij
       real*8, intent(inout), dimension(k1:k2,NSADdust)         :: ODMDUST_ij
       real*8, intent(inout), dimension(k1:k2,NSADdust+NSADaer) :: ERADIUS_ij, TAREA_ij
       real*8, intent(inout), dimension(k1:k2)                  :: cldOD_ij
+      real*8, intent(inout), dimension(k1:k2,num_AerDust-2)    :: aerOD_ij
+!... CCM provided aerosol optical characteristics
+      logical, intent(in) :: do_CCM_OptProps
+      integer, intent(in) :: num_CCM_WL, num_CCM_aers, num_CCM_mom
+      real*8,  intent(in), dimension(num_CCM_WL)                           :: CCM_WL_ij
+      real*8,  intent(in), dimension(num_CCM_WL, k1:k2+1, num_CCM_aers)    :: CCM_SSALB_ij, CCM_OPTX_ij
+      real*8,  intent(in), dimension(num_CCM_mom, num_CCM_WL, k1:k2+1, num_CCM_aers) :: CCM_SSLEG_ij
 !
       logical, parameter           :: LPRTJ=.false.
       integer                      :: TCLDFLAG, NRANDO, IRAN, LNRG
@@ -74,9 +89,11 @@
       real*8, dimension(1:k2-k1+2,AN_) :: AERSP, aerOD_out
       real*8, dimension(W_)        :: SOLF
       real*8, dimension(0:k2-k1+2) :: PPP,ZZZ
-      real*8, dimension(1:k2-k1+2) :: TTT, DDD, RRR, OOO
+      real*8, dimension(1:k2-k1+2) :: TTT, DDD, RRR, OOO, HHH
       real*8, dimension(1:k2-k1+2) :: LWP, IWP, REFFL, REFFI, cldOD_out
-      real*8, dimension(1:k2-k1+1,num_qjs) :: VALJXX
+!     real*8, dimension(1:k2-k1+1,num_qjs) :: VALJXX
+      real*8, ALLOCATABLE          :: VALJXX(:,:)
+      integer                      :: NJX_BIG_ENOUGH    ! can hold # photolysis reactions or # cross-section species
       real*8, dimension(5,W_+W_r)  :: RFL
 !
 !-------------local use-----------------------
@@ -198,10 +215,6 @@
 !             AERSP, IDXAER, L_+1, AN_, VALJXX, num_qjs,  &
 !             TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT)
 !
-! PPP     = gridbox edge pressures (hPa)
-! TTT     = gridbox temperatures (K)
-! RRR     = Relative humidity (%)
-! ZZZ     = gridbox bottom height [edge] (cm)
 ! U0      = cos(SZA)
 ! SZA     = solar zenith angle (degrees) - PASS IN
 ! RFL     = Lambertian albedo of surface for angles 1:4 & U0 (#5)
@@ -222,10 +235,10 @@
 ! CLDIW   = integer flag: 1 = water cld, 2 = ice cloud, 3 = both
 ! AERSP   = aerosol species array - path (g/m2) of aerosol
 ! IDXAER  = aerosol index for assigning optical characteristics
-! L1_     = 
+! L1_     = number of layers + 1
 ! AN_     = number of aerosol types
 ! VALJXX  = 
-! JVN_    = 
+! num_qjs = number of phot rates
 ! CLDFLAG = type of cloud handling
 ! NRANDO  = parameter for CLDFLAG = 5
 ! IRAN    = parameter for CLDFLAG = 5
@@ -233,6 +246,12 @@
 ! NICA    = output - No. ICAs
 ! JCOUNT  = output
 !
+!... JRATET has trouble if the size of VALJXX is too small
+      NJX_BIG_ENOUGH = MAX( NUM_J, NJX )   ! NUM_J from setkin_par.h; NJX from FJX_CMN_MOD.F90
+      ALLOCATE(VALJXX(1:k2-k1+1,NJX_BIG_ENOUGH))
+
+!     PRINT*,'NUM_J, NJX, BIG_ENOUGH, num_qjs: ', NUM_J, NJX, NJX_BIG_ENOUGH, num_qjs 
+
       MONTH = month_gmi
       GMTAU = time_sec / SECPHR
 !
@@ -269,12 +288,15 @@
 !---set O3
 !... gridbox ozone (vmr?)
       if (present(ozone_ij)) then
-        OOO(1:k2-k1+1) = ozone_ij(k1:k2) * DDD(k1:k2)
+        OOO(1:k2-k1+1) = ozone_ij(k1:k2) * DDD(1:k2-k1+1)
         OOO(k2-k1+2) = ozone_ij(k2) * DDD(k2-k1+2)
       else
 !... read in Michael's T and O3 climotology
         call ACLIM_FJX (lat_ij, MONTH, PPP, TTT, OOO, L_+1)
       endif
+!... H2O for flux attenuation (molecules/cm^3)
+      HHH(1:k2-k1+1) = h2o_ij(k1:k2) * DDD(1:k2-k1+1)
+      HHH(k2-k1+2)   = h2o_ij(k2)    * DDD(k2-k1+2)
 !
 !... set to 18 to turn off LW fluxes
       NSBIN = 18
@@ -289,8 +311,8 @@
         colch4(k2+1) = CH4_ij(k2) * 1.0d9 
         colo2(:)  = MXRO2 * DDD(:)
         colh2o(1:k2-k1+1) = H2O_IJ(k1:k2)         !H2O in kg/kg
-        colh2o(k2+1) = H2O_IJ(k2)
-        coldry(:) = DDD(:) - colh2o(:)
+!.sds        colh2o(k2+1) = H2O_IJ(k2)
+        coldry(:) = DDD(:) - HHH(:)
       endif
 !
 !!! set up aerosols
@@ -481,6 +503,10 @@
 !    (-4)  SS-3     ss_aop.r1.26to2.50.dat
 !    (-5)  SS-4     ss_aop.r2.50to10.dat
 !
+      if(do_CCM_OptProps) then
+!.if bulk params, no loop
+        num_aer = num_aer+1
+      else
         if(oldgmi_aero) then 
           ioffd = 2000   ! aertype > 1000 is use old GMI parameters, aertype > 2000 is hydrophobic
           gmi_naer = 14  ! add 14 for offset in orig GMI table to first dust type
@@ -515,8 +541,13 @@
 !
         enddo
 !
-!... remapped NSADaer (hydrophyllic)
-        do N=1,NSADaer
+!... remapped NSADaer (hydrophylic)
+!       do N=1,NSADaer
+!... MEM: We only have 5 entries (not 6) for gmiDAA, etc. as read from GMIscat-aer.dat
+!... MEM: More precisely, we have 5x7 entries for aerosols, instead of 6x7 (7 = # RH bins)
+!... MEM: Previously we had Nwaer_=5
+!... MEM: We now have Nwaer_=6, but iDRYwaer(6)==iDRYwaer(1), so we can use the 5x7 entries
+        do N=1,Nwaer_
           num_aer = num_aer+1
           kdry = iDRYwaer(N)
           rho = gmiDAA(4,kdry)*1.0D+3
@@ -582,6 +613,13 @@
           enddo
         enddo
 !
+!... to account for the fact that the previous loop could only be run for Nwaer_ iterations;
+!... when capturing diagnostics later, the code assumes NSADaer entries
+!... (this code was added when Nwaer_ was 5 and NSADaer was 6)
+        do N=1,(NSADaer-Nwaer_)
+          num_aer = num_aer+1
+        enddo
+!
 !... BCphobic Aerosols
         num_aer = num_aer+1
         loc_naer = 6    ! UM-BC1  | 0.140 1.500| UMich w/Mie code logN:r=.050:s=.642  n=1.80+0.50i
@@ -629,6 +667,7 @@
         enddo
 !... end aerosol initialization
       endif 
+    endif    ! do_CCM_OptProps == FALSE
 !
 !!! set up clouds
 !
@@ -767,47 +806,57 @@
 !
 !=======================================================================
 !
-      call CLOUD_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT,  &
+      call CLOUD_JX (U0, SZA, RFL, SOLF, LPRTJ, PPP, ZZZ, TTT, HHH,      &
              DDD, RRR, OOO, LWP, IWP, REFFL, REFFI, CLF, CLDCOR, CLDIW,  &
-             AERSP, IDXAER, LTOP, num_aer, VALJXX, num_qjs,  &
-             TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT, cldOD_out, aerOD_out)
+             AERSP, IDXAER, LTOP, num_aer, VALJXX, NJX_BIG_ENOUGH,       &
+             TCLDFLAG, NRANDO, IRAN, LNRG, NICA, JCOUNT,                 &
+             do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom,     &
+             CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij,         &
+             cldOD_out, aerOD_out)
 !     
 !... send CLOUD_JX calcd cloud optical depth of 400nm back for diagnostic output w no FJX top layer
-     cldOD_ij(k1:k2) = cldOD_out(1:k2-k1+1)
+      cldOD_ij(k1:k2) = cldOD_out(1:k2-k1+1)
 !
 !... send aerosol optical depth of 400nm back for diagnostic output
-     num_aer = 0
-     do N=1,NSADdust
-       num_aer = num_aer+1
-       ODMDUST_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
-     enddo
-     do N=1,NSADaer
-        num_aer = num_aer+1
-        ODAER_ij(k1:k2,N)  = aerOD_out(1:k2-k1+1,num_aer)
-     enddo
+      if(do_CCM_OptProps) then
+!.sds... send aerosol optical depth of 400nm back for diagnostic output
+        do N = 1,num_CCM_aers
+          aerOD_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,N)
+        enddo
+      else
+        num_aer = 0
+        do N=1,NSADdust
+          num_aer = num_aer+1
+          ODMDUST_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
+        enddo
+        do N=1,NSADaer
+           num_aer = num_aer+1
+           ODAER_ij(k1:k2,N)  = aerOD_out(1:k2-k1+1,num_aer)
+        enddo
 !... add in hydrophobic BC and OC
-     do N=1,2
-        num_aer = num_aer+1
-        ODcAER_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
-     enddo
+        do N=1,2
+           num_aer = num_aer+1
+           ODcAER_ij(k1:k2,N) = aerOD_out(1:k2-k1+1,num_aer)
+        enddo
+      endif
 !... map FastJX's Jrates to our order
-      kall = chem_mask_khi-k1+1
+      kall = k2-k1+1
       do n=1,num_qjs
 !
 !.sds.. as per previous 6.5 code:
 !... * original fast-J/2 code had VALJ(2) as J[O3 -> O(3P)+O2]
 !...     but now J[O3] is total O3 rate [O(1D) and O(3P)], correct
         if(JVMAP(n).eq.'O3') then
-          qjgmi_ij(k1:chem_mask_khi,n) = (JFACTA(n) &
+          qjgmi_ij(k1:k2,n) = (JFACTA(n) &
             * (VALJXX(1:kall,JINDO3) - VALJXX(1:kall,JINDO1D)))
 !.sds.. as per previous 6.5 code:
 !...     need to add both branches of Acet for GMI
         elseif(JVMAP(n).eq.'Acet-a') then
-          qjgmi_ij(k1:chem_mask_khi,n) = (JFACTA(n) &
+          qjgmi_ij(k1:k2,n) = (JFACTA(n) &
             * (VALJXX(1:kall,JINDAceta) + VALJXX(1:kall,JINDAcetb)))
         else
 !.sds.. all others
-          qjgmi_ij(k1:chem_mask_khi,n) = JFACTA(n) * VALJXX(1:kall,JIND(n))
+          qjgmi_ij(k1:k2,n) = JFACTA(n) * VALJXX(1:kall,JIND(n))
         endif
       enddo
 !
@@ -822,6 +871,8 @@
          end do
       end do
 !
+      DEALLOCATE(VALJXX)
+!
       return
 !
       end subroutine controlFastJX74
@@ -833,7 +884,7 @@
 !
 ! !INTERFACE:
 !
-      subroutine initializeFastJX74 (k1, k2, chem_mask_khi, num_qjs &
+      subroutine initializeFastJX74 (k1, k2, num_qjs &
        , cross_section_file, cloud_scat_file, ssa_scat_file &
        , aer_scat_file, UMaer_scat_file, GMI_scat_file, T_O3_climatology_file &
        , H2O_CH4_climatology_file, cldflag, rootProc)
@@ -848,7 +899,6 @@
 ! !INPUT PARAMETERS:
       logical            , intent(in) :: rootProc
       integer            , intent(in) :: k1, k2
-      integer            , intent(in) :: chem_mask_khi ! number of chemistry levels [JVL_]
       integer            , intent(in) :: num_qjs       ! number of photolysis reactions [JVN_]
       integer            , intent(in) :: cldflag       ! type of cloud OD calc for J rates
 !... fast-J X-sections (spectral data) input file name
@@ -981,6 +1031,39 @@
       return
 !
       END SUBROUTINE RD_GMI
+!------------------------------------------------------------------------------
+!EOP
+!BOC
+!-----------------------------------------------------------------------
+      subroutine GetQAA_inFastJX74(i,j,qaa_ij,rc)
+!-----------------------------------------------------------------------
+!-------Retrieve one entry from the QAA array
+!-----------------------------------------------------------------------
+!     i        index
+!     j        index
+!     qaa_ij   Return value
+!     rc       Return code
+!-----------------------------------------------------------------------
+      implicit none
+!
+      integer, intent(in)  :: i,j
+      real*8,  intent(out) :: qaa_ij
+      integer, intent(out) :: rc
+!
+      integer              :: status
+      character(len=32)    :: IAm
+
+      rc = 0
+      IAm = "GetQAA_inFastJX74"
+
+      _ASSERT( i.GT.0 .AND. i.LE.5,   'index i out of bounds' )
+      _ASSERT( j.GT.0 .AND. j.LE.NAA, 'index j out of bounds' )
+
+      qaa_ij = QAA(i,j)
+
+      return
+!
+      END SUBROUTINE GetQAA_inFastJX74
 !------------------------------------------------------------------------------
 !EOP
       END MODULE CloudJ_mod

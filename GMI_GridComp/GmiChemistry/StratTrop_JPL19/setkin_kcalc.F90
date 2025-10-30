@@ -39,7 +39,6 @@
 !.... Argument declarations
 
       INTEGER, INTENT (IN)  :: npres0
-
       INTEGER, INTENT (IN)  :: cPBLcol(npres0)
 
       REAL*8,  INTENT (IN)  :: ptrop
@@ -78,29 +77,8 @@
 !
       real*8, DIMENSION (npres0) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
 !... effective radii of stratospheric aerosols
-      real*8 reff_lbs, reff_sts, reff_nat, reff_ice, reff_soot
+      real*8 reff_lbs   ! reff_sts, reff_nat, reff_ice, reff_soot
 !
-!      real*8  :: constcol(num_molefrac, k1:k2)
-!      real*8  :: qkcol   (num_qks,      k1:k2)
-!      real*8  :: sadcol  (num_sad,      k1:k2)        ! originally for tropospheric aerosols
-!      real*8  :: sadcol2 (nSADdust+nSADaer,   k1:k2)  ! originally for stratospheric aerosols
-!      real*8  :: radA    (nSADdust+nSADaer,   k1:k2)
-! call     (ivert, sadcol, sadcol2, prescol, tropp(il,ij),  cPBLcol, &
-!     &         tempcol, fcldcol, lwccol, adcol, constcol, qkcol, radA, rhcol &
-!               ,num_species,num_qks,num_molefrac,num_sad,nSADdust,nSADaer)
-!     subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
-!     &  temperature,fcld,lwc,adcol,specarr,rcarr,radA,FRH &
-!       ,num_species,num_qks,num_molefrac,num_sad,nSADdust,nSADaer)
-
-!.ok      if(inum_molefrac.ne.NMF) print *,'sds - num_molefrac: ',inum_molefrac,NMF
-!.ok      if(inum_qks.ne.NUM_K) print *,'sds - num_qks: ',inum_qks,NUM_K
-!.ok      if(inum_sad.ne.NSAD) print *,'sds - num_sad: ',inum_sad,NSAD
-!      if(.ne.) print *,'sds - : ',,
-!      if(.ne.) print *,'sds - : ',,
-!      if(.ne.) print *,'sds - : ',,
-!      if(.ne.) print *,'sds - : ',,
-!.sds
-
       mw(:) = mw_data(:)
 
       naltmax     = npres0
@@ -119,10 +97,10 @@
       water(:)    = specarr(49 ,:)
 !... * 0.0d0
       reff_lbs  = 0.221d-4
-      reff_sts  = 0.221d-4
-      reff_nat  = 0.221d-4
-      reff_ice  = 0.221d-4
-      reff_soot = 0.221d-4
+!     reff_sts  = 0.221d-4
+!     reff_nat  = 0.221d-4
+!     reff_ice  = 0.221d-4
+!     reff_soot = 0.221d-4
 !
       sad_lbs(:)  = sadcol(ILBSSAD, :)
       sad_sts(:)  = sadcol(ISTSSAD, :)
@@ -302,7 +280,7 @@
 !
 !....           ClO + MO2 = CH2O + Cl + HO2 + O2
 !
-      rcarr(41,:) = skarr(  1.800D-12 ,600.0D+00 ,temperature)
+      rcarr(41,:) = skarr(  1.800D-11 ,600.0D+00 ,temperature)
 !
 !....           HO2 + MO2 = MP + O2
 !
@@ -1231,32 +1209,22 @@
 !
 !....           ClONO2 = HNO3 + HOCl
 !
-!.      rcarr(265,:) = 0.0d0
       rcarr(265,:) = sklbs_clono2_h2o (temperature  & 
      &           ,pressure ,sad_lbs ,g_clono2_h2o ,mw(iCLONO2) ,ptrop)
-!..      rcarr(265,:) = sksts_clono2 (temperature  & 
-!..     &           ,adcol ,pressure ,sad_lbs ,specarr(  55,:) ,water ,ptrop)
 !
 !....           BrONO2 = HNO3 + HOBr
 !
       rcarr(266,:) = sklbs_brono2 (temperature ,pressure ,sad_lbs ,wt_h2so4 ,ptrop)
-!      rcarr(266,:) = sksts_brono2 (temperature ,pressure ,sad_lbs ,ptrop)
 !
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
-!.      rcarr(267,:) = 0.0d0
       rcarr(267,:) = sklbs_clono2_hcl (temperature  & 
      &           ,pressure ,sad_lbs ,g_clono2_hcl ,mw(iCLONO2) ,specarr( 55,:) ,ptrop)
-!..      rcarr(267,:) = sksts_clono2_hcl (temperature  & 
-!..     &           ,adcol ,pressure ,sad_lbs ,specarr(    37,:) ,specarr(  55,:) ,water ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
-!.      rcarr(268,:) = 0.0d0
       rcarr(268,:) = sklbs_hocl_hcl (temperature  & 
      &           ,pressure ,sad_lbs ,g_hocl_hcl ,mw(iHOCL) ,specarr( 55,:) ,ptrop)
-!..      rcarr(268,:) = sksts_hocl_hcl (temperature  &
-!..     &           ,adcol ,pressure ,sad_lbs ,specarr(  68,:) ,specarr( 55,:) ,water ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
@@ -2249,7 +2217,7 @@
 !
 !.old          skohmek(:) = 2.92D-12 * (300.0d0 / tk(:))**(-2.0d0) * exp(414.0d0 / tk(:))
 !... JPL 19-5
-          skohmek(:) = 1.33d-13 + 3.82d-11 * exp(2000.0d0 / tk(:))
+          skohmek(:) = 1.33d-13 + 3.82d-11 * exp(-2000.0d0 / tk(:))
 !
         END FUNCTION skohmek
 !
@@ -2643,8 +2611,10 @@
 !... Following: Shi, Q., et al, JGR, V106, D20, pp24,259-24,274, OCTOBER 27, 2001.
 !
   use ieee_arithmetic
+!... return value
+      real*8  sk_clono2_gammas
 !... input variables
-      real*8  tk(:), ad(:), pr(:), clono2(:), hcl(:), h2o(:), FRH(:), sk_clono2_gammas
+      real*8  tk(:), ad(:), pr(:), clono2(:), hcl(:), h2o(:), FRH(:), reff
 !... output variables
       real*8, DIMENSION (size(tk)) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
 !
@@ -2657,7 +2627,7 @@
       real*8, DIMENSION (size(tk)) :: gamma_s, F_hcl, gamma_prime_s, gamma_prime_hcl, gamma_b
       real*8, DIMENSION (size(tk)) :: D_hocl, k_hocl_hcl, H_hocl, l_hocl, f_hocl, gamma_hocl_rxn
       integer :: l
-      real*8  :: Rgas, reff
+      real*8  :: Rgas
 !
 !
       sk_clono2_gammas = 999.0

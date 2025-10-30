@@ -41,7 +41,7 @@ GMI_table::
 
 # Name     Units        Long Name
 # -----    ------       --------------------------------
-AOADAYS    days          Age-of-air                                                                      
+AOADAYS    days          'Age-of-air'                                                                    
 ACTA       'mol mol-1'   '{CH3C(O)OH; Acetic acid}'                                                      
 ALD2       'mol mol-1'   '{CH3CHO; Acetaldehyde}'                                                        
 ALK4       'mol mol-1'   'C4+ alkanes (C4H10, C5H12)'                                                    
@@ -177,5 +177,5 @@ ACET       'mol mol-1'   '{CH3C(O)CH3; Acetone}'
 N2         cm-3          'Molecular nitrogen'                                                            
 O2         cm-3          'Molecular oxygen'                                                              
 NUMDENS    cm-3          'Total number density'                                                          
-T2M15d     K             Daily T2M time average                                                          
+T2M15d     K             'Daily T2M time average'                                                        
 ::

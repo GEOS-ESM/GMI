@@ -6,7 +6,7 @@
 !
 ! !MODULE:  GmiEmiss_GCCMod --- GMI Grid Component Class
 !
-! Grid Component class for the GMI combined stratopshere/troposphere 
+! Grid Component class for the GMI combined stratopshere/troposphere
 ! chemistry
 !
 ! !INTERFACE:
@@ -63,8 +63,8 @@
    INTEGER, SAVE              :: OVP_MASK_DT
    CHARACTER(LEN=ESMF_MAXSTR), save :: ptfile_save(MAX_NUM_CONST) = '/dev/null'
 
-   PUBLIC  GmiEmiss_GridComp       ! The GMI object 
-   PUBLIC  t_GmiPointEmiss         ! GMI point emission data type 
+   PUBLIC  GmiEmiss_GridComp       ! The GMI object
+   PUBLIC  t_GmiPointEmiss         ! GMI point emission data type
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
@@ -120,11 +120,6 @@
 ! -------------------------------------------------------------------------------
      LOGICAL :: gotImportRst
 
-! Set BCRealTime = .TRUE. when boundary conditions 
-! must be for exact year of current calendar date.
-! -------------------------------------------------
-     LOGICAL :: BCRealTime
-
 ! Daily and monthly emissions
 ! ---------------------------
      INTEGER :: num_diurnal_emiss
@@ -132,12 +127,12 @@
 ! Various switches
 ! ----------------
      LOGICAL :: pr_dry_depos
-     LOGICAL :: pr_wet_depos   
+     LOGICAL :: pr_wet_depos
      LOGICAL :: pr_scav
      LOGICAL :: pr_diag
      LOGICAL :: do_drydep
      LOGICAL :: do_wetdep
-     LOGICAL :: do_emission            
+     LOGICAL :: do_emission
      LOGICAL :: pr_const
      LOGICAL :: do_synoz
      LOGICAL :: do_gcr
@@ -200,7 +195,7 @@
 ! Point emission data
 ! --------------------------------------------
      TYPE(t_GmiPointEmiss), pointer :: GmiPointEmiss(:) => null()
- 
+
    END TYPE GmiEmiss_GridComp
 
   CONTAINS
@@ -247,7 +242,7 @@
 
    INTEGER, INTENT(out) ::  rc                  ! Error return code:
                                                 !  0 - all is well
-                                                !  1 - 
+                                                !  1 -
 
 ! !DESCRIPTION: Initializes the GMI Grid Component. It primarily sets
 !               the import state.
@@ -265,7 +260,7 @@
    CHARACTER(LEN=255) :: namelistFile
    CHARACTER(LEN=255) :: importRestartFile
    CHARACTER(LEN=255) :: string, fieldName
-   
+
    CHARACTER(LEN=ESMF_MAXSTR), POINTER   :: itemNames(:)
    TYPE(ESMF_StateItem_Flag), POINTER :: itemTypes(:)
    TYPE(ESMF_Config)  :: gmiConfigFile
@@ -274,7 +269,7 @@
    INTEGER :: i, i1, i2, ic, im, j, j1, j2, jm, k, km, kReverse
    INTEGER :: m, n, scanNumber, STATUS
 
-   INTEGER :: i1_gl, i2_gl, ju1_gl, j2_gl 
+   INTEGER :: i1_gl, i2_gl, ju1_gl, j2_gl
    INTEGER :: ju1, jv1, jv1_gl, j1p, j2p
    INTEGER :: k1, k2, k1_gl, k2_gl
    INTEGER :: ilong, ilat, ivert, itloop
@@ -289,7 +284,7 @@
    INTEGER :: loc_proc, locGlobProc, commu_slaves
    LOGICAL :: one_proc, rootProc
    LOGICAL :: exists,open,found
-   
+
 ! Grid cell area can be set by initialize
 ! ---------------------------------------
    REAL, POINTER, DIMENSION(:,:) :: cellArea
@@ -317,11 +312,11 @@
    i1 = self%i1
    i2 = self%i2
    im = self%im
-   
+
    j1 = self%j1
    j2 = self%j2
    jm = self%jm
-   
+
    km = self%km
 
 !-------------------
@@ -347,7 +342,7 @@
 !------------------------------
 ! Deposition related variables
 !------------------------------
-    
+
     call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_drydep, &
               label="do_drydep:", default=.false., rc=STATUS)
     VERIFY_(STATUS)
@@ -421,17 +416,8 @@
     VERIFY_(STATUS)
 
 
-!-------------------------------------------
-! Should BC files have current date and time?
-! Useful for mission support and replays.
-!--------------------------------------------
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%BCRealTime, &
-     &           label="BCRealTime:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-     
       if (self%do_gcr) call INIT_GCR_DIAG(i1,i2,j1,j2,1,km)
-      
+
 ! Does the GMICHEM import restart file exist?  If not,
 ! the species must "freewheel" through the first time step.
 ! ---------------------------------------------------------
@@ -459,7 +445,7 @@
     NPI = 4
     NPJ = 4
     ilo = i1 - gmi_nborder
-    ihi = i2 + gmi_nborder 
+    ihi = i2 + gmi_nborder
     julo = ju1 - gmi_nborder
     jvlo = jv1 - gmi_nborder
     jhi = j2 + gmi_nborder
@@ -479,7 +465,7 @@
     loc_proc = -99
     locGlobProc = -99
     commu_slaves = -99
-   
+
     rootProc=.FALSE.
     IF( MAPL_AM_I_ROOT() ) THEN
       rootProc=.TRUE.
@@ -551,7 +537,7 @@
       END IF
 
 
-    if (self%Emission%num_point_emiss .gt. 0) then 
+    if (self%Emission%num_point_emiss .gt. 0) then
       allocate(self%GmiPointEmiss(self%Emission%num_point_emiss))
     endif
 
@@ -623,7 +609,7 @@
     VERIFY_(STATUS)
     CALL ESMF_StateGet(expChem, ITEMNAMELIST=itemNames, ITEMTYPELIST=itemTypes, RC=STATUS)
     VERIFY_(STATUS)
-   
+
     self%numEM_Exports = 0
 
     Scan: DO scanNumber = 1,2
@@ -638,7 +624,7 @@
             CALL ESMF_StateGet(expChem, itemNames(m), FIELD, RC=STATUS)
             VERIFY_(STATUS)
             ic = ic+1
-       
+
             IF(scanNumber == 2) THEN
               CALL ESMF_AttributeGet(FIELD, NAME='UNITS', VALUE=string, RC=status)
               VERIFY_(STATUS)
@@ -651,7 +637,7 @@
         END IF TypeIsField
 
       END DO Searching
-    
+
       IF(scanNumber == 1) THEN
         self%numEM_Exports = ic
         ALLOCATE(self%EM_ExportNames(ic), STAT=STATUS)
@@ -689,7 +675,7 @@
     CALL OVP_mask ( LONS=LONS, DELTA_TIME=OVP_MASK_DT, OVERPASS_HOUR=14, MASK=MASK_2PM  )
 
     RETURN
-   
+
     END SUBROUTINE GmiEmiss_GridCompInitialize
 
 !-------------------------------------------------------------------------
@@ -707,7 +693,7 @@
 ! !OUTPUT PARAMETERS:
       INTEGER, INTENT(out) ::  rc               ! Error return code:
                                                 !  0 - all is well
-                                                !  1 - 
+                                                !  1 -
 !
 ! !INPUT/OUTPUT PARAMETERS:
       TYPE(GmiEmiss_GridComp), INTENT(INOUT)  :: self      ! Grid Component
@@ -754,7 +740,7 @@
 
          RC = STATUS
       END IF
-      
+
       END SUBROUTINE GmiEmiss_initSurfEmissBundle
 !EOC
 !-------------------------------------------------------------------------
@@ -803,7 +789,7 @@
    TYPE(ESMF_Clock),        INTENT(INOUT) :: clock       ! The clock
 
 !.sds
-   type(ESMF_GridComp), intent(inout) :: gc     ! Gridded component 
+   type(ESMF_GridComp), intent(inout) :: gc     ! Gridded component
    character (len=ESMF_MAXSTR)        :: COMP_NAME
    type(ESMF_Grid)                    :: grid
 !.sds
@@ -819,7 +805,7 @@
                                                          !  0 - all is well
                                                          !  1 -
 
-! !DESCRIPTION: This routine implements the GMI Strat/Trop Driver. That 
+! !DESCRIPTION: This routine implements the GMI Strat/Trop Driver. That
 !               is, adds chemical tendencies to each of the constituents
 !
 ! !IMPLEMENTATION NOTES:
@@ -830,7 +816,7 @@
 !
 !  18Sep2003 da Silva  First crack.
 !  24Jan2005 Nielsen   Implementation of Code 916 chemistry
-!  30Oct2007 Nielsen   Implementation of GMI cmbined 
+!  30Oct2007 Nielsen   Implementation of GMI cmbined
 !                       stratosphere/troposphere chemistry
 !
 !EOP
@@ -901,7 +887,7 @@
    LOGICAL :: found, rootProc
 !  LOGICAL, PARAMETER :: do_qqjk_reset = .TRUE.
    LOGICAL, PARAMETER :: doThis = .FALSE.
-   
+
 ! Allocatables.  Use KIND=DBL where GMI expects REAL*8.
 ! -----------------------------------------------------
    INTEGER, ALLOCATABLE :: lwis_flags(:,:)
@@ -945,7 +931,7 @@
 !... Workspace for point emissions
 !   character(len=255)     :: point_emissions_srcfilen   ! filename for pointwise emissions
    integer :: nPts, l, irc
-   real    :: ebot, etop, demissdz, z0, z1, dz, dPE    
+   real    :: ebot, etop, demissdz, z0, z1, dz, dPE
    logical :: fileExists
 !.sds.end
    REAL(KIND=DBL), ALLOCATABLE :: surfEmissForChem(:,:,:)
@@ -966,11 +952,11 @@
    i1 = self%i1
    i2 = self%i2
    im = self%im
-   
+
    j1 = self%j1
    j2 = self%j2
    jm = self%jm
-   
+
    km = self%km
 
 !  Some real constants
@@ -1071,7 +1057,7 @@
    DO k=1,km
      pl(i1:i2,j1:j2,k) = (ple(i1:i2,j1:j2,k-1)+ple(i1:i2,j1:j2,k))*0.50
    END DO
-   
+
 ! Set GMI's clock
 ! ---------------
    CALL Set_curGmiDate(self%gmiClock, nymd)
@@ -1094,7 +1080,7 @@
    VERIFY_(STATUS)
 
 ! SZA  (don't forget to take the cosine)
-! ---                           
+! ---
    call compute_SZA ( GC=gc, CLOCK=clock, tdt=tdt, label='GMI-EMISS', &
                       SZA=cosSolarZenithAngle, __RC__ )
    cosSolarZenithAngle = COS( cosSolarZenithAngle * MAPL_DEGREES_TO_RADIANS )
@@ -1213,7 +1199,7 @@
         call populateBundle()
      endif
    ENDIF
- 
+
 ! Return species concentrations to the chemistry bundle
 ! -----------------------------------------------------
    IF (self%gotImportRst) THEN
@@ -1266,7 +1252,7 @@ CONTAINS
 ! !INTERFACE:
 
   SUBROUTINE Acquire_Clims(rc)
-  
+
   IMPLICIT NONE
 
   INTEGER, INTENT(OUT) :: rc
@@ -1390,7 +1376,7 @@ CONTAINS
 ! -----------------------------------------------------------------------------------------------
     tokgCPerBox = tdt*1.00E-09/3600.00
 
-    IF(self%Emission%doMEGANviaHEMCO) THEN 
+    IF(self%Emission%doMEGANviaHEMCO) THEN
    ! get MEGAN emissions pointers from HEMCO  (already kgC/m2/s)
        CALL MAPL_GetPointer(impChem,   PTR2D, 'GMI_ISOPRENE', RC=STATUS)
        VERIFY_(STATUS)
@@ -1470,14 +1456,14 @@ CONTAINS
 ! !INTERFACE:
 
   SUBROUTINE Refresh_Daily(rc)
-  
+
   IMPLICIT NONE
 
   INTEGER, INTENT(OUT) :: rc
 !
 ! !DESCRIPTION:
 !
-!  Update emissions with daily inventories from A. Darmenov supplemented with monthly 
+!  Update emissions with daily inventories from A. Darmenov supplemented with monthly
 !  EDGAR or EDGAR/TRANSCOM CO, NO, and CH4 from L. Ott.
 !
 !  File names and update intervals are now specified by ExtData.rc
@@ -1498,7 +1484,7 @@ CONTAINS
 !  of in Acquire_Clims.  This is one-layer data, too.
 !
 !  WARNING: It is NOT required that daily and monthly emissions are sourced
-!           from the same year. 
+!           from the same year.
 !
 !EOP
 !---------------------------------------------------------------------------
@@ -1537,8 +1523,8 @@ CONTAINS
 ! ------------------------------- I M P O R T A N T --------------------------------
 ! The emissionArray units are kg s^{-1}, which is a legacy attribute. However, for
 ! proper mapping from regularly-spaced latitudes and longitudes to the cubed sphere
-! the fluxes on the emissions file MUST be per unit area. When clim_emiss_by_area is 
-! .TRUE., the units on the emission files are assumed kg m^{-2} s^{-1}, and 
+! the fluxes on the emissions file MUST be per unit area. When clim_emiss_by_area is
+! .TRUE., the units on the emission files are assumed kg m^{-2} s^{-1}, and
 ! multiplication by cellArea follows data acquisition by MAPL_ExtData.
 ! ----------------------------------------------------------------------------------
   ALLOCATE(cellWeighting(i1:i2,j1:j2),weightedField2D(i1:i2,j1:j2),__STAT__)
@@ -1578,7 +1564,7 @@ CONTAINS
       _FAIL('GmiEmiss:: Emission scaling invalid for '//TRIM(speciesNamePrefix))
     END IF
 
-!... Special cases: 
+!... Special cases:
 ! Parameterized ship emissions are handled elsewhere (calcShipEmission)
     IF ( TRIM(speciesName) == '*shipO3*'.OR. TRIM(speciesName) == '*shipHNO3*' ) CYCLE
 !.sds.. DMS emission is special case, emissions handled elsewhere
@@ -1611,7 +1597,7 @@ CONTAINS
       NULLIFY(PTR2D)
 
     ELSE
-  
+
       CALL MAPL_GetPointer(impChem, PTR3D, TRIM(speciesName), __RC__)
 
       IF(i <= self%num_diurnal_emiss) THEN
@@ -1728,13 +1714,12 @@ CONTAINS
           VERIFY_(status)
         endif
 !... loop over all points in file
-        do n = 1,nPts 
+        do n = 1,nPts
           i = self%GmiPointEmiss(k)%iPoint(n)
           j = self%GmiPointEmiss(k)%jPoint(n)
 !... emission in sub-domain?
           if (i.lt.1 .or. j.lt.1) cycle
 !... during emission period?
-!    print '(''sds01: '',6i8,2f12.2)',k , n, i, j, vStart(n), vEnd(n), vBase(n), vTop(n)
           if(nhms .ge. self%GmiPointEmiss(k)%vStart(n) &
             .and. nhms .lt. self%GmiPointEmiss(k)%vEnd(n)) then
 !... distribute in the vertical (m)
@@ -1761,7 +1746,7 @@ CONTAINS
               z1 = height3e(i,j,l)
               dz = z1 - z0
               dPE = 0.0
-!... emission (kg/s)/m if (ebot .ne. etop) 
+!... emission (kg/s)/m if (ebot .ne. etop)
               if (etop .ne. ebot) demissdz = self%GmiPointEmiss(k)%vEmis(n)/(etop-ebot)
 !... emission is above this level "cycle"
               if (ebot .gt. z1) cycle
@@ -1783,7 +1768,7 @@ CONTAINS
               elseif ( (etop .le. z1 .and. etop .ge. z0) .and. ebot .lt. z0) then
                 dPE = (etop-z0) * demissdz
               endif
-!... add to GMI emission array (kg/gridbox/s)*timestep 
+!... add to GMI emission array (kg/gridbox/s)*timestep
               self%Emission%emissionArray(ic)%pArray3D(i,j,l) = &
                 self%Emission%emissionArray(ic)%pArray3D(i,j,l) + dPE * scale
             enddo
@@ -1870,7 +1855,7 @@ CONTAINS
   SUBROUTINE FillExports(rc)
 
   USE gcr_mod,                       ONLY : GET_GCR_EMISS
-    
+
   IMPLICIT NONE
 
    INTEGER, INTENT(OUT) :: rc
@@ -1902,12 +1887,12 @@ CONTAINS
      IF(ASSOCIATED(emIsopSfc)) emIsopSfc(:,:) = self%Emission%emiss_isop( :,:)/self%cellArea(:,:)
 
      IF(ASSOCIATED(emIsopSfc)) THEN
-       tmpisop = emIsopSfc(i1:i2,j1:j2) 
+       tmpisop = emIsopSfc(i1:i2,j1:j2)
        CALL MAPL_MaxMin('emIsopSfc in gmiEmiss:',tmpisop(:,:))
      END IF
    END IF
 
-! Biogenic CO, soil NOx, and surface ship emissions.  GmiEmission says 
+! Biogenic CO, soil NOx, and surface ship emissions.  GmiEmission says
 ! that these are kg m^{-2} per time step.  Convert to kg m^{-2} s^{-1}.
 ! ---------------------------------------------------------------------
    IF(self%do_emission .AND. self%pr_surf_emiss) THEN
@@ -1941,31 +1926,31 @@ CONTAINS
      VERIFY_(rc)
      CALL ESMFL_StateGetPointerToData(expChem, EM_pointer, TRIM(fieldName), RC=STATUS)
      VERIFY_(STATUS)
-     
+
      IsAssociated: IF(ASSOCIATED(EM_pointer)) THEN
 ! GCR emissions
 ! ------------
       IF(TRIM(fieldName) == "EM_GCR_NO") THEN
-       ALLOCATE(var3dDBL(i1:i2,j1:j2,1:km),STAT=STATUS) 
+       ALLOCATE(var3dDBL(i1:i2,j1:j2,1:km),STAT=STATUS)
        VERIFY_(STATUS)
        if (self%do_gcr) then
         CALL GET_GCR_EMISS ( var3dDBL, i1, i2, j1, j2, 1, km )  ! (molec/cm3/sec) (bottom up)
 
         SELECT CASE (unitsName)
         CASE ("molec cm-3 s-1")
-         EM_pointer(:,:,km:1:-1) = var3dDBL(:,:,1:km)        
+         EM_pointer(:,:,km:1:-1) = var3dDBL(:,:,1:km)
         CASE ("kg m-3 s-1")
          EM_pointer(:,:,km:1:-1) = var3dDBL(:,:,1:km) / MAPL_AVOGAD * mw * 1.e+6
         CASE ("kg m-2 s-1")
-         EM_pointer(:,:,km:1:-1) = var3dDBL(:,:,1:km) / MAPL_AVOGAD * mw * 1.e+6  *  gridBoxThickness(:,:,1:km) 
+         EM_pointer(:,:,km:1:-1) = var3dDBL(:,:,1:km) / MAPL_AVOGAD * mw * 1.e+6  *  gridBoxThickness(:,:,1:km)
         CASE DEFAULT
          PRINT *,TRIM(Iam)//": Modifications needed to export  "//TRIM(unitsName)//" for "//TRIM(fieldName)
          STATUS = -1
          VERIFY_(STATUS)
         END SELECT
 
-       else        
-        EM_pointer(:,:,km:1:-1) = 0.0 
+       else
+        EM_pointer(:,:,km:1:-1) = 0.0
        end if
 
        DEALLOCATE(var3dDBL)
@@ -1976,7 +1961,7 @@ CONTAINS
 
        CALL Get_lightning_opt(self%Emission,lightning_opt)
 
-       DO k = 1,km 
+       DO k = 1,km
         kReverse = km-k+1
 
 ! Force kg m^{-3} s^{-1} for both prescribed and parameterized lightning NO
@@ -2003,12 +1988,12 @@ CONTAINS
                 EM_pointer(i1:i2,j1:j2,kReverse) = EM_pointer(i1:i2,j1:j2,kReverse)*var2dDBL(i1:i2,j1:j2)
               CASE DEFAULT
                 PRINT *,TRIM(Iam)//": Modifications needed to export  "//TRIM(unitsName)//" for "//TRIM(fieldName)
-                STATUS = -1 
+                STATUS = -1
                 VERIFY_(STATUS)
              END SELECT
 
            END DO
-      
+
 !      Record the Overpass values   (note: AddExport done in GMIchem_GridCompMod.F90)
 !      ------------------------------------------------------------------------------
 
@@ -2029,7 +2014,7 @@ CONTAINS
 ! Emission exports other than lightning NO
 ! ----------------------------------------
          ELSE
-      
+
            DO k = 1,km
              kReverse = km-k+1
 
@@ -2051,7 +2036,7 @@ CONTAINS
 
        END DO
 
-      END IF 
+      END IF
 
      END IF IsAssociated
     END DO Scan
@@ -2070,7 +2055,7 @@ CONTAINS
 !!  IF(ASSOCIATED(EM_pointer)) EM_pointer(i1:i2,j1:j2,km:1:-1) = &
 !!                               (AIRDENS(i1:i2,j1:j2,km:1:-1) * gridBoxThickness(i1:i2,j1:j2,1:km)) / MAPL_AIRMW
 
-!! NATSAD, ICESAD, LBSSAD, SOOTSAD and STSSAD (really VOLCSAD for now)
+!! NATSAD, ICESAD, LBSSAD, PYROSAD and STSSAD (really VOLCSAD for now)
      call ESMF_StateGet (expChem, "gmiSAD", sadBundle, RC=STATUS )
      VERIFY_(STATUS)
 
@@ -2098,9 +2083,9 @@ CONTAINS
        EM_pointer(i1:i2,j1:j2,1:km) = ptr3D(i1:i2,j1:j2,1:km)
      END IF
 
-     CALL MAPL_GetPointer(expChem, EM_pointer, "SOOTSAD", __RC__)
+     CALL MAPL_GetPointer(expChem, EM_pointer, "PYROSAD", __RC__)
      IF(ASSOCIATED(EM_pointer)) THEN
-       CALL obtainTracerFromBundle(sadBundle, ptr3D, ISTSSAD)
+       CALL obtainTracerFromBundle(sadBundle, ptr3D, IPYROSAD)
        EM_pointer(i1:i2,j1:j2,1:km) = ptr3D(i1:i2,j1:j2,1:km)
      END IF
 
@@ -2141,37 +2126,26 @@ CONTAINS
   rc = 0
   SELECT CASE (TRIM(name))
    CASE ("EM_NO")
-    mw = mw_data(  INO)
     i =   INO
    CASE ("EM_CO")
-    mw = mw_data(  ICO)
     i =   ICO
    CASE ("EM_MEK")
-    mw = mw_data( IMEK)
     i =  IMEK
    CASE ("EM_PRPE")
-    mw = mw_data(IC3H6)
     i = IC3H6
    CASE ("EM_C2H6")
-    mw = mw_data(IC2H6)
     i = IC2H6
    CASE ("EM_C3H8")
-    mw = mw_data(IC3H8)
     i = IC3H8
    CASE ("EM_ALK4")
-    mw = mw_data(IALK4)
     i = IALK4
    CASE ("EM_ALD2")
-    mw = mw_data(IALD2)
     i = IALD2
    CASE ("EM_CH2O")
-    mw = mw_data(ICH2O)
     i = ICH2O
    CASE ("EM_ACET")
-    mw = mw_data(IACET)
     i = IACET
    CASE ("EM_CH4")
-    mw = mw_data( ICH4)
     i =  ICH4
    CASE ("EM_LGTNO")
     mw = mw_data(  INO)
@@ -2189,9 +2163,17 @@ CONTAINS
       endif
     enddo
     PRINT *,TRIM(Iam)//": Add "//TRIM(name)//" to molecular weight search list"
-    STATUS = -1 
+    STATUS = -1
     VERIFY_(STATUS)
   END SELECT
+  if ( i .EQ. 0 ) then
+    PRINT *,TRIM(Iam)//": The species "//TRIM(name)//" is not in the mechanism"
+    STATUS = -1
+    VERIFY_(STATUS)
+  endif
+  if ( i .GT. 0 ) then
+    mw = mw_data( i )
+  endif
   RETURN
   END SUBROUTINE getMW
 
@@ -2253,7 +2235,7 @@ CONTAINS
 ! !INTERFACE:
 
   SUBROUTINE FindPointers(rc)
-  
+
    IMPLICIT NONE
 
    INTEGER, INTENT(OUT) :: rc
@@ -2266,7 +2248,7 @@ CONTAINS
 !---------------------------------------------------------------------------
 
    CHARACTER(LEN=255) :: IAm
-  
+
    rc=0
    IAm="FindPointers"
 
@@ -2304,7 +2286,7 @@ CONTAINS
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(impChem,     drpar,     'DRPAR', RC=STATUS)
    VERIFY_(STATUS)
-  
+
    CALL MAPL_GetPointer(impChem,   airdens, 'AIRDENS', RC=STATUS)
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(impChem,       ple,	'PLE', RC=STATUS)
@@ -2388,7 +2370,7 @@ CONTAINS
 ! !INTERFACE:
 
   SUBROUTINE SatisfyImports(rc)
-  
+
   IMPLICIT NONE
 
   INTEGER, INTENT(OUT) :: rc
@@ -2402,13 +2384,13 @@ CONTAINS
 !---------------------------------------------------------------------------
 
   CHARACTER(LEN=255) :: IAm
-  
+
   INTEGER, ALLOCATABLE :: on(:,:)
-  
+
   rc=0
   IAm="SatisfyImports"
 
-! ------------------------------------------------------------------------ 
+! ------------------------------------------------------------------------
 ! Imports to REAL*8, apply units conversion, and reverse vertical stacking
 ! ------------------------------------------------------------------------
 
@@ -2484,7 +2466,7 @@ CONTAINS
 ! !INTERFACE:
 
   SUBROUTINE MonitorT2M(rc)
-  
+
   IMPLICIT NONE
 
   INTEGER, INTENT(OUT) :: rc
@@ -2493,7 +2475,7 @@ CONTAINS
 !
 !  Obtain the current and previous 15 days average T2M.
 !
-!  T2M15d is a 3D array that is not entirely filled and is concatenated to the 
+!  T2M15d is a 3D array that is not entirely filled and is concatenated to the
 !  XX (non-transported) species.  Each "layer" of T2M15d contains:
 
 !     Index   Contents
@@ -2506,14 +2488,14 @@ CONTAINS
 !       km-1  Place holder jNO2val
 !         km  Place holder for most recent valid tropopause pressures (Pa)
 
-!  When the day number changes, the values in position 16 must be 
+!  When the day number changes, the values in position 16 must be
 !  moved to 15, 15 to 14, 14 to 13, and so on.  After this age-off is
 !  complete, position 1 is replaced with the average of positions 1-15.
 !  Position 1 is referenced as the 15-day average T2M.
 
 !  USAGE NOTES:
 
-!  Only whole calendar days are considered in the running averages, and 
+!  Only whole calendar days are considered in the running averages, and
 !   age-off occurs on the first pass of the new calendar day, which occurs
 !   at heartBeat seconds after midnight UTC.  Note that for 0:00 UTC restarts,
 !   age-off occurs after restart, not before the end of the previous segment.
@@ -2522,10 +2504,10 @@ CONTAINS
 !   calendar day continues to be computed using the value from the internal
 !   restart file.
 
-!  WARNING: Do not overwrite "layer" km, as it contains the most recent 
+!  WARNING: Do not overwrite "layer" km, as it contains the most recent
 !   valid tropopause pressures (Pa). This is a kluge, but enables (1) the
 !   reproducibility of GMIchem across various layouts, including the cubed
-!   sphere, (2) eliminates the occasional MAPL_UNDEFs in TROPP, and (3) 
+!   sphere, (2) eliminates the occasional MAPL_UNDEFs in TROPP, and (3)
 !   allows the information to be included the w_c bundle.
 
 !EOP
@@ -2568,7 +2550,7 @@ CONTAINS
 
     IF( MAPL_AM_I_ROOT() ) THEN
       PRINT *," "
-      PRINT *,"GMICHEM::"//TRIM(IAm)//": Doing T2M15d age-off and recalculation"  
+      PRINT *,"GMICHEM::"//TRIM(IAm)//": Doing T2M15d age-off and recalculation"
       PRINT *," "
     END IF
 
@@ -2594,7 +2576,7 @@ CONTAINS
 ! Otherwise, keep running average for current day
 ! -----------------------------------------------
   bxx%qa(i)%data3d(i1:i2,j1:j2,16) = bxx%qa(i)%data3d(i1:i2,j1:j2,16) + T2m(i1:i2,j1:j2)*avgFactor
-    
+
   RETURN
  END SUBROUTINE MonitorT2M
 
@@ -2633,7 +2615,7 @@ CONTAINS
    INTEGER, INTENT(out) ::  rc                  ! Error return code:
                                                 !  0 - all is well
                                                 !  1 -
- 
+
 ! !DESCRIPTION: This routine finalizes this Grid Component.
 !
 ! !REVISION HISTORY:
@@ -2661,5 +2643,5 @@ CONTAINS
    RETURN
 
  END SUBROUTINE GmiEmiss_GridCompFinalize
-  
+
  END module GmiEmiss_GCCMod

@@ -40,8 +40,6 @@
   TAUCLI             |  1              | xyz | C |    |   |   |     |      |    | optical_thickness_for_ice_clouds
   QL                 |  kg kg-1        | xyz | C |    |   |   |     |      |    | cloud_liquid_for_radiation
   QI                 |  kg kg-1        | xyz | C |    |   |   |     |      |    | cloud_ice_for_radiation
-  RI                 |  m              | xyz | C |    |   |   |     |      |    | ice_phase_cloud_particle_effective_radius
-  RL                 |  m              | xyz | C |    |   |   |     |      |    | liquid_cloud_particle_effective_radius
   CNV_MFC            |  kg m-2 s-1     | xyz | E |    |   |   |     |      |    | cumulative_mass_flux
   CNV_MFD            |  kg m-2 s-1     | xyz | C |    |   |   |     |      |    | detraining_mass_flux
   RH2                |  1              | xyz | C |    |   |   |     |      |    | relative_humidity_after_moist
@@ -198,43 +196,44 @@
   EMSOILNOX         | kg m-2 s-1     | xy  |   |    |   |   |     | soil_source_of_odd_nitrogen
   EMSHIPHNO3        | kg m-2 s-1     | xy  |   |    |   |   |     | surface_ship_source_of_nitric_acid
   EMSHIPO3          | kg m-2 s-1     | xy  |   |    |   |   |     | surface_ship_source_of_ozone
-  EM_NO             | mol mol-1 s-1  | xyz | C |    |   |   |     | nitric_oxide_emissions
-  EM_CO             | mol mol-1 s-1  | xyz | C |    |   |   |     | carbon_monoxide_emissions
-  EM_MEK            | mol mol-1 s-1  | xyz | C |    |   |   |     | methyl_ethyl_ketone_(C4H8O)_emissions
-  EM_MOH            | mol mol-1 s-1  | xyz | C |    |   |   |     | methynol_(CH3OH)_emissions
-  EM_H2O            | mol mol-1 s-1  | xyz | C |    |   |   |     | water_emissions
-  EM_PRPE           | mol mol-1 s-1  | xyz | C |    |   |   |     | propene_(C3H6)_emissions
-  EM_C2H6           | mol mol-1 s-1  | xyz | C |    |   |   |     | ethane_emissions
-  EM_C3H8           | mol mol-1 s-1  | xyz | C |    |   |   |     | propane_emissions
-  EM_ALK4           | mol mol-1 s-1  | xyz | C |    |   |   |     | C4,5 alkanes_(C4H10)_emissions
-  EM_ALD2           | mol mol-1 s-1  | xyz | C |    |   |   |     | acetaldehyde_(C2H4O)_emissions
-  EM_CH2O           | mol mol-1 s-1  | xyz | C |    |   |   |     | formaldehyde_emissions
-  EM_ACET           | mol mol-1 s-1  | xyz | C |    |   |   |     | acetone_emissions
-  EM_CH4            | mol mol-1 s-1  | xyz | C |    |   |   |     | methane_emissions
-  EM_CFC11          | mol mol-1 s-1  | xyz | C |    |   |   |     | CFC11_emissions
-  EM_CFC12          | mol mol-1 s-1  | xyz | C |    |   |   |     | CFC12_emissions
-  EM_CFC113         | mol mol-1 s-1  | xyz | C |    |   |   |     | CFC113_emissions
-  EM_HCFC22         | mol mol-1 s-1  | xyz | C |    |   |   |     | HCFC22_emissions
-  EM_HFC125         | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC125_emissions
-  EM_HFC134a        | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC134a_emissions
-  EM_HFC143a        | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC143a_emissions
-  EM_HFC152a        | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC152a_emissions
-  EM_HFC23          | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC23_emissions
-  EM_HFC32          | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC32_emissions
-  EM_CH3CCL3        | mol mol-1 s-1  | xyz | C |    |   |   |     | CH3CCL3_emissions
-  EM_CCL4           | mol mol-1 s-1  | xyz | C |    |   |   |     | CCL4_emissions
-  EM_CHBR3          | mol mol-1 s-1  | xyz | C |    |   |   |     | methylbromoform_emissions
-  EM_CH2BR2         | mol mol-1 s-1  | xyz | C |    |   |   |     | dibromomethane_emissions
-  EM_N2O            | mol mol-1 s-1  | xyz | C |    |   |   |     | N2O_emissions
-  EM_DMS            | mol mol-1 s-1  | xyz | C |    |   |   |     | DMS_emissions
-  EM_SO2            | mol mol-1 s-1  | xyz | C |    |   |   |     | SO2_emissions
-  EM_H2SO4          | mol mol-1 s-1  | xyz | C |    |   |   |     | H2SO4_emissions
-  EM_OCSg           | mol mol-1 s-1  | xyz | C |    |   |   |     | OCSg_emissions
+  EM_ACET           | mol mol-1 s-1  | xyz | C |    |   |   |     | {CH3C(O)CH3;_Acetone}_emissions
+  EM_ALD2           | mol mol-1 s-1  | xyz | C |    |   |   |     | {CH3CHO;_Acetaldehyde}_emissions
+  EM_ALK4           | mol mol-1 s-1  | xyz | C |    |   |   |     | C4+_alkanes_(C4H10,_C5H12)_emissions
+  EM_C2Cl4          | mol mol-1 s-1  | xyz | C |    |   |   |     | Tetrachloroethylene_emissions
+  EM_C2H4Cl2        | mol mol-1 s-1  | xyz | C |    |   |   |     | Ethylene_dichloride,_1-2_Dichloroethane_emissions
+  EM_C2H6           | mol mol-1 s-1  | xyz | C |    |   |   |     | Ethane_emissions
+  EM_C3H8           | mol mol-1 s-1  | xyz | C |    |   |   |     | Propane_emissions
+  EM_CFC11          | mol mol-1 s-1  | xyz | C |    |   |   |     | Freon-11,_Trichlorofluoromethane_emissions
+  EM_CFC113         | mol mol-1 s-1  | xyz | C |    |   |   |     | CFC113,_Trichlorotrifluoroethane_emissions
+  EM_CFC12          | mol mol-1 s-1  | xyz | C |    |   |   |     | Freon-12,_Dichlorodifluoromethane_emissions
+  EM_CH2Cl2         | mol mol-1 s-1  | xyz | C |    |   |   |     | Dichloromethane_emissions
+  EM_CH2O           | mol mol-1 s-1  | xyz | C |    |   |   |     | Formalydehyde_emissions
+  EM_CH4            | mol mol-1 s-1  | xyz | C |    |   |   |     | Methane_emissions
+  EM_CHCl3          | mol mol-1 s-1  | xyz | C |    |   |   |     | Chloroform,_Trichloromethane_emissions
+  EM_CO             | mol mol-1 s-1  | xyz | C |    |   |   |     | Carbon_monoxide_emissions
+  EM_DMS            | mol mol-1 s-1  | xyz | C |    |   |   |     | Dimethylsulfide_(CH3SCH3)_emissions
+  EM_H2O            | mol mol-1 s-1  | xyz | C |    |   |   |     | Water_emissions
+  EM_H2SO4          | mol mol-1 s-1  | xyz | C |    |   |   |     | Sulfuric_acid_emissions
+  EM_HCFC22         | mol mol-1 s-1  | xyz | C |    |   |   |     | HCFC-22_(CClF2H)_emissions
+  EM_HFC125         | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC-125,_Pentafluoroethane_emissions
+  EM_HFC134a        | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC-134a,_CH2FCF3,_1,1,1,2-Tetrafluoroethane_emissions
+  EM_HFC143a        | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC-143a,_1,1,1-Trifluoroethane_emissions
+  EM_HFC152a        | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC-152a,_1,1-Difluoroethane_emissions
+  EM_HFC23          | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC-23,_Fluoroform_emissions
+  EM_HFC32          | mol mol-1 s-1  | xyz | C |    |   |   |     | HFC-32,_Difluoromethane_emissions
+  EM_MEK            | mol mol-1 s-1  | xyz | C |    |   |   |     | {CH3C(O)CH3;_Methyl_ethyl_ketone}_emissions
+  EM_MOH            | mol mol-1 s-1  | xyz | C |    |   |   |     | {CH3OH;_Methanol}_emissions
+  EM_N2O            | mol mol-1 s-1  | xyz | C |    |   |   |     | Nitrous_oxide_emissions
+  EM_NO             | mol mol-1 s-1  | xyz | C |    |   |   |     | Nitric_oxide_emissions
+  EM_OCSg           | mol mol-1 s-1  | xyz | C |    |   |   |     | Carbonyl_Sulfide_in_GMI_(gas)_emissions
+  EM_PRPE           | mol mol-1 s-1  | xyz | C |    |   |   |     | Propene_(CH2=CHCH3)_emissions
+  EM_SO2            | mol mol-1 s-1  | xyz | C |    |   |   |     | Sulfur_dioxide_emissions
   EM_LGTNO          | mol mol-1 s-1  | xyz | C |    |   |   |     | NO_emissions_from_lightning
   EM_GCR_NO         | molec cm-3 s-1 | xyz | C |    |   |   |     | NO_emissions_from_galactic_cosmic_rays
   SZAPHOT           | deg            | xy  |   |    |   |   |     | solar_zenith_angle_for_GMIchem_photolysis
   FJXCLDOD          | 1              | xyz | C |    |   |   |     | FastJX_cloud_optical_depth_(400_nm - daylight only)
   FJXFCLD           | 1              | xyz | C |    |   |   |     | FastJX_cloud_fraction
+  AEROOD            | 1              | xyz | C |    |   |   |     | aerosol_optical_depth_(400_nm)
   DUSTOD            | 1              | xyz | C |    |   |   |     | dust_optical_depth_(400_nm)
   DUSTSA            | cm+2 cm-3      | xyz | C |    |   |   |     | dust_surface_area
   SO4OD             | 1              | xyz | C |    |   |   |     | sulfate_optical_depth_(400_nm)
@@ -269,7 +268,7 @@
   ICESAD            | cm+2 cm-3      | xyz | C |    |   |   |     | ice_surface_area_density
   LBSSAD            | cm+2 cm-3      | xyz | C |    |   |   |     | LBS_surface_area_density
   STSSAD            | cm+2 cm-3      | xyz | C |    |   |   |     | STS_surface_area_density
-  SOOTSAD           | cm+2 cm-3      | xyz | C |    |   |   |     | Soot_surface_area_density
+  PYROSAD           | cm+2 cm-3      | xyz | C |    |   |   |     | Pyro_surface_area_density
   AIRMASS           | kg m-2         | xyz | C |    |   |   |     | mass_of_air_in_layer
   OCS_JRATE         | s-1            | xyz | C |    |   |   |     | Jrate_for_OCS    
 # ------------------|----------------|-----|---|----|---|---|-----|---------------------------------

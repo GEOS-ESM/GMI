@@ -48,7 +48,7 @@
                        qqkda, qqjda, do_smv_reord, do_synoz,                   &
                        do_semiss_inchem, nymd, nhms, gmi_sec, tdt,             &
                        pr_diag, loc_proc, synoz_threshold, chem_cycle,         &
-                       chem_mask_klo, chem_mask_khi, imgas_num, initrogen_num, &
+                       imgas_num, initrogen_num, &
                        ioxygen_num, isynoz_num, num_species, num_qks, num_qjs, &
                        num_qjo, num_sad, num_molefrac, num_chem, num_active,   &
                        ilong, ilat, ivert, itloop, ilo, ihi, julo, jhi, i1, i2,&
@@ -77,7 +77,6 @@
       real*8 , intent(in) :: tdt
       integer, intent(in) :: imgas_num
       integer, intent(in) :: initrogen_num, ioxygen_num, isynoz_num
-      integer, intent(in) :: chem_mask_klo, chem_mask_khi
       real*8 , intent(in) :: gmi_sec
       real*8,  intent(in) :: synoz_threshold
       real*8,  intent(in) :: chem_cycle
@@ -149,7 +148,7 @@
                    pr_diag, pr_qqjk, pr_smv2, do_smv_reord, do_synoz,            &
                    do_qqjk_inchem, do_semiss_inchem, imgas_num, initrogen_num,   &
                    ioxygen_num, isynoz_num, yda, qqkda, qqjda, pr_nc_period,     &
-                   tdt, chem_mask_klo, chem_mask_khi, loc_proc, synoz_threshold, &
+                   tdt, loc_proc, synoz_threshold, &
                    ilong, ilat, ivert, itloop, i1, i2, ju1, j2, k1, k2, ilo,     &
                    ihi, julo, jhi, num_molefrac,                                 &
                    num_qjo, num_qks, num_qjs, num_active, num_species, rootProc)

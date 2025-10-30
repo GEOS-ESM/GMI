@@ -1,0 +1,1573 @@
+!=======================================================================
+!
+! $Id: $
+!
+! ROUTINE
+!   Calc_rate_Setkin - GMI version (setkin_ratecalc.F)
+!   13 JUN 02 - PSC
+!
+! DESCRIPTION
+!   Calculates and returns rates of kinetic processes for block
+!   of boxes
+!
+! ARGUMENTS
+!   INPUT
+!    nblock  : number of blocks
+!    numj    : number of photolysis rate constants
+!    numk    : number of thermal rate constants
+!    numspc  ; number of species
+!    qk     : thermal reaction rate constants (cm^3 molecule^-1 s^-1)
+!    qj     : photolysis rate constants (s^-1)
+!    y      : concentrations of transported species (molecules cm^-3)
+!   OUTPUT
+!    qqk    : rates of thermal processes (molecules cm^-3 s^-1)
+!    qqj    : rates of photolytic processes (molecules cm^-3 s^-1)
+!
+!  Input mechanism:        Standard.txt
+!  Reaction dictionary:    GMI_reactions_JPL19.db
+!  Setkin files generated: Wed Sep 17 16:30:54 2025
+!
+!=======================================================================
+      subroutine Calc_rate_Setkin &
+     &  (nblock, numj, numk, numspc, &
+     &   qk, qj, y, qqk, qqj)
+
+      implicit none
+
+      integer &
+     &  nblock, &
+     &  numj, numk, numspc
+
+      real*8 &
+     &  qj    (nblock, numj), &
+     &  qk    (nblock, numk), &
+     &  qqj   (nblock, numj), &
+     &  qqk   (nblock, numk), &
+     &  y     (nblock, numspc)
+
+      integer &
+     &  kloop
+
+      do kloop = 1, nblock
+!
+!                  start thermal reactions
+!
+!....         O + O = O2
+!
+      qqk(kloop,1)=qk(kloop,1)*y(kloop,87)*y(kloop,87)
+!
+!....         O + O2 = O3
+!
+      qqk(kloop,2)=qk(kloop,2)*y(kloop,87)*y(kloop,122)
+!
+!....         O + O3 = 2 O2
+!
+      qqk(kloop,3)=qk(kloop,3)*y(kloop,87)*y(kloop,89)
+!
+!....         H2O2 + O = HO2 + OH
+!
+      qqk(kloop,4)=qk(kloop,4)*y(kloop,48)*y(kloop,87)
+!
+!....         N2 + O1D = N2 + O
+!
+      qqk(kloop,5)=qk(kloop,5)*y(kloop,121)*y(kloop,88)
+!
+!....         O1D + O2 = O + O2
+!
+      qqk(kloop,6)=qk(kloop,6)*y(kloop,88)*y(kloop,122)
+!
+!....         O1D + O3 = 2 O2
+!
+      qqk(kloop,7)=qk(kloop,7)*y(kloop,88)*y(kloop,89)
+!
+!....         O1D + O3 = 2 O + O2
+!
+      qqk(kloop,8)=qk(kloop,8)*y(kloop,88)*y(kloop,89)
+!
+!....         H2O + O1D = 2 OH
+!
+      qqk(kloop,9)=qk(kloop,9)*y(kloop,49)*y(kloop,88)
+!
+!....         H2 + O1D = H + OH
+!
+      qqk(kloop,10)=qk(kloop,10)*y(kloop,46)*y(kloop,88)
+!
+!....         N2O + O1D = N2 + O2
+!
+      qqk(kloop,11)=qk(kloop,11)*y(kloop,82)*y(kloop,88)
+!
+!....         N2O + O1D = 2 NO
+!
+      qqk(kloop,12)=qk(kloop,12)*y(kloop,82)*y(kloop,88)
+!
+!....         CH4 + O1D = MO2 + OH
+!
+      qqk(kloop,13)=qk(kloop,13)*y(kloop,31)*y(kloop,88)
+!
+!....         CH4 + O1D = CH2O + H + HO2
+!
+      qqk(kloop,14)=qk(kloop,14)*y(kloop,31)*y(kloop,88)
+!
+!....         CH4 + O1D = CH2O + H2
+!
+      qqk(kloop,15)=qk(kloop,15)*y(kloop,31)*y(kloop,88)
+!
+!....         CFC12 + O1D = 2 Cl
+!
+      qqk(kloop,16)=qk(kloop,16)*y(kloop,23)*y(kloop,88)
+!
+!....         CFC113 + O1D = 3 Cl
+!
+      qqk(kloop,17)=qk(kloop,17)*y(kloop,19)*y(kloop,88)
+!
+!....         CFC114 + O1D = 2 Cl
+!
+      qqk(kloop,18)=qk(kloop,18)*y(kloop,20)*y(kloop,88)
+!
+!....         CFC115 + O1D = Cl
+!
+      qqk(kloop,19)=qk(kloop,19)*y(kloop,21)*y(kloop,88)
+!
+!....         HCFC22 + O1D = Cl
+!
+      qqk(kloop,20)=qk(kloop,20)*y(kloop,54)*y(kloop,88)
+!
+!....         HCFC141b + O1D = 2 Cl
+!
+      qqk(kloop,21)=qk(kloop,21)*y(kloop,52)*y(kloop,88)
+!
+!....         HCFC142b + O1D = Cl
+!
+      qqk(kloop,22)=qk(kloop,22)*y(kloop,53)*y(kloop,88)
+!
+!....         H + O2 = HO2
+!
+      qqk(kloop,23)=qk(kloop,23)*y(kloop,45)*y(kloop,122)
+!
+!....         H + O3 = O2 + OH
+!
+      qqk(kloop,24)=qk(kloop,24)*y(kloop,45)*y(kloop,89)
+!
+!....         H + HO2 = 2 OH
+!
+      qqk(kloop,25)=qk(kloop,25)*y(kloop,45)*y(kloop,60)
+!
+!....         H + HO2 = H2 + O2
+!
+      qqk(kloop,26)=qk(kloop,26)*y(kloop,45)*y(kloop,60)
+!
+!....         H + HO2 = H2O + O
+!
+      qqk(kloop,27)=qk(kloop,27)*y(kloop,45)*y(kloop,60)
+!
+!....         H + NO2 = NO + OH
+!
+      qqk(kloop,28)=qk(kloop,28)*y(kloop,45)*y(kloop,85)
+!
+!....         O + OH = H + O2
+!
+      qqk(kloop,29)=qk(kloop,29)*y(kloop,87)*y(kloop,92)
+!
+!....         HO2 + O = O2 + OH
+!
+      qqk(kloop,30)=qk(kloop,30)*y(kloop,60)*y(kloop,87)
+!
+!....         H + HO2 = 2 OH
+!
+      qqk(kloop,31)=qk(kloop,31)*y(kloop,45)*y(kloop,60)
+!
+!....         O3 + OH = HO2 + O2
+!
+      qqk(kloop,32)=qk(kloop,32)*y(kloop,89)*y(kloop,92)
+!
+!....         HO2 + O3 = 2 O2 + OH
+!
+      qqk(kloop,33)=qk(kloop,33)*y(kloop,60)*y(kloop,89)
+!
+!....         OH + OH = H2O + O
+!
+      qqk(kloop,34)=qk(kloop,34)*y(kloop,92)*y(kloop,92)
+!
+!....         OH + OH = H2O2
+!
+      qqk(kloop,35)=qk(kloop,35)*y(kloop,92)*y(kloop,92)
+!
+!....         HO2 + OH = H2O + O2
+!
+      qqk(kloop,36)=qk(kloop,36)*y(kloop,60)*y(kloop,92)
+!
+!....         H2O2 + OH = H2O + HO2
+!
+      qqk(kloop,37)=qk(kloop,37)*y(kloop,48)*y(kloop,92)
+!
+!....         HO2 + HO2 = H2O2 + O2
+!
+      qqk(kloop,38)=qk(kloop,38)*y(kloop,60)*y(kloop,60)
+!
+!....         H2O + HO2 + HO2 = H2O + H2O2 + O2
+!
+      qqk(kloop,39)=qk(kloop,39)*y(kloop,49)*y(kloop,60)*y(kloop,60)
+!
+!....         H2 + OH = H + H2O
+!
+      qqk(kloop,40)=qk(kloop,40)*y(kloop,46)*y(kloop,92)
+!
+!....         NO + O3 = NO2 + O2
+!
+      qqk(kloop,41)=qk(kloop,41)*y(kloop,84)*y(kloop,89)
+!
+!....         NO2 + O3 = NO3 + O2
+!
+      qqk(kloop,42)=qk(kloop,42)*y(kloop,85)*y(kloop,89)
+!
+!....         HO2 + NO = NO2 + OH
+!
+      qqk(kloop,43)=qk(kloop,43)*y(kloop,60)*y(kloop,84)
+!
+!....         CO + OH = H
+!
+      qqk(kloop,44)=qk(kloop,44)*y(kloop,38)*y(kloop,92)
+!
+!....         CH4 + OH = H2O + MO2
+!
+      qqk(kloop,45)=qk(kloop,45)*y(kloop,31)*y(kloop,92)
+!
+!....         MO2 + NO = CH2O + HO2 + NO2
+!
+      qqk(kloop,46)=qk(kloop,46)*y(kloop,76)*y(kloop,84)
+!
+!....         ClO + MO2 = CH2O + Cl + HO2 + O2
+!
+      qqk(kloop,47)=qk(kloop,47)*y(kloop,36)*y(kloop,76)
+!
+!....         HO2 + MO2 = MP + O2
+!
+      qqk(kloop,48)=qk(kloop,48)*y(kloop,60)*y(kloop,76)
+!
+!....         MO2 + MO2 = CH2O + MOH + O2
+!
+      qqk(kloop,49)=qk(kloop,49)*y(kloop,76)*y(kloop,76)
+!
+!....         MO2 + MO2 = 2 CH2O + 2 HO2
+!
+      qqk(kloop,50)=qk(kloop,50)*y(kloop,76)*y(kloop,76)
+!
+!....         MP + OH = H2O + MO2
+!
+      qqk(kloop,51)=qk(kloop,51)*y(kloop,78)*y(kloop,92)
+!
+!....         MP + OH = CH2O + H2O + OH
+!
+      qqk(kloop,52)=qk(kloop,52)*y(kloop,78)*y(kloop,92)
+!
+!....         CH2O + OH = CO + H2O + HO2
+!
+      qqk(kloop,53)=qk(kloop,53)*y(kloop,27)*y(kloop,92)
+!
+!....         NO + O = NO2
+!
+      qqk(kloop,54)=qk(kloop,54)*y(kloop,84)*y(kloop,87)
+!
+!....         NO2 + O = NO + O2
+!
+      qqk(kloop,55)=qk(kloop,55)*y(kloop,85)*y(kloop,87)
+!
+!....         NO2 + O = NO3
+!
+      qqk(kloop,56)=qk(kloop,56)*y(kloop,85)*y(kloop,87)
+!
+!....         NO3 + O = NO2 + O2
+!
+      qqk(kloop,57)=qk(kloop,57)*y(kloop,86)*y(kloop,87)
+!
+!....         N + O2 = NO + O
+!
+      qqk(kloop,58)=qk(kloop,58)*y(kloop,81)*y(kloop,122)
+!
+!....         N + OH = H + NO
+!
+      qqk(kloop,59)=qk(kloop,59)*y(kloop,81)*y(kloop,92)
+!
+!....         N + NO = N2 + O
+!
+      qqk(kloop,60)=qk(kloop,60)*y(kloop,81)*y(kloop,84)
+!
+!....         N + NO2 = N2O + O
+!
+      qqk(kloop,61)=qk(kloop,61)*y(kloop,81)*y(kloop,85)
+!
+!....         NO2 + OH = HNO3
+!
+      qqk(kloop,62)=qk(kloop,62)*y(kloop,85)*y(kloop,92)
+!
+!....         HNO3 + OH = H2O + NO3
+!
+      qqk(kloop,63)=qk(kloop,63)*y(kloop,58)*y(kloop,92)
+!
+!....         NO + OH = HNO2
+!
+      qqk(kloop,64)=qk(kloop,64)*y(kloop,84)*y(kloop,92)
+!
+!....         HNO2 + OH = H2O + NO2
+!
+      qqk(kloop,65)=qk(kloop,65)*y(kloop,57)*y(kloop,92)
+!
+!....         HO2 + NO2 = HNO4
+!
+      qqk(kloop,66)=qk(kloop,66)*y(kloop,60)*y(kloop,85)
+!
+!....         HNO4 = HO2 + NO2
+!
+      qqk(kloop,67)=qk(kloop,67)*y(kloop,59)
+!
+!....         HNO4 + OH = H2O + NO2 + O2
+!
+      qqk(kloop,68)=qk(kloop,68)*y(kloop,59)*y(kloop,92)
+!
+!....         HO2 + NO3 = NO2 + O2 + OH
+!
+      qqk(kloop,69)=qk(kloop,69)*y(kloop,60)*y(kloop,86)
+!
+!....         NO + NO3 = 2 NO2
+!
+      qqk(kloop,70)=qk(kloop,70)*y(kloop,84)*y(kloop,86)
+!
+!....         NO3 + OH = HO2 + NO2
+!
+      qqk(kloop,71)=qk(kloop,71)*y(kloop,86)*y(kloop,92)
+!
+!....         NO2 + NO3 = N2O5
+!
+      qqk(kloop,72)=qk(kloop,72)*y(kloop,85)*y(kloop,86)
+!
+!....         N2O5 = NO2 + NO3
+!
+      qqk(kloop,73)=qk(kloop,73)*y(kloop,83)
+!
+!....         HCOOH + OH = H2O + HO2
+!
+      qqk(kloop,74)=qk(kloop,74)*y(kloop,56)*y(kloop,92)
+!
+!....         MOH + OH = CH2O + HO2
+!
+      qqk(kloop,75)=qk(kloop,75)*y(kloop,77)*y(kloop,92)
+!
+!....         NO2 + NO3 = NO + NO2 + O2
+!
+      qqk(kloop,76)=qk(kloop,76)*y(kloop,85)*y(kloop,86)
+!
+!....         CH2O + NO3 = CO + HNO3 + HO2
+!
+      qqk(kloop,77)=qk(kloop,77)*y(kloop,27)*y(kloop,86)
+!
+!....         Cl + O3 = ClO + O2
+!
+      qqk(kloop,78)=qk(kloop,78)*y(kloop,35)*y(kloop,89)
+!
+!....         Cl + H2 = H + HCl
+!
+      qqk(kloop,79)=qk(kloop,79)*y(kloop,35)*y(kloop,46)
+!
+!....         Cl + H2O2 = HCl + HO2
+!
+      qqk(kloop,80)=qk(kloop,80)*y(kloop,35)*y(kloop,48)
+!
+!....         Cl + HO2 = HCl + O2
+!
+      qqk(kloop,81)=qk(kloop,81)*y(kloop,35)*y(kloop,60)
+!
+!....         Cl + HO2 = ClO + OH
+!
+      qqk(kloop,82)=qk(kloop,82)*y(kloop,35)*y(kloop,60)
+!
+!....         ClO + O = Cl + O2
+!
+      qqk(kloop,83)=qk(kloop,83)*y(kloop,36)*y(kloop,87)
+!
+!....         ClO + OH = Cl + HO2
+!
+      qqk(kloop,84)=qk(kloop,84)*y(kloop,36)*y(kloop,92)
+!
+!....         ClO + OH = HCl + O2
+!
+      qqk(kloop,85)=qk(kloop,85)*y(kloop,36)*y(kloop,92)
+!
+!....         ClO + HO2 = HOCl + O2
+!
+      qqk(kloop,86)=qk(kloop,86)*y(kloop,36)*y(kloop,60)
+!
+!....         ClO + NO = Cl + NO2
+!
+      qqk(kloop,87)=qk(kloop,87)*y(kloop,36)*y(kloop,84)
+!
+!....         ClO + NO2 = ClONO2
+!
+      qqk(kloop,88)=qk(kloop,88)*y(kloop,36)*y(kloop,85)
+!
+!....         ClO + ClO = 2 Cl + O2
+!
+      qqk(kloop,89)=qk(kloop,89)*y(kloop,36)*y(kloop,36)
+!
+!....         ClO + ClO = Cl2 + O2
+!
+      qqk(kloop,90)=qk(kloop,90)*y(kloop,36)*y(kloop,36)
+!
+!....         ClO + ClO = Cl + OClO
+!
+      qqk(kloop,91)=qk(kloop,91)*y(kloop,36)*y(kloop,36)
+!
+!....         ClO + ClO = Cl2O2
+!
+      qqk(kloop,92)=qk(kloop,92)*y(kloop,36)*y(kloop,36)
+!
+!....         Cl2O2 = 2 ClO
+!
+      qqk(kloop,93)=qk(kloop,93)*y(kloop,34)
+!
+!....         HCl + OH = Cl + H2O
+!
+      qqk(kloop,94)=qk(kloop,94)*y(kloop,55)*y(kloop,92)
+!
+!....         HOCl + OH = ClO + H2O
+!
+      qqk(kloop,95)=qk(kloop,95)*y(kloop,62)*y(kloop,92)
+!
+!....         ClONO2 + O = ClO + NO3
+!
+      qqk(kloop,96)=qk(kloop,96)*y(kloop,37)*y(kloop,87)
+!
+!....         ClONO2 + OH = HOCl + NO3
+!
+      qqk(kloop,97)=qk(kloop,97)*y(kloop,37)*y(kloop,92)
+!
+!....         Cl + ClONO2 = Cl2 + NO3
+!
+      qqk(kloop,98)=qk(kloop,98)*y(kloop,35)*y(kloop,37)
+!
+!....         Br + O3 = BrO + O2
+!
+      qqk(kloop,99)=qk(kloop,99)*y(kloop,7)*y(kloop,89)
+!
+!....         Br + HO2 = HBr + O2
+!
+      qqk(kloop,100)=qk(kloop,100)*y(kloop,7)*y(kloop,60)
+!
+!....         Br + CH2O = CO + HBr + HO2
+!
+      qqk(kloop,101)=qk(kloop,101)*y(kloop,7)*y(kloop,27)
+!
+!....         BrO + O = Br + O2
+!
+      qqk(kloop,102)=qk(kloop,102)*y(kloop,9)*y(kloop,87)
+!
+!....         BrO + HO2 = HOBr + O2
+!
+      qqk(kloop,103)=qk(kloop,103)*y(kloop,9)*y(kloop,60)
+!
+!....         BrO + NO = Br + NO2
+!
+      qqk(kloop,104)=qk(kloop,104)*y(kloop,9)*y(kloop,84)
+!
+!....         BrO + NO2 = BrONO2
+!
+      qqk(kloop,105)=qk(kloop,105)*y(kloop,9)*y(kloop,85)
+!
+!....         BrO + ClO = Br + OClO
+!
+      qqk(kloop,106)=qk(kloop,106)*y(kloop,9)*y(kloop,36)
+!
+!....         BrO + ClO = Br + Cl + O2
+!
+      qqk(kloop,107)=qk(kloop,107)*y(kloop,9)*y(kloop,36)
+!
+!....         BrO + ClO = BrCl + O2
+!
+      qqk(kloop,108)=qk(kloop,108)*y(kloop,9)*y(kloop,36)
+!
+!....         BrO + BrO = 2 Br + O2
+!
+      qqk(kloop,109)=qk(kloop,109)*y(kloop,9)*y(kloop,9)
+!
+!....         HBr + OH = Br + H2O
+!
+      qqk(kloop,110)=qk(kloop,110)*y(kloop,51)*y(kloop,92)
+!
+!....         CHBr3 + OH = 3 Br
+!
+      qqk(kloop,111)=qk(kloop,111)*y(kloop,32)*y(kloop,92)
+!
+!....         CH2Br2 + OH = 2 Br
+!
+      qqk(kloop,112)=qk(kloop,112)*y(kloop,25)*y(kloop,92)
+!
+!....         CH2O + O = CO + HO2 + OH
+!
+      qqk(kloop,113)=qk(kloop,113)*y(kloop,27)*y(kloop,87)
+!
+!....         CH4 + Cl = HCl + MO2
+!
+      qqk(kloop,114)=qk(kloop,114)*y(kloop,31)*y(kloop,35)
+!
+!....         CH2O + Cl = CO + HCl + HO2
+!
+      qqk(kloop,115)=qk(kloop,115)*y(kloop,27)*y(kloop,35)
+!
+!....         CH3Cl + OH = Cl + H2O + HO2
+!
+      qqk(kloop,116)=qk(kloop,116)*y(kloop,30)*y(kloop,92)
+!
+!....         CH3CCl3 + OH = 3 Cl + H2O
+!
+      qqk(kloop,117)=qk(kloop,117)*y(kloop,29)*y(kloop,92)
+!
+!....         HCFC22 + OH = Cl + H2O
+!
+      qqk(kloop,118)=qk(kloop,118)*y(kloop,54)*y(kloop,92)
+!
+!....         HCFC141b + OH = 2 Cl + H2O
+!
+      qqk(kloop,119)=qk(kloop,119)*y(kloop,52)*y(kloop,92)
+!
+!....         HCFC142b + OH = Cl + H2O
+!
+      qqk(kloop,120)=qk(kloop,120)*y(kloop,53)*y(kloop,92)
+!
+!....         CH3Cl + Cl = CO + 2 HCl + HO2
+!
+      qqk(kloop,121)=qk(kloop,121)*y(kloop,30)*y(kloop,35)
+!
+!....         CH3Br + OH = Br + H2O + HO2
+!
+      qqk(kloop,122)=qk(kloop,122)*y(kloop,28)*y(kloop,92)
+!
+!....         CHCl3 + OH = 3 Cl
+!
+      qqk(kloop,123)=qk(kloop,123)*y(kloop,24)*y(kloop,92)
+!
+!....         CH2Cl2 + OH = 2 Cl
+!
+      qqk(kloop,124)=qk(kloop,124)*y(kloop,26)*y(kloop,92)
+!
+!....         C2H4Cl2 + OH = 2 Cl
+!
+      qqk(kloop,125)=qk(kloop,125)*y(kloop,12)*y(kloop,92)
+!
+!....         CHCl3 + Cl = 3 Cl + HCl
+!
+      qqk(kloop,126)=qk(kloop,126)*y(kloop,24)*y(kloop,35)
+!
+!....         CH2Cl2 + Cl = 2 Cl + HCl
+!
+      qqk(kloop,127)=qk(kloop,127)*y(kloop,26)*y(kloop,35)
+!
+!....         C2Cl4 + Cl = 2 Cl
+!
+      qqk(kloop,128)=qk(kloop,128)*y(kloop,11)*y(kloop,35)
+!
+!....         A3O2 + HO2 = RA3P
+!
+      qqk(kloop,129)=qk(kloop,129)*y(kloop,1)*y(kloop,60)
+!
+!....         A3O2 + MO2 =  0.75 CH2O + HO2 +  0.25 MOH +  0.75 RCHO +  0.25 ROH
+!
+      qqk(kloop,130)=qk(kloop,130)*y(kloop,1)*y(kloop,76)
+!
+!....         A3O2 + NO = HO2 + NO2 + RCHO
+!
+      qqk(kloop,131)=qk(kloop,131)*y(kloop,1)*y(kloop,84)
+!
+!....         ACET + OH = ATO2 + H2O
+!
+      qqk(kloop,132)=qk(kloop,132)*y(kloop,120)*y(kloop,92)
+!
+!....         ACTA + OH = H2O + MO2
+!
+      qqk(kloop,133)=qk(kloop,133)*y(kloop,2)*y(kloop,92)
+!
+!....         ALD2 + NO3 = HNO3 + MCO3
+!
+      qqk(kloop,134)=qk(kloop,134)*y(kloop,3)*y(kloop,86)
+!
+!....         ALD2 + OH =  0.05 CH2O +  0.05 CO + H2O +  0.05 HO2 +  0.95 MCO3
+!
+      qqk(kloop,135)=qk(kloop,135)*y(kloop,3)*y(kloop,92)
+!
+!....         ALK4 + NO3 = HNO3 + R4O2
+!
+      qqk(kloop,136)=qk(kloop,136)*y(kloop,4)*y(kloop,86)
+!
+!....         ALK4 + OH = R4O2
+!
+      qqk(kloop,137)=qk(kloop,137)*y(kloop,4)*y(kloop,92)
+!
+!....         ATO2 + HO2 =  0.15 CH2O +  0.85 HCOOH +  0.15 MCO3 +  0.15 OH
+!
+      qqk(kloop,138)=qk(kloop,138)*y(kloop,5)*y(kloop,60)
+!
+!....         ATO2 + MCO3 =  0.10 ACTA +  0.90 CH2O +  0.90 MCO3 +  0.10 MGLY +  0.90 MO2
+!
+      qqk(kloop,139)=qk(kloop,139)*y(kloop,5)*y(kloop,73)
+!
+!....         ATO2 + MO2 =  0.50 CH2O +  0.20 HAC +  0.30 HO2 +  0.30 MCO3 +  0.50 MGLY +  0.50 MOH
+!
+      qqk(kloop,140)=qk(kloop,140)*y(kloop,5)*y(kloop,76)
+!
+!....         ATO2 + NO = CH2O + MCO3 + NO2
+!
+      qqk(kloop,141)=qk(kloop,141)*y(kloop,5)*y(kloop,84)
+!
+!....         B3O2 + HO2 = RB3P
+!
+      qqk(kloop,142)=qk(kloop,142)*y(kloop,6)*y(kloop,60)
+!
+!....         B3O2 + MCO3 = ACET +  0.10 ACTA +  0.90 HO2 +  0.90 MO2
+!
+      qqk(kloop,143)=qk(kloop,143)*y(kloop,6)*y(kloop,73)
+!
+!....         B3O2 + MO2 =  0.75 ACET +  0.75 CH2O + HO2 +  0.25 MOH +  0.25 ROH
+!
+      qqk(kloop,144)=qk(kloop,144)*y(kloop,6)*y(kloop,76)
+!
+!....         B3O2 + NO = ACET + HO2 + NO2
+!
+      qqk(kloop,145)=qk(kloop,145)*y(kloop,6)*y(kloop,84)
+!
+!....         C2H6 + NO3 = ETO2 + HNO3
+!
+      qqk(kloop,146)=qk(kloop,146)*y(kloop,13)*y(kloop,86)
+!
+!....         C2H6 + OH = ETO2 + H2O
+!
+      qqk(kloop,147)=qk(kloop,147)*y(kloop,13)*y(kloop,92)
+!
+!....         C2H6 + Cl = ETO2 + HCl
+!
+      qqk(kloop,148)=qk(kloop,148)*y(kloop,13)*y(kloop,35)
+!
+!....         C3H8 + OH = A3O2
+!
+      qqk(kloop,149)=qk(kloop,149)*y(kloop,14)*y(kloop,92)
+!
+!....         C3H8 + OH = B3O2
+!
+      qqk(kloop,150)=qk(kloop,150)*y(kloop,14)*y(kloop,92)
+!
+!....         EOH + OH = ALD2 + HO2
+!
+      qqk(kloop,151)=qk(kloop,151)*y(kloop,40)*y(kloop,92)
+!
+!....         ETO2 + ETO2 =  1.60 ALD2 +  0.40 EOH +  1.20 HO2
+!
+      qqk(kloop,152)=qk(kloop,152)*y(kloop,41)*y(kloop,41)
+!
+!....         ETO2 + NO = ALD2 + HO2 + NO2
+!
+      qqk(kloop,153)=qk(kloop,153)*y(kloop,41)*y(kloop,84)
+!
+!....         ETP + OH =  0.64 ALD2 +  0.36 ETO2 +  0.64 OH
+!
+      qqk(kloop,154)=qk(kloop,154)*y(kloop,42)*y(kloop,92)
+!
+!....         GLYC + OH =  0.73 CH2O +  0.50 CO +  0.13 GLYX +  0.13 HCOOH +  0.77 HO2 +  0.23 OH
+!
+      qqk(kloop,155)=qk(kloop,155)*y(kloop,43)*y(kloop,92)
+!
+!....         GLYC + OH = CO + HCOOH + OH
+!
+      qqk(kloop,156)=qk(kloop,156)*y(kloop,43)*y(kloop,92)
+!
+!....         GLYX + NO3 = 2 CO + HNO3 + HO2
+!
+      qqk(kloop,157)=qk(kloop,157)*y(kloop,44)*y(kloop,86)
+!
+!....         GLYX + OH = 2 CO + HO2
+!
+      qqk(kloop,158)=qk(kloop,158)*y(kloop,44)*y(kloop,92)
+!
+!....         HAC + OH = HO2 + MGLY
+!
+      qqk(kloop,159)=qk(kloop,159)*y(kloop,50)*y(kloop,92)
+!
+!....         HAC + OH =  0.50 ACTA +  0.50 CO +  0.50 HCOOH +  0.50 MO2 + OH
+!
+      qqk(kloop,160)=qk(kloop,160)*y(kloop,50)*y(kloop,92)
+!
+!....         ETO2 + HO2 = ETP
+!
+      qqk(kloop,161)=qk(kloop,161)*y(kloop,41)*y(kloop,60)
+!
+!....         HO2 + MCO3 =  0.13 ACTA +  0.37 MAP +  0.50 MO2 +  0.13 O3 +  0.50 OH
+!
+      qqk(kloop,162)=qk(kloop,162)*y(kloop,60)*y(kloop,73)
+!
+!....         IALD + OH =  0.15 HO2 +  0.44 IAO2 +  0.41 MAO3
+!
+      qqk(kloop,163)=qk(kloop,163)*y(kloop,63)*y(kloop,92)
+!
+!....         HO2 + IAO2 =  0.50 MACR +  0.50 MVK + 2 OH
+!
+      qqk(kloop,164)=qk(kloop,164)*y(kloop,60)*y(kloop,64)
+!
+!....         IAO2 + NO =  0.50 MACR +  0.50 MVK + NO2 + OH
+!
+      qqk(kloop,165)=qk(kloop,165)*y(kloop,64)*y(kloop,84)
+!
+!....         HO2 + INO2 = INPN
+!
+      qqk(kloop,166)=qk(kloop,166)*y(kloop,60)*y(kloop,65)
+!
+!....         INO2 + MCO3 =  0.15 CH2O +  0.85 HNO3 +  0.80 HO2 +  0.10 MACR + MO2 +  0.05 MVK +  0.15 NO2
+!
+      qqk(kloop,167)=qk(kloop,167)*y(kloop,65)*y(kloop,73)
+!
+!....         INO2 + MCO3 = ACTA + NO2 + RCHO
+!
+      qqk(kloop,168)=qk(kloop,168)*y(kloop,65)*y(kloop,73)
+!
+!....         INO2 + MO2 =  0.83 CH2O +  0.43 HNO3 +  0.90 HO2 +  0.05 MACR +  0.25 MOH +  0.03 MVK +  0.57 NO2 +  0.25 RCHO +  0.25 ROH
+!
+      qqk(kloop,169)=qk(kloop,169)*y(kloop,65)*y(kloop,76)
+!
+!....         INO2 + NO =  0.15 CH2O +  0.85 HNO3 +  0.80 HO2 +  0.10 MACR +  0.05 MVK +  1.15 NO2
+!
+      qqk(kloop,170)=qk(kloop,170)*y(kloop,65)*y(kloop,84)
+!
+!....         INPN + OH = INO2
+!
+      qqk(kloop,171)=qk(kloop,171)*y(kloop,66)*y(kloop,92)
+!
+!....         ISOP + NO3 = INO2
+!
+      qqk(kloop,172)=qk(kloop,172)*y(kloop,67)*y(kloop,86)
+!
+!....         ISOP + O3 =  0.83 CH2O +  0.41 CO +  0.01 H2O2 +  0.58 HCOOH +  0.16 HO2 +  0.42 MACR +  0.41 MO2 +  0.18 MVK +  0.28 OH
+!
+      qqk(kloop,173)=qk(kloop,173)*y(kloop,67)*y(kloop,89)
+!
+!....         ISOP + OH = RIO2
+!
+      qqk(kloop,174)=qk(kloop,174)*y(kloop,67)*y(kloop,92)
+!
+!....         HO2 + KO2 =  0.15 ALD2 +  0.85 HCOOH +  0.15 MCO3 +  0.85 MO2 +  0.15 OH
+!
+      qqk(kloop,175)=qk(kloop,175)*y(kloop,60)*y(kloop,68)
+!
+!....         KO2 + MCO3 =  0.10 ACTA +  0.90 ALD2 +  0.90 MCO3 +  0.10 MEK +  0.90 MO2
+!
+      qqk(kloop,176)=qk(kloop,176)*y(kloop,68)*y(kloop,73)
+!
+!....         KO2 + MO2 =  0.50 ALD2 +  0.75 CH2O +  0.50 HO2 +  0.50 MCO3 +  0.25 MEK +  0.25 MO2 +  0.25 MOH +  0.25 ROH
+!
+      qqk(kloop,177)=qk(kloop,177)*y(kloop,68)*y(kloop,76)
+!
+!....         KO2 + NO =  0.92 ALD2 +  0.92 MCO3 +  0.93 NO2 +  0.07 R4N2
+!
+      qqk(kloop,178)=qk(kloop,178)*y(kloop,68)*y(kloop,84)
+!
+!....         MACR + NO3 =  0.68 CO +  0.32 HNO3 +  0.32 MAO3 +  0.68 MGLY +  0.68 NO2
+!
+      qqk(kloop,179)=qk(kloop,179)*y(kloop,69)*y(kloop,86)
+!
+!....         MACR + OH = MAO3
+!
+      qqk(kloop,180)=qk(kloop,180)*y(kloop,69)*y(kloop,92)
+!
+!....         MACR + O3 =  0.12 CH2O +  0.12 CO +  0.88 HCOOH +  0.12 MCO3 +  0.88 MGLY +  0.12 OH
+!
+      qqk(kloop,181)=qk(kloop,181)*y(kloop,69)*y(kloop,89)
+!
+!....         HO2 + MAO3 =  0.50 CH2O +  0.32 CO +  0.50 MAOP +  0.17 MCO3 +  0.32 MO2 +  0.13 O3 +  0.50 OH
+!
+      qqk(kloop,182)=qk(kloop,182)*y(kloop,60)*y(kloop,70)
+!
+!....         MAO3 + NO = CH2O +  0.65 CO +  0.35 MCO3 +  0.65 MO2 + NO2
+!
+      qqk(kloop,183)=qk(kloop,183)*y(kloop,70)*y(kloop,84)
+!
+!....         MAO3 + NO2 = PMN
+!
+      qqk(kloop,184)=qk(kloop,184)*y(kloop,70)*y(kloop,85)
+!
+!....         MAOP + OH =  0.25 CH2O +  0.49 CO +  0.49 HAC +  0.17 MAO3 +  0.10 MAOP +  0.09 MCO3 +  0.16 MO2 +  0.58 OH
+!
+      qqk(kloop,185)=qk(kloop,185)*y(kloop,71)*y(kloop,92)
+!
+!....         A3O2 + MCO3 =  0.10 ACTA +  0.90 HO2 +  0.90 MO2 + RCHO
+!
+      qqk(kloop,186)=qk(kloop,186)*y(kloop,1)*y(kloop,73)
+!
+!....         ETO2 + MCO3 =  0.10 ACTA + ALD2 +  0.90 HO2 +  0.90 MO2
+!
+      qqk(kloop,187)=qk(kloop,187)*y(kloop,41)*y(kloop,73)
+!
+!....         MCO3 + MCO3 = 2 MO2
+!
+      qqk(kloop,188)=qk(kloop,188)*y(kloop,73)*y(kloop,73)
+!
+!....         MCO3 + MO2 =  0.10 ACTA + CH2O +  0.90 HO2 +  0.90 MO2
+!
+      qqk(kloop,189)=qk(kloop,189)*y(kloop,73)*y(kloop,76)
+!
+!....         MCO3 + NO2 = PAN
+!
+      qqk(kloop,190)=qk(kloop,190)*y(kloop,73)*y(kloop,85)
+!
+!....         MCO3 + NO = MO2 + NO2
+!
+      qqk(kloop,191)=qk(kloop,191)*y(kloop,73)*y(kloop,84)
+!
+!....         MCO3 + PO2 =  0.10 ACTA +  0.90 ALD2 +  0.90 CH2O +  0.06 HAC +  0.90 HO2 +  0.90 MO2 +  0.04 RCHO
+!
+      qqk(kloop,192)=qk(kloop,192)*y(kloop,73)*y(kloop,95)
+!
+!....         MEK + NO3 = HNO3 + KO2
+!
+      qqk(kloop,193)=qk(kloop,193)*y(kloop,74)*y(kloop,86)
+!
+!....         MEK + OH = H2O + KO2
+!
+      qqk(kloop,194)=qk(kloop,194)*y(kloop,74)*y(kloop,92)
+!
+!....         MGLY + NO3 = CO + HNO3 + MCO3
+!
+      qqk(kloop,195)=qk(kloop,195)*y(kloop,75)*y(kloop,86)
+!
+!....         MGLY + OH = CO + MCO3
+!
+      qqk(kloop,196)=qk(kloop,196)*y(kloop,75)*y(kloop,92)
+!
+!....         MVK + O3 =  0.04 ALD2 +  0.80 CH2O +  0.05 CO +  0.06 HO2 +  0.82 MGLY +  0.20 O3 +  0.08 OH
+!
+      qqk(kloop,197)=qk(kloop,197)*y(kloop,80)*y(kloop,89)
+!
+!....         MVK + OH = VRO2
+!
+      qqk(kloop,198)=qk(kloop,198)*y(kloop,80)*y(kloop,92)
+!
+!....         MAP + OH =  0.22 CH2O +  0.78 MCO3 +  0.22 OH
+!
+      qqk(kloop,199)=qk(kloop,199)*y(kloop,72)*y(kloop,92)
+!
+!....         OH + RCHO = H2O + RCO3
+!
+      qqk(kloop,200)=qk(kloop,200)*y(kloop,92)*y(kloop,107)
+!
+!....         OH + RCOOH = ETO2
+!
+      qqk(kloop,201)=qk(kloop,201)*y(kloop,92)*y(kloop,109)
+!
+!....         PAN = MCO3 + NO2
+!
+      qqk(kloop,202)=qk(kloop,202)*y(kloop,93)
+!
+!....         PMN = MAO3 + NO2
+!
+      qqk(kloop,203)=qk(kloop,203)*y(kloop,94)
+!
+!....         OH + PMN =  0.25 CO +  0.25 HAC +  0.75 MAOP + NO3
+!
+      qqk(kloop,204)=qk(kloop,204)*y(kloop,92)*y(kloop,94)
+!
+!....         HO2 + PO2 = PP
+!
+      qqk(kloop,205)=qk(kloop,205)*y(kloop,60)*y(kloop,95)
+!
+!....         MO2 + PO2 =  0.50 ALD2 +  1.25 CH2O +  0.16 HAC + HO2 +  0.25 MOH +  0.09 RCHO +  0.25 ROH
+!
+      qqk(kloop,206)=qk(kloop,206)*y(kloop,76)*y(kloop,95)
+!
+!....         NO + PO2 = ALD2 + CH2O + HO2 + NO2
+!
+      qqk(kloop,207)=qk(kloop,207)*y(kloop,84)*y(kloop,95)
+!
+!....         PPN = NO2 + RCO3
+!
+      qqk(kloop,208)=qk(kloop,208)*y(kloop,97)
+!
+!....         OH + PP =  0.79 HAC +  0.79 OH +  0.21 PO2
+!
+      qqk(kloop,209)=qk(kloop,209)*y(kloop,92)*y(kloop,96)
+!
+!....         HO2 + PRN1 = PRPN
+!
+      qqk(kloop,210)=qk(kloop,210)*y(kloop,60)*y(kloop,98)
+!
+!....         MCO3 + PRN1 =  0.10 ACTA +  0.90 ALD2 +  0.90 CH2O +  0.90 MO2 + NO2 +  0.10 RCHO
+!
+      qqk(kloop,211)=qk(kloop,211)*y(kloop,73)*y(kloop,98)
+!
+!....         MO2 + PRN1 =  0.50 ALD2 +  1.25 CH2O +  0.50 HO2 +  0.25 MOH + NO2 +  0.25 RCHO +  0.25 ROH
+!
+      qqk(kloop,212)=qk(kloop,212)*y(kloop,76)*y(kloop,98)
+!
+!....         NO + PRN1 = ALD2 + CH2O + 2 NO2
+!
+      qqk(kloop,213)=qk(kloop,213)*y(kloop,84)*y(kloop,98)
+!
+!....         NO3 + PRPE = PRN1
+!
+      qqk(kloop,214)=qk(kloop,214)*y(kloop,86)*y(kloop,99)
+!
+!....         O3 + PRPE =  0.12 ACTA +  0.50 ALD2 +  0.50 CH2O +  0.10 CH4 +  0.56 CO +  0.22 HCOOH +  0.28 HO2 +  0.28 MO2 +  0.36 OH
+!
+      qqk(kloop,215)=qk(kloop,215)*y(kloop,89)*y(kloop,99)
+!
+!....         OH + PRPE = PO2
+!
+      qqk(kloop,216)=qk(kloop,216)*y(kloop,92)*y(kloop,99)
+!
+!....         OH + PRPN =  0.79 MGLY +  0.79 NO2 +  0.21 PRN1
+!
+      qqk(kloop,217)=qk(kloop,217)*y(kloop,92)*y(kloop,100)
+!
+!....         HO2 + R4N1 = R4N2
+!
+      qqk(kloop,218)=qk(kloop,218)*y(kloop,60)*y(kloop,101)
+!
+!....         MCO3 + R4N1 =  0.10 ACTA +  0.68 ALD2 +  0.35 CH2O +  0.90 MO2 + NO2 +  0.27 R4O2 +  0.61 RCHO
+!
+      qqk(kloop,219)=qk(kloop,219)*y(kloop,73)*y(kloop,101)
+!
+!....         MO2 + R4N1 =  0.38 ALD2 +  0.95 CH2O +  0.50 HO2 +  0.25 MOH + NO2 +  0.15 R4O2 +  0.58 RCHO +  0.38 ROH
+!
+      qqk(kloop,220)=qk(kloop,220)*y(kloop,76)*y(kloop,101)
+!
+!....         NO + R4N1 =  0.97 ALD2 +  0.64 CH2O + 2 NO2 +  0.64 RCHO
+!
+      qqk(kloop,221)=qk(kloop,221)*y(kloop,84)*y(kloop,101)
+!
+!....         OH + R4N2 = H2O + R4N1
+!
+      qqk(kloop,222)=qk(kloop,222)*y(kloop,92)*y(kloop,102)
+!
+!....         HO2 + R4O2 = R4P
+!
+      qqk(kloop,223)=qk(kloop,223)*y(kloop,60)*y(kloop,103)
+!
+!....         MCO3 + R4O2 =  0.05 A3O2 +  0.29 ACET +  0.10 ACTA +  0.29 ALD2 +  0.16 B3O2 +  0.29 ETO2 +  0.24 HO2 +  0.27 MEK +  0.90 MO2 +  0.25 RCHO
+!
+      qqk(kloop,224)=qk(kloop,224)*y(kloop,73)*y(kloop,103)
+!
+!....         MO2 + R4O2 =  0.03 A3O2 +  0.16 ACET +  0.16 ALD2 +  0.09 B3O2 +  0.75 CH2O +  0.16 ETO2 +  0.64 HO2 +  0.35 MEK +  0.09 MO2 +  0.25 MOH +  0.13 RCHO +  0.38 ROH
+!
+      qqk(kloop,225)=qk(kloop,225)*y(kloop,76)*y(kloop,103)
+!
+!....         NO + R4O2 =  0.05 A3O2 +  0.34 ACET +  0.34 ALD2 +  0.19 B3O2 +  0.34 ETO2 +  0.27 HO2 +  0.19 MEK +  0.19 MO2 + NO2 +  0.15 RCHO
+!
+      qqk(kloop,226)=qk(kloop,226)*y(kloop,84)*y(kloop,103)
+!
+!....         NO + R4O2 = R4N2
+!
+      qqk(kloop,227)=qk(kloop,227)*y(kloop,84)*y(kloop,103)
+!
+!....         OH + R4P =  0.79 OH +  0.21 R4O2 +  1.18 RCHO
+!
+      qqk(kloop,228)=qk(kloop,228)*y(kloop,92)*y(kloop,104)
+!
+!....         OH + RA3P =  0.36 A3O2 +  0.64 OH +  0.64 RCHO
+!
+      qqk(kloop,229)=qk(kloop,229)*y(kloop,92)*y(kloop,105)
+!
+!....         OH + RB3P =  0.79 ACET +  0.21 B3O2 +  0.79 OH
+!
+      qqk(kloop,230)=qk(kloop,230)*y(kloop,92)*y(kloop,106)
+!
+!....         NO3 + RCHO = HNO3 + RCO3
+!
+      qqk(kloop,231)=qk(kloop,231)*y(kloop,86)*y(kloop,107)
+!
+!....         HO2 + RCO3 =  0.03 A3O2 +  0.12 B3O2 +  0.22 ETO2 +  0.15 O3 +  0.44 OH +  0.15 RCOOH +  0.41 RP
+!
+      qqk(kloop,232)=qk(kloop,232)*y(kloop,60)*y(kloop,108)
+!
+!....         MCO3 + RCO3 =  0.07 A3O2 +  0.27 B3O2 +  0.49 ETO2 + MO2
+!
+      qqk(kloop,233)=qk(kloop,233)*y(kloop,73)*y(kloop,108)
+!
+!....         MO2 + RCO3 =  0.07 A3O2 +  0.27 B3O2 + CH2O +  0.49 ETO2 + HO2
+!
+      qqk(kloop,234)=qk(kloop,234)*y(kloop,76)*y(kloop,108)
+!
+!....         NO2 + RCO3 = PPN
+!
+      qqk(kloop,235)=qk(kloop,235)*y(kloop,85)*y(kloop,108)
+!
+!....         NO + RCO3 =  0.07 A3O2 +  0.27 B3O2 +  0.49 ETO2 + NO2
+!
+      qqk(kloop,236)=qk(kloop,236)*y(kloop,84)*y(kloop,108)
+!
+!....         HO2 + RIO1 =  0.06 CH2O +  0.06 HO2 +  0.06 MVK +  0.06 OH +  0.94 RIPA
+!
+      qqk(kloop,237)=qk(kloop,237)*y(kloop,60)*y(kloop,110)
+!
+!....         HO2 + RIO2 =  0.06 CH2O +  0.06 HO2 +  0.06 MACR +  0.06 OH +  0.94 RIPB
+!
+      qqk(kloop,238)=qk(kloop,238)*y(kloop,60)*y(kloop,111)
+!
+!....         MO2 + RIO1 = 2 CH2O + 2 HO2 + MVK
+!
+      qqk(kloop,239)=qk(kloop,239)*y(kloop,76)*y(kloop,110)
+!
+!....         MO2 + RIO2 = 2 CH2O + 2 HO2 + MACR
+!
+      qqk(kloop,240)=qk(kloop,240)*y(kloop,76)*y(kloop,111)
+!
+!....         RIO1 + RIO1 = 2 CH2O + 2 HO2 + 2 MVK
+!
+      qqk(kloop,241)=qk(kloop,241)*y(kloop,110)*y(kloop,110)
+!
+!....         RIO2 + RIO2 = 2 CH2O + 2 HO2 + 2 MACR
+!
+      qqk(kloop,242)=qk(kloop,242)*y(kloop,111)*y(kloop,111)
+!
+!....         RIO1 + RIO2 = 2 CH2O + 2 HO2 + MACR + MVK
+!
+      qqk(kloop,243)=qk(kloop,243)*y(kloop,110)*y(kloop,111)
+!
+!....         NO + RIO1 = CH2O + HO2 + MVK + NO2
+!
+      qqk(kloop,244)=qk(kloop,244)*y(kloop,84)*y(kloop,110)
+!
+!....         NO + RIO2 = CH2O + HO2 + MACR + NO2
+!
+      qqk(kloop,245)=qk(kloop,245)*y(kloop,84)*y(kloop,111)
+!
+!....         NO + RIO1 = HNO3
+!
+      qqk(kloop,246)=qk(kloop,246)*y(kloop,84)*y(kloop,110)
+!
+!....         NO + RIO2 = HNO3
+!
+      qqk(kloop,247)=qk(kloop,247)*y(kloop,84)*y(kloop,111)
+!
+!....         RIO1 = CH2O + MVK + OH
+!
+      qqk(kloop,248)=qk(kloop,248)*y(kloop,110)
+!
+!....         RIO2 = CH2O + MACR + OH
+!
+      qqk(kloop,249)=qk(kloop,249)*y(kloop,111)
+!
+!....         RIO1 =  0.30 CH2O +  0.60 CO +  0.40 HO2 +  0.40 IALD +  0.30 MCO3 +  0.30 MGLY +  1.50 OH
+!
+      qqk(kloop,250)=qk(kloop,250)*y(kloop,110)
+!
+!....         RIO2 =  0.30 CH2O +  0.90 CO +  0.30 HCOOH +  0.70 HO2 +  0.40 IALD +  0.30 MGLY +  1.50 OH
+!
+      qqk(kloop,251)=qk(kloop,251)*y(kloop,111)
+!
+!....         OH + RIPA =  0.25 CO +  0.25 HO2 +  0.12 MRP +  0.12 MVK +  0.75 RIO1
+!
+      qqk(kloop,252)=qk(kloop,252)*y(kloop,92)*y(kloop,112)
+!
+!....         OH + RIPB =  0.33 CO +  0.33 HO2 +  0.16 IAO2 +  0.17 MACR +  0.17 MRP +  0.51 RIO2
+!
+      qqk(kloop,253)=qk(kloop,253)*y(kloop,92)*y(kloop,113)
+!
+!....         OH + ROH = HO2 + RCHO
+!
+      qqk(kloop,254)=qk(kloop,254)*y(kloop,92)*y(kloop,114)
+!
+!....         OH + RP =  0.50 ALD2 +  0.50 OH +  0.50 RCO3
+!
+      qqk(kloop,255)=qk(kloop,255)*y(kloop,92)*y(kloop,115)
+!
+!....         HO2 + VRO2 =  0.05 CH2O +  0.36 GLYC +  0.31 HO2 +  0.25 MAOP +  0.36 MCO3 +  0.05 MGLY +  0.67 OH +  0.34 VRP
+!
+      qqk(kloop,256)=qk(kloop,256)*y(kloop,60)*y(kloop,116)
+!
+!....         NO + VRO2 = HNO3
+!
+      qqk(kloop,257)=qk(kloop,257)*y(kloop,84)*y(kloop,116)
+!
+!....         NO + VRO2 =  0.24 CH2O +  0.76 GLYC +  0.24 HO2 +  0.76 MCO3 +  0.24 MGLY + NO2
+!
+      qqk(kloop,258)=qk(kloop,258)*y(kloop,84)*y(kloop,116)
+!
+!....         OH + VRP =  1.19 CO +  0.53 HO2 +  0.53 MCO3 +  0.19 MGLY +  0.19 OH
+!
+      qqk(kloop,259)=qk(kloop,259)*y(kloop,92)*y(kloop,117)
+!
+!....         N2O5 = 2 HNO3
+!
+      qqk(kloop,260)=qk(kloop,260)*y(kloop,83)
+!
+!....         ClONO2 = HNO3 + HOCl
+!
+      qqk(kloop,261)=qk(kloop,261)*y(kloop,37)
+!
+!....         BrONO2 = HNO3 + HOBr
+!
+      qqk(kloop,262)=qk(kloop,262)*y(kloop,10)
+!
+!....         ClONO2 + HCl = Cl2 + HNO3
+!
+      qqk(kloop,263)=qk(kloop,263)*y(kloop,37)*y(kloop,55)
+!
+!....         HCl + HOCl = Cl2 + H2O
+!
+      qqk(kloop,264)=qk(kloop,264)*y(kloop,55)*y(kloop,62)
+!
+!....         HCl + HOBr = BrCl + H2O
+!
+      qqk(kloop,265)=qk(kloop,265)*y(kloop,55)*y(kloop,61)
+!
+!....         N2O5 = 2 HNO3
+!
+      qqk(kloop,266)=qk(kloop,266)*y(kloop,83)
+!
+!....         ClONO2 = HNO3 + HOCl
+!
+      qqk(kloop,267)=qk(kloop,267)*y(kloop,37)
+!
+!....         BrONO2 = HNO3 + HOBr
+!
+      qqk(kloop,268)=qk(kloop,268)*y(kloop,10)
+!
+!....         ClONO2 + HCl = Cl2 + HNO3
+!
+      qqk(kloop,269)=qk(kloop,269)*y(kloop,37)*y(kloop,55)
+!
+!....         HCl + HOCl = Cl2 + H2O
+!
+      qqk(kloop,270)=qk(kloop,270)*y(kloop,55)*y(kloop,62)
+!
+!....         HCl + HOBr = BrCl + H2O
+!
+      qqk(kloop,271)=qk(kloop,271)*y(kloop,55)*y(kloop,61)
+!
+!....         ClONO2 = HNO3 + HOCl
+!
+      qqk(kloop,272)=qk(kloop,272)*y(kloop,37)
+!
+!....         BrONO2 = HNO3 + HOBr
+!
+      qqk(kloop,273)=qk(kloop,273)*y(kloop,10)
+!
+!....         ClONO2 + HCl = Cl2 + HNO3
+!
+      qqk(kloop,274)=qk(kloop,274)*y(kloop,37)*y(kloop,55)
+!
+!....         HCl + HOCl = Cl2 + H2O
+!
+      qqk(kloop,275)=qk(kloop,275)*y(kloop,55)*y(kloop,62)
+!
+!....         BrONO2 + HCl = BrCl + HNO3
+!
+      qqk(kloop,276)=qk(kloop,276)*y(kloop,10)*y(kloop,55)
+!
+!....         HCl + HOBr = BrCl + H2O
+!
+      qqk(kloop,277)=qk(kloop,277)*y(kloop,55)*y(kloop,61)
+!
+!....         ClONO2 = HNO3 + HOCl
+!
+      qqk(kloop,278)=qk(kloop,278)*y(kloop,37)
+!
+!....         BrONO2 = HNO3 + HOBr
+!
+      qqk(kloop,279)=qk(kloop,279)*y(kloop,10)
+!
+!....         ClONO2 + HCl = Cl2 + HNO3
+!
+      qqk(kloop,280)=qk(kloop,280)*y(kloop,37)*y(kloop,55)
+!
+!....         HCl + HOCl = Cl2 + H2O
+!
+      qqk(kloop,281)=qk(kloop,281)*y(kloop,55)*y(kloop,62)
+!
+!....         BrONO2 + HCl = BrCl + HNO3
+!
+      qqk(kloop,282)=qk(kloop,282)*y(kloop,10)*y(kloop,55)
+!
+!....         HCl + HOBr = BrCl + H2O
+!
+      qqk(kloop,283)=qk(kloop,283)*y(kloop,55)*y(kloop,61)
+!
+!....         HNO3 = NO2 + OH
+!
+      qqk(kloop,284)=qk(kloop,284)*y(kloop,58)
+!
+!....         NO3 + NO3 = 2 NO2 + O2
+!
+      qqk(kloop,285)=qk(kloop,285)*y(kloop,86)*y(kloop,86)
+!
+!....         HO2 =  0.50 H2O
+!
+      qqk(kloop,286)=qk(kloop,286)*y(kloop,60)
+!
+!....         NO2 =  0.50 HNO2 +  0.50 HNO3
+!
+      qqk(kloop,287)=qk(kloop,287)*y(kloop,85)
+!
+!....         NO3 = HNO3
+!
+      qqk(kloop,288)=qk(kloop,288)*y(kloop,86)
+!
+!....         N2O5 = 2 HNO3
+!
+      qqk(kloop,289)=qk(kloop,289)*y(kloop,83)
+!
+!....         DMS + OH = SO2
+!
+      qqk(kloop,290)=qk(kloop,290)*y(kloop,39)*y(kloop,92)
+!
+!....         DMS + NO3 = HNO3 + SO2
+!
+      qqk(kloop,291)=qk(kloop,291)*y(kloop,39)*y(kloop,86)
+!
+!....         O + SO2 = H2SO4
+!
+      qqk(kloop,292)=qk(kloop,292)*y(kloop,87)*y(kloop,118)
+!
+!....         OH + SO2 = H2SO4
+!
+      qqk(kloop,293)=qk(kloop,293)*y(kloop,92)*y(kloop,118)
+!
+!....         H2O2 + SO2 = H2SO4
+!
+      qqk(kloop,294)=qk(kloop,294)*y(kloop,48)*y(kloop,118)
+!
+!....         O3 + SO2 = H2SO4
+!
+      qqk(kloop,295)=qk(kloop,295)*y(kloop,89)*y(kloop,118)
+!
+!....         O + OCSg = CO + SO2
+!
+      qqk(kloop,296)=qk(kloop,296)*y(kloop,87)*y(kloop,91)
+!
+!....         OCSg + OH = SO2
+!
+      qqk(kloop,297)=qk(kloop,297)*y(kloop,91)*y(kloop,92)
+!
+!                  start photolytic reactions
+!
+!....  O2 + hv = 2 O
+!
+      qqj(kloop,1)=qj(kloop,1)*y(kloop,122)
+!
+!....  O2 + hv = O + O1D
+!
+      qqj(kloop,2)=qj(kloop,2)*y(kloop,122)
+!
+!....  O3 + hv = O + O2
+!
+      qqj(kloop,3)=qj(kloop,3)*y(kloop,89)
+!
+!....  O3 + hv = O1D + O2
+!
+      qqj(kloop,4)=qj(kloop,4)*y(kloop,89)
+!
+!....  NO + hv = N + O
+!
+      qqj(kloop,5)=qj(kloop,5)*y(kloop,84)
+!
+!....  N2O + hv = N2 + O1D
+!
+      qqj(kloop,6)=qj(kloop,6)*y(kloop,82)
+!
+!....  NO2 + hv = NO + O
+!
+      qqj(kloop,7)=qj(kloop,7)*y(kloop,85)
+!
+!....  H2O + hv = H + OH
+!
+      qqj(kloop,8)=qj(kloop,8)*y(kloop,49)
+!
+!....  H2O + hv = H2O
+!
+      qqj(kloop,9)=qj(kloop,9)*y(kloop,49)
+!
+!....  H2O + hv = H2 + O
+!
+      qqj(kloop,10)=qj(kloop,10)*y(kloop,49)
+!
+!....  CH4 + hv = CO + 2 H2
+!
+      qqj(kloop,11)=qj(kloop,11)*y(kloop,31)
+!
+!....  H2O2 + hv = 2 OH
+!
+      qqj(kloop,12)=qj(kloop,12)*y(kloop,48)
+!
+!....  MP + hv = CH2O + HO2 + OH
+!
+      qqj(kloop,13)=qj(kloop,13)*y(kloop,78)
+!
+!....  CH2O + hv = CO + H + HO2
+!
+      qqj(kloop,14)=qj(kloop,14)*y(kloop,27)
+!
+!....  CH2O + hv = CO + H2
+!
+      qqj(kloop,15)=qj(kloop,15)*y(kloop,27)
+!
+!....  HNO3 + hv = NO2 + OH
+!
+      qqj(kloop,16)=qj(kloop,16)*y(kloop,58)
+!
+!....  HNO2 + hv = NO + OH
+!
+      qqj(kloop,17)=qj(kloop,17)*y(kloop,57)
+!
+!....  HNO4 + hv = NO3 + OH
+!
+      qqj(kloop,18)=qj(kloop,18)*y(kloop,59)
+!
+!....  HNO4 + hv = HO2 + NO2
+!
+      qqj(kloop,19)=qj(kloop,19)*y(kloop,59)
+!
+!....  NO3 + hv = NO2 + O3
+!
+      qqj(kloop,20)=qj(kloop,20)*y(kloop,86)
+!
+!....  NO3 + hv = NO + O2
+!
+      qqj(kloop,21)=qj(kloop,21)*y(kloop,86)
+!
+!....  N2O5 + hv = NO2 + NO3
+!
+      qqj(kloop,22)=qj(kloop,22)*y(kloop,83)
+!
+!....  Cl2 + hv = 2 Cl
+!
+      qqj(kloop,23)=qj(kloop,23)*y(kloop,33)
+!
+!....  OClO + hv = ClO + O
+!
+      qqj(kloop,24)=qj(kloop,24)*y(kloop,90)
+!
+!....  Cl2O2 + hv = 2 Cl + O2
+!
+      qqj(kloop,25)=qj(kloop,25)*y(kloop,34)
+!
+!....  HOCl + hv = Cl + OH
+!
+      qqj(kloop,26)=qj(kloop,26)*y(kloop,62)
+!
+!....  ClONO2 + hv = Cl + NO3
+!
+      qqj(kloop,27)=qj(kloop,27)*y(kloop,37)
+!
+!....  ClONO2 + hv = ClO + NO2
+!
+      qqj(kloop,28)=qj(kloop,28)*y(kloop,37)
+!
+!....  BrCl + hv = Br + Cl
+!
+      qqj(kloop,29)=qj(kloop,29)*y(kloop,8)
+!
+!....  BrO + hv = Br + O
+!
+      qqj(kloop,30)=qj(kloop,30)*y(kloop,9)
+!
+!....  HOBr + hv = Br + OH
+!
+      qqj(kloop,31)=qj(kloop,31)*y(kloop,61)
+!
+!....  BrONO2 + hv = Br + NO3
+!
+      qqj(kloop,32)=qj(kloop,32)*y(kloop,10)
+!
+!....  CHBr3 + hv = 3 Br
+!
+      qqj(kloop,33)=qj(kloop,33)*y(kloop,32)
+!
+!....  CH2Br2 + hv = 2 Br
+!
+      qqj(kloop,34)=qj(kloop,34)*y(kloop,25)
+!
+!....  CH3Cl + hv = Cl + MO2
+!
+      qqj(kloop,35)=qj(kloop,35)*y(kloop,30)
+!
+!....  CCl4 + hv = 4 Cl
+!
+      qqj(kloop,36)=qj(kloop,36)*y(kloop,15)
+!
+!....  CH3CCl3 + hv = 3 Cl
+!
+      qqj(kloop,37)=qj(kloop,37)*y(kloop,29)
+!
+!....  CFC11 + hv = 3 Cl
+!
+      qqj(kloop,38)=qj(kloop,38)*y(kloop,22)
+!
+!....  CFC12 + hv = 2 Cl
+!
+      qqj(kloop,39)=qj(kloop,39)*y(kloop,23)
+!
+!....  CFC113 + hv = 3 Cl
+!
+      qqj(kloop,40)=qj(kloop,40)*y(kloop,19)
+!
+!....  CFC114 + hv = 2 Cl
+!
+      qqj(kloop,41)=qj(kloop,41)*y(kloop,20)
+!
+!....  CFC115 + hv = Cl
+!
+      qqj(kloop,42)=qj(kloop,42)*y(kloop,21)
+!
+!....  HCFC141b + hv = 2 Cl
+!
+      qqj(kloop,43)=qj(kloop,43)*y(kloop,52)
+!
+!....  HCFC142b + hv = Cl
+!
+      qqj(kloop,44)=qj(kloop,44)*y(kloop,53)
+!
+!....  CH3Br + hv = Br + MO2
+!
+      qqj(kloop,45)=qj(kloop,45)*y(kloop,28)
+!
+!....  CF3Br + hv = Br
+!
+      qqj(kloop,46)=qj(kloop,46)*y(kloop,18)
+!
+!....  CF2Br2 + hv = 2 Br
+!
+      qqj(kloop,47)=qj(kloop,47)*y(kloop,16)
+!
+!....  H2402 + hv = 2 Br
+!
+      qqj(kloop,48)=qj(kloop,48)*y(kloop,47)
+!
+!....  CF2ClBr + hv = Br + Cl
+!
+      qqj(kloop,49)=qj(kloop,49)*y(kloop,17)
+!
+!....  ALD2 + hv = CO + HO2 + MO2
+!
+      qqj(kloop,50)=qj(kloop,50)*y(kloop,3)
+!
+!....  PAN + hv =  0.70 MCO3 +  0.30 MO2 +  0.70 NO2 +  0.30 NO3
+!
+      qqj(kloop,51)=qj(kloop,51)*y(kloop,93)
+!
+!....  RCHO + hv =  0.07 A3O2 +  0.27 B3O2 + CO +  0.49 ETO2 + HO2
+!
+      qqj(kloop,52)=qj(kloop,52)*y(kloop,107)
+!
+!....  ACET + hv = MCO3 + MO2
+!
+      qqj(kloop,53)=qj(kloop,53)*y(kloop,120)
+!
+!....  MEK + hv =  0.06 A3O2 +  0.23 B3O2 +  0.41 ETO2 +  0.85 MCO3 +  0.15 MO2 +  0.15 RCO3
+!
+      qqj(kloop,54)=qj(kloop,54)*y(kloop,74)
+!
+!....  GLYC + hv =  0.90 CH2O + CO +  1.73 HO2 +  0.10 MOH +  0.07 OH
+!
+      qqj(kloop,55)=qj(kloop,55)*y(kloop,43)
+!
+!....  GLYX + hv = 2 CO + H2
+!
+      qqj(kloop,56)=qj(kloop,56)*y(kloop,44)
+!
+!....  GLYX + hv = 2 CO + 2 HO2
+!
+      qqj(kloop,57)=qj(kloop,57)*y(kloop,44)
+!
+!....  GLYX + hv = CH2O + CO
+!
+      qqj(kloop,58)=qj(kloop,58)*y(kloop,44)
+!
+!....  MGLY + hv = CO + HO2 + MCO3
+!
+      qqj(kloop,59)=qj(kloop,59)*y(kloop,75)
+!
+!....  MVK + hv = CO + PRPE
+!
+      qqj(kloop,60)=qj(kloop,60)*y(kloop,80)
+!
+!....  MVK + hv = MO2 + RCO3
+!
+      qqj(kloop,61)=qj(kloop,61)*y(kloop,80)
+!
+!....  MACR + hv = CH2O + CO + HO2 + MCO3
+!
+      qqj(kloop,62)=qj(kloop,62)*y(kloop,69)
+!
+!....  HAC + hv = CH2O + HO2 + MCO3
+!
+      qqj(kloop,63)=qj(kloop,63)*y(kloop,50)
+!
+!....  INPN + hv = HO2 + NO2 + OH + RCHO
+!
+      qqj(kloop,64)=qj(kloop,64)*y(kloop,66)
+!
+!....  PRPN + hv = HO2 + NO2 + OH + RCHO
+!
+      qqj(kloop,65)=qj(kloop,65)*y(kloop,100)
+!
+!....  ETP + hv = ALD2 + HO2 + OH
+!
+      qqj(kloop,66)=qj(kloop,66)*y(kloop,42)
+!
+!....  RA3P + hv = HO2 + OH + RCHO
+!
+      qqj(kloop,67)=qj(kloop,67)*y(kloop,105)
+!
+!....  RB3P + hv = ACET + HO2 + OH
+!
+      qqj(kloop,68)=qj(kloop,68)*y(kloop,106)
+!
+!....  R4P + hv = HO2 + OH +  1.50 RCHO
+!
+      qqj(kloop,69)=qj(kloop,69)*y(kloop,104)
+!
+!....  PP + hv = ALD2 + CH2O + HO2 + OH
+!
+      qqj(kloop,70)=qj(kloop,70)*y(kloop,96)
+!
+!....  RP + hv = ALD2 + HO2 + MO2 + OH
+!
+      qqj(kloop,71)=qj(kloop,71)*y(kloop,115)
+!
+!....  RIPA + hv = CH2O + HO2 + MVK + OH
+!
+      qqj(kloop,72)=qj(kloop,72)*y(kloop,112)
+!
+!....  RIPB + hv = CH2O + HO2 + MACR + OH
+!
+      qqj(kloop,73)=qj(kloop,73)*y(kloop,113)
+!
+!....  VRP + hv =  0.53 CH2O +  0.76 CO +  0.23 GLYX +  1.24 HO2 +  0.76 MCO3 +  0.23 MGLY
+!
+      qqj(kloop,74)=qj(kloop,74)*y(kloop,117)
+!
+!....  MRP + hv =  0.35 CH2O +  0.38 CO +  0.26 GLYC +  0.38 HAC +  0.74 HO2 +  0.26 MCO3 +  0.35 MGLY + OH
+!
+      qqj(kloop,75)=qj(kloop,75)*y(kloop,79)
+!
+!....  MAOP + hv =  0.23 CH2O +  0.77 CO +  0.77 HAC + HO2 +  0.23 MGLY + OH
+!
+      qqj(kloop,76)=qj(kloop,76)*y(kloop,71)
+!
+!....  R4N2 + hv =  0.05 A3O2 +  0.34 ACET +  0.34 ALD2 +  0.19 B3O2 +  0.34 ETO2 +  0.27 HO2 +  0.19 MEK +  0.19 MO2 + NO2 +  0.15 RCHO
+!
+      qqj(kloop,77)=qj(kloop,77)*y(kloop,102)
+!
+!....  MAP + hv = MO2 + OH
+!
+      qqj(kloop,78)=qj(kloop,78)*y(kloop,72)
+!
+!....  CH2Cl2 + hv = 2 Cl
+!
+      qqj(kloop,79)=qj(kloop,79)*y(kloop,26)
+!
+!....  OCSg + hv = CO + SO2
+!
+      qqj(kloop,80)=qj(kloop,80)*y(kloop,91)
+!
+!....  H2SO4 + hv = 2 OH + SO2
+!
+      qqj(kloop,81)=qj(kloop,81)*y(kloop,119)
+      enddo
+!
+!.... End of kloop
+!
+      return
+      end

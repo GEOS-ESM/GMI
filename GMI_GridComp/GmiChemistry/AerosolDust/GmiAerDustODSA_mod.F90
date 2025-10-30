@@ -53,9 +53,9 @@
   REAL*8, intent(in) :: dAersl  (i1:i2, ju1:j2, k1:k2, 2)
   REAL*8, intent(in) :: wAersl  (i1:i2, ju1:j2, k1:k2, NSADaer )
 !... SO4 Volc
-  REAL*8, intent(in) :: so4v_nden (i1:i2, ju1:j2, k1:k2 )
-  REAL*8, intent(in) :: so4v_sa   (i1:i2, ju1:j2, k1:k2 )
-  REAL*8, intent(in) :: so4v_sareff
+  REAL*8, intent(in) :: so4v_nden  (i1:i2, ju1:j2, k1:k2 )
+  REAL*8, intent(in) :: so4v_sa    (i1:i2, ju1:j2, k1:k2 )
+  REAL*8, intent(in) :: so4v_sareff(i1:i2, ju1:j2, k1:k2 )
   logical,intent(in) :: so4v_saexist
 !... OUTPUT PARAMETERS:
   REAL*8, intent(InOut) :: optDepth(i1:i2, ju1:j2, k1:k2, num_AerDust)
@@ -171,7 +171,12 @@
 
             ! Wet radius in "jv_spec.dat"
             if(N.eq.NSADaer) then         !!  SPECIAL_vSO4
-              RW(R) = so4v_sareff * rhGrthFac(R)
+               ! PRC -- what is implemented in this loop is clunky since it presume global fields
+               ! PRC -- I will for now implement a fixed radius (which GOCART anyway does for dry field)
+               ! PRC -- this is inconsistent with the actual OD calculation done below
+               ! PRC -- this is what we had: RW(R) = so4v_sareff * rhGrthFac(R)
+               ! PRC -- For now I will assume 0.4 um reff for dry volcanic sulfate
+              RW(R) = 0.4 * rhGrthFac(R)
             else
               RW(R) = raa_b(4,IND(N)+R-1)
             endif
@@ -300,7 +305,7 @@
                        odAer(I,J,L,IRHN) = SCALEOD(I,J,L,R)  &
                                   * 0.75d0 * gridBoxHeight(I,J,L)  &
                                   * so4v_nden(I,J,L) * 0.3537 /  &
-                                  ( MSDENS(N) * so4v_sareff * 1.0D-6 )
+                                  ( MSDENS(N) * so4v_sareff(I,J,L) * 1.0D-6 )
                     ENDDO
                  ENDDO
               ENDDO

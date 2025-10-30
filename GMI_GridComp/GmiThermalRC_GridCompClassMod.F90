@@ -88,8 +88,9 @@
    LOGICAL :: do_qqjk_inchem
    LOGICAL :: do_qqjk_reset
    LOGICAL :: pr_qqjk
+   LOGICAL :: do_tran_h2
    LOGICAL :: do_AerDust_Calc
-   LOGICAL :: do_LBSplusBCOC_SAD
+   LOGICAL :: do_LBSplusBCOC_SAD, do_StratPyroHetChem
    INTEGER :: phot_opt
 
 ! Dimensions
@@ -292,6 +293,15 @@ CONTAINS
      &           label="do_LBSplusBCOC_SAD:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
 
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_StratPyroHetChem, &
+     &           label="do_StratPyroHetChem:", default=.false., rc=STATUS)
+      VERIFY_(STATUS)
+!
+!... mutually exclusive, do_StratPyroHetChem takes precedence
+!... adding BC and OC to LBS was a first attempt at the effects of PyroCB
+!... the current approach uses BR from GOCART2G
+      if(self%do_StratPyroHetChem) self%do_LBSplusBCOC_SAD = .false.
+!
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%pr_qqjk, &
      &           label="pr_qqjk:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
@@ -485,6 +495,13 @@ CONTAINS
 
     allocate(self%mapSpecies(NSP))
     self%mapSpecies(:) = speciesReg_for_CCM(lchemvar, NSP, bgg%reg%vname, bxx%reg%vname )
+!... if mesospheric chem then BC for H2 is applied like a source gas
+    self%do_tran_h2 = .false.
+    do ib=1,NUM_K
+      if(lqkchem(ib).eq.'H + HO2 = H2 + O2') then
+        self%do_tran_h2 = .true.
+      endif
+    enddo
 
   RETURN
 
@@ -501,7 +518,7 @@ CONTAINS
 !
 
    SUBROUTINE GmiThermalRC_GridCompRun ( self, bgg, bxx, impChem, expChem, nymd, nhms, &
-                                tdt, gcSAD,   rc )
+                                tdt, gcSAD, gcPhot,   rc )
 
 ! !USES:
 
@@ -511,6 +528,7 @@ CONTAINS
    USE GmiSpcConcentrationMethod_mod, ONLY : resetFixedConcentration
    use GmiThermalRateConstants_mod  , only : calcThermalRateConstants
    USE GmiSAD_GCCMod
+   USE GmiPhotolysis_GCCMod
 
    IMPLICIT none
 
@@ -533,7 +551,8 @@ CONTAINS
                                                 !  0 - all is well
                                                 !  1 -
 
-   TYPE (GmiSAD_GridComp), INTENT(IN) :: gcSAD
+   TYPE (GmiSAD_GridComp), INTENT(INOUT)     :: gcSAD
+   TYPE (GmiPhotolysis_GridComp), INTENT(IN) :: gcPhot
 
 ! !DESCRIPTION: This routine implements the GMI Strat/Trop Driver. That 
 !               is, adds chemical tendencies to each of the constituents
@@ -781,13 +800,12 @@ CONTAINS
        self%SpeciesConcentration%concentration(INITROGEN)%pArray3D(:,:,:) =  &
            self%SpeciesConcentration%concentration(IMGAS)%pArray3D(:,:,:) * MXRN2
 
-       !===========================================
-       ! Fixes for H2 - Provided by David Considine
-       !===========================================
-       self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,:) = MXRH2
-       !=================
-       ! end fixes for H2
-       !=================
+!... BCs for H2 - like source gas if have mesospheric reactions, otherwise entire domain fixed
+       if(self%do_tran_h2) then 
+         self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,k1:k1+1) = MXRH2
+       else
+         self%SpeciesConcentration%concentration(IH2)%pArray3D(:,:,:) = MXRH2
+       endif
 
        ! If CARMA is providing stratospheric SAD and REFF, update sadcol2(iSO4)
        !   and radA(iSO4)
@@ -800,11 +818,11 @@ CONTAINS
 
        call calcThermalRateConstants (rootProc, num_time_steps, IH2O,        &
                 IMGAS, nymd, self%rxnr_adjust_map,                           &
-                press3c, tropopausePress, kel, clwc, fcld, cmf, gmiSAD,      &
+                press3c, tropopausePress, kel, clwc, fcld, cmf, gcSAD%sadgmi, &
                 self%qkgmi, self%SpeciesConcentration%concentration,         &
-                self%rxnr_adjust, eRadius, tArea, self%so4v_saexist,         &
+                self%rxnr_adjust, eRadius, tArea, gcPhot,                    &
                 relativeHumidity, conPBLFlag, self%do_AerDust_Calc,          &
-                self%do_LBSplusBCOC_SAD, self%phot_opt,                      &
+                self%do_LBSplusBCOC_SAD, self%do_StratPyroHetChem, self%phot_opt, &
                 self%pr_diag, loc_proc, self%num_rxnr_adjust,                &
                 self%rxnr_adjust_timpyr, ivert, NSAD, NUM_K, NMF, NSP,       &
                 ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
@@ -956,14 +974,16 @@ CONTAINS
       subroutine populateBundleQK()
 !
       implicit none
+! !INPUT/OUTPUT PARAMETERS:
+!      type(ESMF_State), intent(inOut) :: state
 !
 ! !DESCRIPTION:
 !
 ! !LOCAL VARIABLES:
       integer :: STATUS, numVars, ib, rc
       real(rPrec), pointer, dimension(:,:,:)   :: ptr3D
-      type(ESMF_FieldBundle)                ::      qkBundle
-      character(len=ESMF_MAXSTR), parameter :: IAm = "populateBundleQK"
+      type(ESMF_FieldBundle)                   :: qkBundle, sadBun
+      character(len=ESMF_MAXSTR), parameter    :: IAm = "populateBundleQK"
 !
 !EOP
 !--------------------------------------------------------------------------------
@@ -984,6 +1004,23 @@ CONTAINS
       do ib = 1, numVars
          ptr3D(:,:,:) = self%qkgmi(ib)%pArray3D(:,:,km:1:-1)
          call updateTracerToBundle(qkBundle, ptr3D, ib)
+      end do
+
+!... push SADs
+      call ESMF_StateGet(expChem, "gmiSAD", sadBun, rc=STATUS)
+      VERIFY_(STATUS)
+
+      call ESMF_FieldBundleGet(sadBun, fieldCount=numVars, rc=STATUS)
+      VERIFY_(STATUS)
+
+      ! Verify that the number of fields in the bundle is equal to the number
+      ! of SAD variables.
+
+      _ASSERT(numVars == NSAD,'in populateBundleSAD get gmiSAD')
+
+      do ib = 1, numVars
+         ptr3D(:,:,:) = gcSAD%sadgmi(ib)%pArray3D(:,:,km:1:-1)
+         call updateTracerToBundle(sadBun, ptr3D, ib)
       end do
 
       deallocate (ptr3D)

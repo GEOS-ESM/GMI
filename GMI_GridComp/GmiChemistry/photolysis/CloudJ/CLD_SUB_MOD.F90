@@ -33,10 +33,12 @@
       CONTAINS
 !
 !
-      SUBROUTINE CLOUD_JX (U0,SZA,RFL,SOLF,LPRTJ,PPP,ZZZ,TTT,       &
+      SUBROUTINE CLOUD_JX (U0,SZA,RFL,SOLF,LPRTJ,PPP,ZZZ,TTT, HHH,  &
              DDD,RRR,OOO,   LWP,IWP,REFFL,REFFI, CLDF,CLDCOR,CLDIW, &
              AERSP,NDXAER,L1U,ANU,VALJXX,NJXU,                      &
              CLDFLAG,NRANDO,IRAN,LNRG,NICA,JCOUNT,                  &
+             do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom,&
+             CCM_WL, CCM_SSALB, CCM_OPTX, CCM_SSLEG,                &
              cldOD_out, aerOD_out)
 
 !.new      SUBROUTINE CLOUD_JX (U0,SZA,RFL,SOLF,LPRTJ,PPP,ZZZ,TTT,HHH,DDD,  &
@@ -125,13 +127,13 @@
 !       CLDFLAG = 6  :  Use all (up to 4) quadrature cloud cover QCAs (mid-pts of bin)
 !       CLDFLAG = 7  :  Use all (up to 4) QCAs (average clouds within each Q-bin)
 !       CLDFLAG = 8  :  Calcluate Js for ALL ICAs (up to 20,000 per cell!)
-!--LNRG   = 
-!... from standalone input:  06   05 0.33   LNRG/RANDO/CLDCOR 
+!--LNRG   =
+!... from standalone input:  06   05 0.33   LNRG/RANDO/CLDCOR
 !--NRANDO = parameter for CLDFLAG = 5
-!--CLDCOR = 
+!--CLDCOR =
 !--IRAN   = parameter for CLDFLAG = 5
-!--NICA   = 
-!--JCOUNT = 
+!--NICA   =
+!--JCOUNT =
 !
 !-----------------------------------------------------------------------
 !
@@ -142,7 +144,7 @@
       real*8,  intent(in), dimension(5,W_+W_r) :: RFL
       logical, intent(in)                    :: LPRTJ
       real*8,  intent(in), dimension(L1U+1)  :: PPP, ZZZ
-      real*8,  intent(in), dimension(L1U  )  :: TTT,DDD,RRR,OOO, LWP,IWP,REFFL,REFFI
+      real*8,  intent(in), dimension(L1U  )  :: TTT,HHH,DDD,RRR,OOO, LWP,IWP,REFFL,REFFI
       real*8,  intent(in), dimension(L1U,AN_):: AERSP
       integer, intent(in), dimension(L1U,AN_):: NDXAER
       real*8,  intent(in), dimension(L1U  )  :: CLDF
@@ -151,6 +153,13 @@
       real*8, intent(out), dimension(L1U-1,NJXU)::  VALJXX
       integer, intent(out) :: NICA,JCOUNT
 !.sds.added
+!... CCM provided aerosol optical characteristics
+      logical, intent(in) :: do_CCM_OptProps
+      integer, intent(in) :: num_CCM_WL, num_CCM_aers, num_CCM_mom
+      real*8,  intent(in), dimension(num_CCM_WL)::   CCM_WL
+      real*8,  intent(in), dimension(num_CCM_WL, L1U, num_CCM_aers)::   CCM_SSALB, CCM_OPTX
+      real*8,  intent(in), dimension(num_CCM_mom, num_CCM_WL, L1U, num_CCM_aers):: CCM_SSLEG
+
       real*8, intent(out), dimension(L1U)     :: cldOD_out
       real*8, intent(out), dimension(L1U,AN_) :: aerOD_out
 !.sds.end
@@ -240,9 +249,12 @@
 !----all above have only a single, simple call for fast_JX------------
 !
 !-----------------------------------------------------------------------
-        call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
-                  DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
-                  AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
+        call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,          &
+                  DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,                   &
+                  AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK,              &
+                  do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, &
+                  CCM_WL, CCM_SSALB, CCM_OPTX, CCM_SSLEG,                 &
+                  cldOD_tmp, aerOD_tmp)
 !... capture cloud OD diagnostic
         cldOD_out(:) = cldOD_tmp(:)
         aerOD_out(:,:) = aerOD_tmp(:,:)
@@ -333,9 +345,11 @@
               endif
             enddo
 !
-            call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
+            call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,  &
                       DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
-                      AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
+                      AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, &
+                      do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL, &
+                      CCM_SSALB, CCM_OPTX, CCM_SSLEG, cldOD_tmp, aerOD_tmp)
 !... capture cloud OD diagnostic
             cldOD_out(:) = cldOD_out(:) + cldOD_tmp(:)*WTRAN
             aerOD_out(:,:) = aerOD_out(:,:) + aerOD_tmp(:,:)*WTRAN
@@ -380,9 +394,11 @@
                 endif
               enddo
 !
-              call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
+              call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,  &
                        DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
-                       AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
+                       AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, &
+                       do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL, &
+                       CCM_SSALB, CCM_OPTX, CCM_SSLEG, cldOD_tmp, aerOD_tmp)
 !... capture cloud OD diagnostic
             cldOD_out(:) = cldOD_out(:) + cldOD_tmp(:)*WTQCA(N)
             aerOD_out(:,:) = aerOD_out(:,:) + aerOD_tmp(:,:)*WTQCA(N)
@@ -438,9 +454,11 @@
                 enddo
                 QCAOD = QCAOD/WTQCA(N)
 !
-                call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
+                call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,  &
                          DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
-                         AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
+                         AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, &
+                         do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL, &
+                         CCM_SSALB, CCM_OPTX, CCM_SSLEG, cldOD_tmp, aerOD_tmp)
 !.sds.. capture cloud OD diagnostic
                 cldOD_out(:) = cldOD_out(:) + cldOD_tmp(:)*WTQCA(N)
                 aerOD_out(:,:) = aerOD_out(:,:) + aerOD_tmp(:,:)*WTQCA(N)
@@ -484,9 +502,11 @@
               endif
             enddo
 !
-            call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,  &
+            call PHOTO_JX (U0,SZA,RFL,SOLF, LPRTJ0, PPP,ZZZ,TTT,HHH,  &
                       DDD,RRR,OOO, LWPX,IWPX,REFFLX,REFFIX,   &
-                      AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, cldOD_tmp, aerOD_tmp)
+                      AERSP,NDXAER, L1U,ANU, VALJXX,NJXU, LDARK, &
+                      do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom, CCM_WL, &
+                      CCM_SSALB, CCM_OPTX, CCM_SSLEG, cldOD_tmp, aerOD_tmp)
 !... capture cloud OD diagnostic
             cldOD_out(:) = cldOD_out(:) + cldOD_tmp(:)*WCOL(I)
             aerOD_out(:,:) = aerOD_out(:,:) + aerOD_tmp(:,:)*WCOL(I)
@@ -1092,9 +1112,12 @@
 !---find beginning/end of quad range, note NQ2 < NQ1 means nothing in that range
       I = 1
       do N = 1,NQDU
-        do while (OCOLS(I).lt.OD_QUAD(N) .and. I.le.NICA)
-          I = I+1
-        enddo
+        if ( I.le.NICA ) then
+          do while (OCOLS(I).lt.OD_QUAD(N))
+            I = I+1
+            if ( I.gt.NICA ) exit
+          enddo
+        endif
         NQ2(N) = I-1
       enddo
       NQ1(1) = 1
@@ -1153,7 +1176,7 @@
         do L = 1,LTOP
           TAUALL = TAUIC(L) + TAULC(L)
           if (TAUALL .gt. 1.d-7) then
-!  calc g0 to get equivlent isootropic OD below
+!  calc g0 to get equivlent isotropic OD below
             TAUG(L) = (G0L*TAULC(L) + G0I*TAUIC(L))/TAUALL
           endif
         enddo

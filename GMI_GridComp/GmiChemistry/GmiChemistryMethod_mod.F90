@@ -87,8 +87,6 @@
 
     integer             :: chem_opt
     real*8              :: chem_cycle
-    integer             :: chem_mask_klo
-    integer             :: chem_mask_khi
     real*8              :: synoz_threshold
     real*8              :: hcl_limit
     real*8              :: t_cloud_ice
@@ -103,7 +101,7 @@
 !
     character (len=MAX_LENGTH_VAR_NAME)  :: qj_var_name
     integer             :: phot_opt
-    logical             :: do_clear_sky
+    logical             :: do_clear_sky, do_CCM_OptProps
 !
     logical             :: do_full_chem
     real*8 , pointer    :: mw (:) => null()
@@ -164,8 +162,8 @@
       integer :: ic
       real    :: tempR4
       real*8  :: hugeReal
-      character (len=MAX_LENGTH_SPECIES_NAME), pointer :: tempListNames(:)
-      character (len=MAX_STRING_LENGTH      ) :: forcedBcSpeciesNames
+!      character (len=MAX_LENGTH_SPECIES_NAME), pointer :: tempListNames(:)
+!      character (len=MAX_STRING_LENGTH      ) :: forcedBcSpeciesNames
       character(len=ESMF_MAXSTR) :: IAm, err_msg
 !
 !EOP
@@ -175,8 +173,8 @@
 
       if (pr_diag) Write(6,*) IAm, 'called by ', loc_proc
 
-      allocate(tempListNames(numSpecies), STAT=STATUS)
-      VERIFY_(STATUS)
+!      allocate(tempListNames(numSpecies), STAT=STATUS)
+!      VERIFY_(STATUS)
 
       !################################
       ! Begin reading the resource file
@@ -215,20 +213,6 @@
       call ESMF_ConfigGetAttribute(config, self%chem_cycle, &
                       label   = "chem_cycle:",              &
                       default = 1.0d0, __RC__ )
-
-!     -----------------------------------------------------
-!     chem_mask_klo, chem_mask_khi:
-!       chemistry turned off where k is outside of range of
-!       [chem_mask_klo, chem_mask_khi]
-!     -----------------------------------------------------
-
-      call ESMF_ConfigGetAttribute(config, self%chem_mask_klo, &
-                      label   = "chem_mask_klo:",              &
-                      default = k1, __RC__ )
-
-      call ESMF_ConfigGetAttribute(config, self%chem_mask_khi, &
-                      label   = "chem_mask_khi:",              &
-                      default = k2, __RC__ )
 
 !     -------------------------------------------------------------------
 !     synoz_threshold:  chemistry turned off where synoz > this threshold
@@ -289,6 +273,20 @@
       call ESMF_ConfigGetAttribute(config, self%sad_opt, &
                       label   = "sad_opt:",              &
                       default = 0, __RC__ )
+
+!     ---------------------------
+!     Aerosol optical properties:
+!     ---------------------------
+
+!     ----------------------------------------------------
+!     do_CCM_OptProps
+!       F:  use old method of existing tables for aerosol optical properties
+!       T:  get aerosol optical properties from another module in CCM
+!     ----------------------------------------------------
+
+      call ESMF_ConfigGetAttribute(config, value=self%do_CCM_OptProps, &
+                      label   = "do_CCM_OptProps:", default = .false., __RC__ )
+
 
 !     =========       
 !     nlGmiPhotolysis 
@@ -745,7 +743,7 @@
                  self%do_smv_reord, self%do_synoz,                             &
                  do_semiss_inchem, nymd, nhms,                                 &
                  gmi_sec, tdt8, pr_diag, loc_proc, self%synoz_threshold,       &
-                 self%chem_cycle, self%chem_mask_klo, self%chem_mask_khi,      &
+                 self%chem_cycle,                                              &
                  self%imgas_num, self%initrogen_num, self%ioxygen_num,         &
                  self%isynoz_num, num_species, self%num_qks, self%num_qjs,     &
                  self%num_qjo, self%num_sad, self%num_molefrac, self%num_chem, &

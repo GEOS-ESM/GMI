@@ -81,11 +81,6 @@
 ! -------------------------------------------------------------------------------
    LOGICAL :: gotImportRst
 
-! Set BCRealTime = .TRUE. when boundary conditions 
-! must be for exact year of current calendar date.
-! -------------------------------------------------
-   LOGICAL :: BCRealTime
-
 ! Perhaps GMICHEM is the AERO_PROVIDER
 ! ------------------------------------
    LOGICAL :: AM_I_AERO_PROVIDER    ! Even if another GC is the real AERO_PROVIDER, set this TRUE to have GMI export the AERO state, etc.
@@ -133,12 +128,10 @@
     character (len=MAX_LENGTH_VAR_NAME)  :: qj_var_name
     integer             :: phot_opt
     integer             :: fastj_opt
-    logical             :: do_clear_sky
+    logical             :: do_clear_sky, do_LymanAlpha
     real*8              :: fastj_offset_sec
 
     real*8              :: synoz_threshold
-    integer             :: chem_mask_klo
-    integer             :: chem_mask_khi
 
     real*8              :: qj_init_val
     integer             :: qj_timpyr
@@ -188,6 +181,8 @@
 
     integer             :: AerDust_Effect_opt
     logical             :: do_AerDust_Calc
+    logical             :: do_CCM_OptProps
+
     character (len=MAX_LENGTH_FILE_NAME) :: AerDust_infile_name
     character (len=MAX_LENGTH_FILE_NAME) :: Dust_infile_name
     character (len=MAX_LENGTH_FILE_NAME) :: Aerosol_infile_name
@@ -205,8 +200,15 @@
 !... tying in G2G volc sulfate
     real*8, pointer     :: so4v_nden  (:,:,:) => null()
     real*8, pointer     :: so4v_sa    (:,:,:) => null()
-    real*8              :: so4v_sareff
+    real*8, pointer     :: so4v_sareff(:,:,:) => null()
     logical             :: so4v_saexist
+!... tying in G2G pyrocb aerosols
+    logical             :: do_StratPyroHetChem
+    real*8, pointer     :: pyro_nden    (:,:,:) => null()
+    real*8, pointer     :: pyro_sa      (:,:,:) => null()
+    real*8, pointer     :: pyro_OptDepth(:,:,:) => null()
+    real*8, pointer     :: pyro_sareff  (:,:,:) => null()
+    logical             :: pyro_saexist
 
 
 ! Component derived type declarations
@@ -301,11 +303,13 @@ CONTAINS
    INTEGER :: ilo_gl, ihi_gl, julo_gl, jvlo_gl, jhi_gl
    INTEGER :: gmi_nborder
    INTEGER :: NMR      ! number of species from the GMI_Mech_Registry.rc
-   INTEGER :: inyr,inmon,iscyr
+   INTEGER :: inyr,inmon,solar_index,first_year_in_file
 !
    REAL, dimension(2628)     :: s_cycle_dates    ! 2628 months : 1882 - 2100
    REAL, dimension(W_ ,2628) :: s_cycle          ! 2628 months : 1882 - 2100
+   REAL, dimension(5 ,2628) :: lym_cycle         ! 2628 months : 1882 - 2100
    REAL(r8), POINTER         :: fjx_solar_cycle_param(:)
+   REAL(r8), POINTER         :: lym_solar_cycle_param(:)
 
    INTEGER :: loc_proc, locGlobProc, commu_slaves
    LOGICAL :: one_proc, rootProc
@@ -327,6 +331,12 @@ CONTAINS
 ! Grid cell area can be set by initialize
 ! ---------------------------------------
    REAL, POINTER, DIMENSION(:,:) :: cellArea
+
+! To interrogate GOCART2G rc
+! --------------------------
+   type (ESMF_Config) :: g2g_cfg      ! GOCART2G_GridComp.rc
+   integer :: n_wavelengths_profile, n_mom
+   real, allocatable :: wavelengths_profile(:)
 
 ! Work space
 ! ----------
@@ -396,15 +406,6 @@ CONTAINS
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%verbose, &
      &           label="verbose:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
-
-      !-------------------------------------------
-      ! Should BC files have current date and time?
-      ! Useful for mission support and replays.
-      !--------------------------------------------
-      
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%BCRealTime, &
-     &           label="BCRealTime:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
       
       !-----------------------------
       ! Photolysis Related Variables
@@ -435,12 +436,18 @@ CONTAINS
      &                default = 4, rc=STATUS )
       VERIFY_(STATUS)
 
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_clear_sky, label="do_clear_sky:", &
-     &                       default=.false., rc=STATUS)
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_clear_sky,     label="do_clear_sky:",     &
+                             default=.false., rc=STATUS)
 
-      call ESMF_ConfigGetAttribute(gmiConfigFile, self%fastj_offset_sec, &
-     &                label   = "fastj_offset_sec:", &
-     &                default = 0.0d0, rc=STATUS )
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_CCM_OptProps,  label="do_CCM_OptProps:",  &
+                             default=.false., rc=STATUS)
+
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%fastj_offset_sec, label="fastj_offset_sec:", &
+                             default=0.0d0,   rc=STATUS)
+
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_LymanAlpha,    label="do_LymanAlpha:",    &
+                             default=.true.,  rc=STATUS)
+
       VERIFY_(STATUS)
 !
 !... CloudJ_cldflag = 1 ! clear sky
@@ -637,7 +644,7 @@ CONTAINS
       !=================================================================
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_AerDust_Calc, label="do_AerDust_Calc:", &
-     &                       default=.false., rc=STATUS)
+     &                       default=.true., rc=STATUS)
 
       !=================================================================
       ! AerDust_Effect_opt is used to select if the radiative effects
@@ -673,6 +680,10 @@ CONTAINS
       call CheckNamelistOptionRange ('fastj_opt', self%fastj_opt, 4, 5)
       call CheckNamelistOptionRange ('AerDust_Effect_opt', self%AerDust_Effect_opt, 0, 3)
 
+      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_StratPyroHetChem, &
+     &           label="do_StratPyroHetChem:", default=.false., rc=STATUS)
+      VERIFY_(STATUS)
+
       self%num_qjs       = NUM_J
       self%num_qjo       = NUM_J
 
@@ -693,22 +704,6 @@ CONTAINS
 !         self%num_qjo = self%num_qjo + 1
 !         self%qj_labels(self%num_qjo)   = 'optical depth'
 !      end if
-
-!     -----------------------------------------------------
-!     chem_mask_klo, chem_mask_khi:
-!       chemistry turned off where k is outside of range of
-!       [chem_mask_klo, chem_mask_khi]
-!     -----------------------------------------------------
-
-      call ESMF_ConfigGetAttribute(gmiConfigFile, self%chem_mask_klo, &
-     &                label   = "chem_mask_klo:", &
-     &                default = 1, rc=STATUS )
-      VERIFY_(STATUS)
-
-      call ESMF_ConfigGetAttribute(gmiConfigFile, self%chem_mask_khi, &
-     &                label   = "chem_mask_khi:", &
-     &                default = km, rc=STATUS )
-      VERIFY_(STATUS)
 
 !     -------------------------------------------------------------------
 !     synoz_threshold:  chemistry turned off where synoz > this threshold
@@ -801,19 +796,23 @@ CONTAINS
 !... solar cycle parameter
    if(self%do_solar_cycle) then
 
-     CALL readSolarCycleData( s_cycle_dates, s_cycle, self%sc_infile_name )
+     CALL readSolarCycleData( s_cycle_dates, s_cycle, lym_cycle, self%sc_infile_name )
 
 !... figure out index for solar cycle array from year and month
      inyr = int(nymd/10000)
      inmon = int(nymd/100)-100*inyr
-     iscyr = nint(((inyr+inmon/12.0)-s_cycle_dates(1))*12.)+1
+     first_year_in_file = nint( s_cycle_dates(1) )
+     solar_index = (inyr - first_year_in_file)*12 + inmon
 
      IF( MAPL_AM_I_ROOT() ) THEN
-       PRINT *,"Solar cycle: ",s_cycle_dates(iscyr),s_cycle(:,iscyr)
+       PRINT *,"Solar cycle: ",s_cycle_dates(solar_index),s_cycle(:,solar_index)
+       PRINT *,"Lyman-alpha cycle: ",s_cycle_dates(solar_index),lym_cycle(:,solar_index)
      ENDIF
-     self%JXbundle%fjx_solar_cycle_param(:) = s_cycle(:,iscyr)
+     self%JXbundle%fjx_solar_cycle_param(:) = s_cycle(:,solar_index)
+     self%JXbundle%lym_solar_cycle_param(:) = lym_cycle(:,solar_index)
    else
      self%JXbundle%fjx_solar_cycle_param(:) = 1.000
+     self%JXbundle%lym_solar_cycle_param(:) = 1.000
    endif
 
 ! Grid box surface area, m^{2}
@@ -923,13 +922,13 @@ CONTAINS
             !=======
             case (4)
             !=======
-                call initializeFastJX65 (k1, k2, self%chem_mask_khi, NUM_J,    &
+                call initializeFastJX65 (k1, k2, NUM_J,    &
      &                         self%cross_section_file,                        &
      &                         self%T_O3_climatology_file, rootProc)
             !=======
             case (5)
             !=======
-                call InitializeFastJX74 (k1, k2, self%chem_mask_khi, NUM_J,    &
+                call InitializeFastJX74 (k1, k2, NUM_J,    &
      &                         self%cross_section_file,  self%cloud_scat_file, &
      &                         self%ssa_scat_file, self%aer_scat_file,         &
      &                         self%UMaer_scat_file, self%GMI_scat_file,       &
@@ -963,13 +962,52 @@ CONTAINS
          Allocate(self%tArea(i1:i2, ju1:j2, k1:k2, nSADdust+nSADaer))
          self%tArea = 0.0d0
 
+!... arrays needed for using aerosol optical properties from aerosol module
+         if(self%do_CCM_OptProps) then
+!
+!   Get information from GOCART2G_GridComp.rc
+!   -----------------------------------------
+           g2g_cfg = ESMF_ConfigCreate (__RC__)
+           call ESMF_ConfigLoadFile (g2g_cfg, 'GOCART2G_GridComp.rc', __RC__)
+           n_wavelengths_profile = ESMF_ConfigGetLen (g2g_cfg,label='aerosol_photolysis_wavelength_in_nm_from_LUT', __RC__)
+           allocate(wavelengths_profile(  n_wavelengths_profile), __STAT__)
+           call ESMF_ConfigGetAttribute (g2g_cfg, wavelengths_profile, label='aerosol_photolysis_wavelength_in_nm_from_LUT:', __RC__)
+           call ESMF_ConfigGetAttribute (g2g_cfg, n_mom, label='n_phase_function_moments_photolysis:', __RC__)
+           call ESMF_ConfigDestroy(g2g_cfg, __RC__)
+!
+           self%JXbundle%NUM_CCM_aers = 1
+           self%JXbundle%NUM_CCM_mom = n_mom
+           self%JXbundle%NUM_CCM_WL = n_wavelengths_profile
+           Allocate(self%JXbundle%CCM_WL(n_wavelengths_profile))
+           self%JXbundle%CCM_WL = wavelengths_profile
+           Allocate(self%JXbundle%CCM_SSALB(n_wavelengths_profile, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%CCM_SSALB = 0.0d0
+           Allocate(self%JXbundle%CCM_OPTX(n_wavelengths_profile, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%CCM_OPTX = 0.0d0
+           Allocate(self%JXbundle%CCM_SSLEG(n_mom, n_wavelengths_profile, i1:i2, ju1:j2, k1:k2, 1))
+           self%JXbundle%CCM_SSLEG = 0.0d0
+           deallocate (wavelengths_profile)
+         endif
+
 !... G2G SO4volc
-         Allocate(self%so4v_nden(i1:i2, ju1:j2, k1:k2))
-         self%so4v_nden = 0.0d0
-         Allocate(self%so4v_sa(i1:i2, ju1:j2, k1:k2))
-         self%so4v_sa(:,:,:) = 0.0d0
-         self%so4v_sareff = 0.0d0
+         Allocate(self%so4v_nden(i1:i2, ju1:j2, k1:k2), &
+                  self%so4v_sa(i1:i2, ju1:j2, k1:k2), &
+                  self%so4v_sareff(i1:i2, ju1:j2, k1:k2))
+         self%so4v_nden   = 0.0d0
+         self%so4v_sa     = 0.0d0
+         self%so4v_sareff = 1.0d0
          self%so4v_saexist = .FALSE.
+
+!... G2G PyroCb aerosols
+         Allocate(self%pyro_nden(i1:i2, ju1:j2, k1:k2), &
+                  self%pyro_sa(i1:i2, ju1:j2, k1:k2), &
+                  self%pyro_optDepth(i1:i2, ju1:j2, k1:k2), &
+                  self%pyro_sareff(i1:i2, ju1:j2, k1:k2))
+         self%pyro_nden      = 0.0d0
+         self%pyro_sa        = 0.0d0
+         self%pyro_optDepth  = 0.0d0
+         self%pyro_sareff    = 1.0d0
+         self%pyro_saexist = .FALSE.
 
          Allocate(self%optDepth(i1:i2, ju1:j2, k1:k2, num_AerDust))
          self%optDepth = 0.0d0
@@ -1179,6 +1217,7 @@ CONTAINS
    type(ESMF_State)   :: bc_state
    type(ESMF_State)   :: oc_state
    type(ESMF_State)   :: br_state
+   type(ESMF_State)   :: pyro_state
    type(ESMF_State)   :: su_state, suv_state
    type(ESMF_State)   :: du_state
    type(ESMF_State)   :: ss_state
@@ -1189,6 +1228,8 @@ CONTAINS
    type(ESMF_Field)   :: oc_philic_3d_field
    type(ESMF_Field)   :: br_phobic_3d_field
    type(ESMF_Field)   :: br_philic_3d_field
+   type(ESMF_Field)   :: pyro_philic_3d_field
+   type(ESMF_Field)   :: pyro_phobic_3d_field
    type(ESMF_Field)   ::       so4_3d_field
    type(ESMF_Field)   ::        du_4d_field
    type(ESMF_Field)   ::        ss_4d_field
@@ -1200,6 +1241,7 @@ CONTAINS
    real, pointer, dimension(:,:,:)   :: br_phobic_3d_array
    real, pointer, dimension(:,:,:)   :: br_philic_3d_array
    real, pointer, dimension(:,:,:)   ::       so4_3d_array
+   real, pointer, dimension(:,:,:)   ::      pyro_3d_array
    real, pointer, dimension(:,:,:,:) ::        du_4d_array
    real, pointer, dimension(:,:,:,:) ::        ss_4d_array
 
@@ -1215,7 +1257,7 @@ CONTAINS
 !  Exports not part of internal state
 !  ----------------------------------
    REAL, POINTER, DIMENSION(:,:) :: SZAPHOT
-   REAL, POINTER, DIMENSION(:,:,:) :: FJXCLDOD, FJXFCLD, DUSTOD, DUSTSA
+   REAL, POINTER, DIMENSION(:,:,:) :: FJXCLDOD, FJXFCLD, AEROOD, DUSTOD, DUSTSA
    REAL, POINTER, DIMENSION(:,:,:) :: SO4OD, SO4HYGRO, SO4SA
    REAL, POINTER, DIMENSION(:,:,:) :: BCOD, BCHYGRO, BCSA
    REAL, POINTER, DIMENSION(:,:,:) :: OCOD, OCHYGRO, OCSA
@@ -1299,7 +1341,7 @@ CONTAINS
 
    REAL(KIND=DBL), ALLOCATABLE :: solarZenithAngle(:,:)
 
-   INTEGER                     :: rcvolc
+   INTEGER                     :: rcvolc, rcpyro
 
    loc_proc = -99
 
@@ -1414,6 +1456,11 @@ CONTAINS
        call ESMF_StateGet(aero_state, 'SU.volc.data_AERO', suv_state,  rc=rcvolc)
        call ESMF_StateGet(aero_state,      'DU.data_AERO', du_state, __RC__)
        call ESMF_StateGet(aero_state,      'SS.data_AERO', ss_state, __RC__)
+
+!+++PRC Place holder for a dedicated pyro state
+       call ESMF_StateGet(aero_state,        'CA.br.data_AERO', pyro_state, rc=rcpyro)
+!---PRC
+
      ELSE
        call ESMF_StateGet(aero_state,        'CA.bc_AERO', bc_state, __RC__)
        call ESMF_StateGet(aero_state,        'CA.oc_AERO', oc_state, __RC__)
@@ -1422,6 +1469,9 @@ CONTAINS
        call ESMF_StateGet(aero_state,      'SU.volc_AERO', suv_state,  rc=rcvolc)
        call ESMF_StateGet(aero_state,           'DU_AERO', du_state, __RC__)
        call ESMF_StateGet(aero_state,           'SS_AERO', ss_state, __RC__)
+!+++PRC Place holder for a dedicated pyro state
+       call ESMF_StateGet(aero_state,        'CA.br_AERO', pyro_state, rc=rcpyro)
+!---PRC
      END IF
 
    END IF
@@ -1448,11 +1498,22 @@ CONTAINS
    CALL Acquire_SU(STATUS)
    VERIFY_(STATUS)
 
+! Obtain aerosol optical properties from either 
+! aeroProvider
+! ----------------------------------------------
+   if(self%do_CCM_OptProps) then
+     if(MAPL_AM_I_ROOT()) print '(''Getting Aerosol Properties from '',a32)', TRIM(self%aeroProviderName)
+     CALL Acquire_OptProps(STATUS)
+     VERIFY_(STATUS)
+   endif
+
 ! Grab imports and do units conversions
 ! -------------------------------------
    CALL SatisfyImports(STATUS)
    VERIFY_(STATUS)
-
+   if(self%do_StratPyroHetChem) CALL Acquire_Pyro(STATUS)
+   VERIFY_(STATUS)
+!
 ! Hand the species concentrations to GMI's bundle
 ! -----------------------------------------------
    IF (self%gotImportRst) then
@@ -1494,16 +1555,16 @@ CONTAINS
                  self%optDepth, self%eRadius, self%tArea, self%odAer,      &
                  relativeHumidity, self%odMdust, self%dust, self%wAersl,   &
                  self%dAersl, humidity, num_AerDust, self%phot_opt,        &
-                 self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, &
+                 self%fastj_opt, self%fastj_offset_sec, self%do_clear_sky, self%do_LymanAlpha, &
                  self%do_AerDust_Calc, self%do_ozone_inFastJX,             &
                  self%do_synoz, self%qj_timpyr, IO3, IH2O, ISYNOZ,         &
-                 self%chem_mask_khi, nymd, nhms, self%pr_diag, loc_proc,   &
+                 nymd, nhms, self%pr_diag, loc_proc,   &
                  self%synoz_threshold, self%AerDust_Effect_opt, NSP,       &
-                 self%so4v_nden, self%so4v_sa,                             &
-                 self%so4v_sareff, self%so4v_saexist,                      &
+                 self%so4v_nden, self%so4v_sa, self%so4v_sareff, self%so4v_saexist, &
+                 self%pyro_nden, self%pyro_sa, self%pyro_sareff, self%pyro_saexist, self%pyro_optDepth, &
                  NUM_J, self%num_qjo, ilo, ihi, julo, jhi,                 &
                  i1, i2, ju1, j2, k1, k2, self%jNOindex, self%jNOamp,      &
-                 self%cldflag)
+                 self%cldflag, self%do_CCM_OptProps)
         endif
       END IF
 
@@ -1975,6 +2036,186 @@ CONTAINS
   RETURN
  END SUBROUTINE Acquire_OC
 
+!
+! !ROUTINE:  Acquire_OptProps
+!
+! !INTERFACE:
+
+  SUBROUTINE Acquire_OptProps(rc)
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(OUT) :: rc
+!
+! !DESCRIPTION:
+!
+!  Obtain aerosol optical properties from aeroProvider if desired
+!
+!EOP
+!---------------------------------------------------------------------------
+
+  CHARACTER(LEN=255) :: IAm
+  REAL*4, POINTER, DIMENSION(:,:,:)   :: PTR3D
+  REAL, POINTER, DIMENSION(:,:,:)     :: AS_PTR_AER, AS_PTR_RH, AS_PTR_PLE
+  REAL*4, POINTER, DIMENSION(:,:,:,:) :: PTR4D
+  character (len=ESMF_MAXSTR) :: aerophot
+  REAL :: qmin, qmax, value
+  integer :: N, M, STATUS, AS_STATUS, imom, ivalue
+  logical :: implements_aerosol_optics, prmaxmin
+  character*16 :: tmpstr
+
+
+  rc = 0
+  IAm = "Acquire_OptProps"
+
+  SELECT CASE (TRIM(self%aeroProviderName))
+
+    CASE("GOCART2G")
+      call ESMF_AttributeGet(aero_state, &
+         name='implements_aerosol_optics_method', &
+         value=implements_aerosol_optics,__RC__)
+      if (implements_aerosol_optics) then
+      ! set RH for aerosol optics
+        call ESMF_AttributeGet(aero_state, &
+              name='relative_humidity_for_aerosol_optics', value=aerophot, __RC__)
+        if(aerophot /= '') then
+           call MAPL_GetPointer(impChem,    AS_PTR_RH, 'RH2', __RC__)
+           call MAPL_GetPointer(aero_state, AS_PTR_AER, trim(aerophot), __RC__)
+           AS_PTR_AER = AS_PTR_RH
+        endif
+
+      ! set PLE for aerosol optics
+        call ESMF_AttributeGet(aero_state, name='air_pressure_for_aerosol_optics' &
+                               , value=aerophot,__RC__)
+        if (aerophot /= '') then
+           call MAPL_GetPointer(impChem,    AS_PTR_PLE, 'PLE', __RC__)
+           call MAPL_GetPointer(aero_state, AS_PTR_AER, trim(aerophot), __RC__)
+           AS_PTR_AER = AS_PTR_PLE
+        endif
+
+      ! Set callback to use photolysis table
+        call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=1, __RC__)
+
+        N = self%JXbundle%num_CCM_aers
+
+      ! Loop over wavelengths
+        do M = 1,self%JXbundle%num_CCM_WL
+
+           ivalue = self%JXbundle%CCM_WL(m)
+!           if(mapl_am_i_root()) print *,'Aero OptProp callback set up: ',m,ivalue
+           call ESMF_AttributeSet(aero_state, &
+              name='band_for_aerosol_optics', &
+              value=ivalue,__RC__)
+
+           ivalue = self%JXbundle%num_CCM_mom
+           call ESMF_AttributeSet(aero_state, &
+              name='n_phase_function_moments', &
+              value=ivalue,__RC__)
+
+         ! execute the aero provider's optics method
+           call ESMF_MethodExecute(aero_state, &
+              label="run_aerosol_optics", &
+              userRC=AS_STATUS, RC=STATUS)
+           VERIFY_(AS_STATUS)
+           VERIFY_(STATUS)
+
+!          SSA as provided by callback is actually the scattering and used that
+           call ESMF_AttributeGet(aero_state, name='single_scattering_albedo_of_ambient_aerosol' &
+                 , value=aerophot, __RC__)
+           if (aerophot /= '') then
+             call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+             self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+           else
+             _FAIL(TRIM(Iam)//': Failed to get single_scattering_albedo_of_ambient_aerosol from aero_state')
+           endif
+
+           call ESMF_AttributeGet(aero_state, name='extinction_in_air_due_to_ambient_aerosol' &
+                 , value=aerophot, __RC__)
+           if (aerophot /= '') then
+             call MAPL_GetPointer(aero_state, PTR3D, trim(aerophot), __RC__)
+             self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = PTR3D(:,:,1:km)
+           else
+             _FAIL(TRIM(Iam)//': Failed to get extinction_in_air_due_to_ambient_aerosol from aero_state')
+           endif
+!
+!... put floor on CCM_SSALB and CCM_OPTX
+           where(self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N).lt.1e-5) &
+             self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,N) = 1e-5
+           where(self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N).lt.1e-5) &
+             self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,N) = 1e-5
+!
+!... Hard-wired for 8 moments; these are provided by callback weighted by scattering and used that way
+           call ESMF_AttributeGet(aero_state, name='legendre_coefficients_of_p11_for_photolysis' &
+                 , value=aerophot, __RC__)
+!
+           if (aerophot /= '') then
+             call MAPL_GetPointer(aero_state, PTR4D, trim(aerophot), __RC__)
+!
+             do imom = 1, 8
+               self%JXbundle%CCM_SSLEG(imom,M,:,:,km:1:-1,N) = PTR4D(:,:,1:km,imom)
+             end do
+           else
+             _FAIL(TRIM(Iam)//': Failed to get legendre_coefficients_of_p11_for_photolysis from aero_state')
+           endif
+
+        enddo
+      ! reset callback
+        call ESMF_AttributeSet(aero_state, name='use_photolysis_table', value=0, __RC__)
+!
+      endif
+!   CASE("GMICHEM")
+!... could I pull out calc of this in CloudJ to new routine?
+
+    CASE("CARMA")
+!      do M = 1,self%JXbundle%num_CCM_WL
+!        call ESMF_StateGet(aero_state, 'SSA', aerophot, __RC__)
+!        call ESMF_FieldGet( field=aerophot, farrayPtr=PTR3D, __RC__ )
+!        self%JXbundle%CCM_SSALB(M,:,:,km:1:-1,1) = PTR3D(:,:,1:km)
+!
+!        call ESMF_StateGet(aero_state, 'EXT', aerophot, __RC__)
+!        call ESMF_FieldGet( field=aerophot, farrayPtr=PTR3D, __RC__ )
+!        self%JXbundle%CCM_OPTX(M,:,:,km:1:-1,1) = PTR3D(:,:,1:km)
+!
+!        call ESMF_StateGet(aero_state, 'SLEG', aerophot, __RC__)
+!        call ESMF_FieldGet( field=aerophot, farrayPtr=PTR4D, __RC__ )
+!        self%JXbundle%CCM_SSLEG(:,M,:,:,km:1:-1,1) = PTR4D(:,:,:,1:km)
+!      enddo
+      self%JXbundle%CCM_SSALB(:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_OPTX (:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_SSLEG(:,:,:,:,:,:) = 0.0d0
+
+    CASE("none")
+      self%JXbundle%CCM_SSALB(:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_OPTX (:,:,:,:,:)   = 0.0d0
+      self%JXbundle%CCM_SSLEG(:,:,:,:,:,:) = 0.0d0
+
+    CASE DEFAULT
+      STATUS = 1
+      VERIFY_(STATUS)
+!
+    END SELECT
+!
+!... debug diags
+    prmaxmin = .true.
+    if(prmaxmin) then
+      do M = 1,self%JXbundle%num_CCM_WL
+        if(mapl_am_i_root()) print *,'Aero Opt Prop callback no: ',m
+        PTR3D = self%JXbundle%CCM_SSALB(m,:,:,:,1)
+        CALL pmaxmin('CCM_SSALB:', PTR3D, qmin, qmax, iXj, km, 1. )
+        PTR3D = self%JXbundle%CCM_OPTX(m,:,:,:,1)
+        CALL pmaxmin('CCM_OPTX:', PTR3D, qmin, qmax, iXj, km, 1. )
+        do N = 1,self%JXbundle%num_CCM_mom
+          PTR3D = self%JXbundle%CCM_SSLEG(N,m,:,:,:,1)
+          write(tmpstr,'(''CCM_SSLEG: '',i2.2)') n
+          CALL pmaxmin(tmpstr, PTR3D, qmin, qmax, iXj, km, 1. )
+        enddo
+      end do
+    endif
+
+  RETURN
+ END SUBROUTINE Acquire_OptProps
+
+
 !---------------------------------------------------------------------------
 ! NASA/GSFC, Global Modeling and Assimilation Office, Code 610.1, GEOS/DAS !
 !---------------------------------------------------------------------------
@@ -2180,39 +2421,26 @@ CONTAINS
  ! Volcanic SU
  ! -----------
     if(rcvolc .eq. ESMF_SUCCESS) then
+     self%so4v_saexist = .TRUE.
      call ESMF_StateGet(suv_state,    'SO4',          so4_3d_field, __RC__)
      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
      CALL MAPL_MaxMin('GMI: SO4v:      ', so4_3d_array)
-!... volc SO4 number density
+!... volc SO4 mass density
      self%so4v_nden(:,:,km:1:-1) = so4_3d_array(:,:,1:km)*airdens(:,:,1:km)
 !
-     call ESMF_StateGet(suv_state, 'SO4SAREA',        so4_3d_field, __RC__)
+     call ESMF_StateGet(suv_state, 'SAREA',        so4_3d_field, __RC__)
      call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
-     CALL MAPL_MaxMin('GMI: SO4v_SArea(m^2/m^3?):', so4_3d_array)
-     call ESMF_AttributeGet(suv_state, NAME='effective_radius_in_microns', VALUE=self%so4v_sareff, __RC__)
-     self%so4v_sareff = self%so4v_sareff * 1.0d-4
-     if(MAPL_AM_I_ROOT()) print *, 'GMI:SO4vSA Reff(cm): ', self%so4v_sareff
-!
-     self%so4v_saexist = .TRUE.
      self%so4v_sa(:,:,km:1:-1) = so4_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3 
+     CALL MAPL_MaxMin('GMI: SO4v_SAREA(m^2/m^3):', so4_3d_array)
+
+     call ESMF_StateGet(suv_state, 'REFF' ,        so4_3d_field, __RC__)
+     call ESMF_FieldGet(field=so4_3d_field, farrayPtr=so4_3d_array, __RC__)
+     self%so4v_sareff(:,:,km:1:-1) = so4_3d_array(:,:,1:km)
+     CALL MAPL_MaxMin('GMI: SO4v_REFF(um):    ', so4_3d_array)
+
+!
 !
     endif
-
-
-!     CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
-!     VERIFY_(STATUS)
-  
-!     IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
-!       CALL MAPL_GetPointer(impChem, SO4, 'SO4v', RC=STATUS)
-!       VERIFY_(STATUS)
-
-!       self%wAersl(:,:,km:1:-1,1) = &
-!       self%wAersl(:,:,km:1:-1,1) + SO4(:,:,1:km)*airdens(:,:,1:km)
-
-!       IF(self%verbose) THEN
-!         CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
-!       END IF
-!     END IF
 
    CASE("GMICHEM")
 
@@ -2251,23 +2479,6 @@ CONTAINS
       CALL pmaxmin('SO4:', SO4, qmin, qmax, iXj, km, 1. )
      END IF
 
-     ! If volcanic SU exists, use it too:
-     CALL ESMF_StateGet(impChem, 'SO4v', itemtype, RC=STATUS)
-     VERIFY_(STATUS)
-
-     IF ( itemtype == ESMF_STATEITEM_FIELD ) THEN
-       CALL MAPL_GetPointer(impChem, SO4, 'SO4v', RC=STATUS)
-       VERIFY_(STATUS)
-
-       self%wAersl(:,:,km:1:-1,1) = &
-       self%wAersl(:,:,km:1:-1,1) + SO4(:,:,1:km)*airdens(:,:,1:km)
-
-       IF(self%verbose) THEN
-         CALL pmaxmin('SO4v:', SO4, qmin, qmax, iXj, km, 1. )
-       END IF
-     END IF
-
-
    CASE("none")
 
      self%wAersl(:,:,1:km,1) = 0.0
@@ -2287,6 +2498,133 @@ CONTAINS
 
   RETURN
  END SUBROUTINE Acquire_SU
+
+!---------------------------------------------------------------------------
+! NASA/GSFC, Global Modeling and Assimilation Office, Code 610.1, GEOS/DAS !
+!---------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE:  	
+!
+! !INTERFACE:
+
+  SUBROUTINE Acquire_Pyro(rc)
+!
+use fastJX65_mod   , only : getQAA_RAAinFastJX65
+use CloudJ_mod     , only : GetQAA_inFastJX74
+  
+  IMPLICIT NONE
+
+!  REAL(KIND=DBL), INTENT(IN) :: tropopausePress(i1:i2,j1:j2)
+!  REAL(KIND=DBL), INTENT(IN) :: press3c(i1:i2,j1:j2,1:km)
+
+  INTEGER, INTENT(OUT) :: rc
+!
+! !DESCRIPTION:
+!
+!  Obtain PyroCb aerosols from GOCART2G, set =0.0 otherwise
+!
+!!
+!EOP
+!---------------------------------------------------------------------------
+
+# include "gmi_AerDust_const.h"
+  integer, parameter :: four = 4
+  REAL*8 :: raa_b(4, NP_b), qaa_b(4, NP_b)   ! these are only for FastJX65
+  REAL*8 :: qaa_ij                           ! use for FastJX74
+!
+  CHARACTER(LEN=255) :: IAm
+  INTEGER :: status
+  REAL, POINTER, DIMENSION(:,:,:) :: PTR3D
+  REAL :: qmin,qmax
+  
+  rc = 0
+  IAm = "Acquire_Pyro"
+
+  SELECT CASE (TRIM(self%aeroProviderName))
+
+   CASE("GOCART2G")
+
+!
+! PyroCb aerosols
+! ---------------
+  if(rcpyro .eq. ESMF_SUCCESS .and. self%do_StratPyroHetChem) then
+    IF ( data_driven ) THEN
+      call ESMF_StateGet(pyro_state, 'CA.br.dataphilic', pyro_philic_3d_field, __RC__)
+      call ESMF_StateGet(pyro_state, 'CA.br.dataphobic', pyro_phobic_3d_field, __RC__)
+    ELSE
+      call ESMF_StateGet(pyro_state, 'CA.brphilic', pyro_philic_3d_field, __RC__)
+      call ESMF_StateGet(pyro_state, 'CA.brphobic', pyro_phobic_3d_field, __RC__)
+    ENDIF
+!
+!... PyroCb number density, part I
+     call ESMF_FieldGet(field=pyro_phobic_3d_field, farrayPtr=pyro_3d_array, __RC__)
+!
+     self%pyro_nden(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)
+!... PyroCb number density, part II
+     call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
+     self%pyro_nden(:,:,km:1:-1) = (self%pyro_nden(:,:,km:1:-1)+pyro_3d_array(:,:,1:km)) &
+                                    *airdens(:,:,1:km)
+!
+!... PyroCb SAD
+     call ESMF_StateGet(pyro_state, 'SAREA',        pyro_philic_3d_field, __RC__)
+     call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
+     self%pyro_sa(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)*1.d4/1.d6   ! convert m^2/m^3 to cm^2/cm^3
+     CALL MAPL_MaxMin('GMI: PyroCb_SAREA(m^2/m^3?):', self%pyro_sa)
+
+     call ESMF_StateGet(pyro_state, 'REFF' ,        pyro_philic_3d_field, __RC__)
+     call ESMF_FieldGet(field=pyro_philic_3d_field, farrayPtr=pyro_3d_array, __RC__)
+     self%pyro_sareff(:,:,km:1:-1) = pyro_3d_array(:,:,1:km)
+     CALL MAPL_MaxMin('GMI: PyroCb_REFF(um):    ', pyro_3d_array)
+
+     
+!... place holder for when optical depth is available    
+     if(self%fastj_opt.eq.4) then
+       call  GetQAA_RAAinFastJX65 (RAA_b, QAA_b, four, NP_b)
+       !... magic index 4    refers to the 1000 nm wavelength
+       !... magic index 14+2 refers to the 2nd dust bin out of 7
+       !... see approx line 2214 in fastJX65_mod.F90
+       self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
+                             self%pyro_nden(:,:,:) * qaa_b(4,14+2)  /  &
+                            ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
+     elseif(self%fastj_opt.eq.5) then
+!      PRINT*,'Need to get the right QAA value in Acquire_Pyro'
+       !... magic index 5    refers to the 1000 nm wavelength
+       !... magic index 12   refers to the 2nd dust bin out of 7
+       call  GetQAA_inFastJX74 (5, 12, qaa_ij, __RC__)
+       self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
+                             self%pyro_nden(:,:,:) * qaa_ij         /  &
+                            ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
+     else
+       self%pyro_optDepth(:,:,:) = 0.75d0 * gridBoxThickness(:,:,:) *  &
+                             self%pyro_nden(:,:,:) * 1.2426d0       /  &
+                            ( 1000.0d0 * self%pyro_sareff(:,:,:) * 1.0D-6 )
+     end if
+!... code to zero out tropospheric PyroCb aerosol
+!    where (pl(i1:i2,ju1:j2,:) > Spread (tropopausePress(:,:), 3, k2))
+!       self%pyro_sa(:,:,:) = 0.0d0
+!       self%pyro_optDepth(:,:,:) = 0.0d0
+!    end where
+     CALL MAPL_MaxMin('GMI: PyroCb_SArea(m^2/m^3?):', self%pyro_sa)
+     CALL MAPL_MaxMin('GMI: PyroCb_optDepth:', self%pyro_optDepth)
+!
+     self%pyro_saexist = .TRUE.
+!
+    endif
+
+   CASE DEFAULT
+
+     self%pyro_nden(:,:,:) = 0.0d0
+     self%pyro_sa(:,:,:) = 0.0d0
+     self%pyro_optDepth(:,:,:) = 0.0d0
+     self%pyro_sareff = 1.0d0
+     self%pyro_saexist = .FALSE.
+
+  END SELECT
+
+  RETURN
+ END SUBROUTINE Acquire_Pyro
+
 
 !---------------------------------------------------------------------------
 ! NASA/GSFC, Global Modeling and Assimilation Office, Code 610.1, GEOS/DAS !
@@ -2346,7 +2684,7 @@ CONTAINS
        kReverse = k2-k+k1
        IF(ASSOCIATED( FJXCLDOD))  FJXCLDOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 1)
        IF(ASSOCIATED(  FJXFCLD))   FJXFCLD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 2)
-!      IF(ASSOCIATED(         ))          (i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 3)
+       IF(ASSOCIATED(   AEROOD))    AEROOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 3)
        IF(ASSOCIATED(   DUSTOD))    DUSTOD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 4)
        IF(ASSOCIATED(   DUSTSA))    DUSTSA(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 5)
        IF(ASSOCIATED(    SO4OD))     SO4OD(i1:i2,j1:j2,kReverse) = self%optDepth(i1:i2,j1:j2,k, 6)
@@ -2538,6 +2876,8 @@ CONTAINS
    CALL MAPL_GetPointer(expChem, FJXCLDOD, 'FJXCLDOD', RC=STATUS)
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(expChem,  FJXFCLD,  'FJXFCLD', RC=STATUS)
+   VERIFY_(STATUS)
+   CALL MAPL_GetPointer(expChem,   AEROOD,   'AEROOD', RC=STATUS)
    VERIFY_(STATUS)
    CALL MAPL_GetPointer(expChem,   DUSTOD,   'DUSTOD', RC=STATUS)
    VERIFY_(STATUS)

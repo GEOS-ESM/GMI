@@ -281,7 +281,7 @@
 !
 !....           ClO + MO2 = CH2O + Cl + HO2 + O2
 !
-      rcarr(41,:) = skarr(  1.800D-12 ,600.0D+00 ,temperature)
+      rcarr(41,:) = skarr(  1.800D-11 ,600.0D+00 ,temperature)
 !
 !....           HO2 + MO2 = MP + O2
 !

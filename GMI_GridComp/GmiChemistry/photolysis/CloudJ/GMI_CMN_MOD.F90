@@ -9,7 +9,7 @@
       implicit none
       public
 !
-      integer, parameter :: NK_=4, NgmiA_=56, Nwaer_=5, NgmiRH_=7
+      integer, parameter :: NK_=4, NgmiA_=56, Nwaer_=6, NgmiRH_=7
 !
       real*8 :: gmiWAA (NK_, NgmiA_)
       real*8 :: gmiQAA (NK_, NgmiA_)
@@ -23,7 +23,7 @@
 !
       real*8, parameter :: tRH(NgmiRH_)=[0.0,0.50,0.70,0.80,0.90,0.95,0.99]
 !
-      integer*8, parameter :: iDRYwaer(Nwaer_)=[22,29,36,43,50]
+      integer*8, parameter :: iDRYwaer(Nwaer_)=[22,29,36,43,50,22]
 !
       END MODULE GMI_CMN_MOD
 !EOP

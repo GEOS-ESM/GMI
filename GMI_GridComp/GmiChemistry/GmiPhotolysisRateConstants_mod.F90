@@ -8,6 +8,7 @@
       module GmiPhotRateConst_mod
 !
 ! !USES:
+   USE MAPL
       use fastJX65_mod             , only : controlFastJX65
       use fastJX65_mod             , only : getQAA_RAAinFastJX65
       use CloudJ_mod               , only : controlFastJX74
@@ -38,7 +39,7 @@
 !     The changes are valid only for the troposphere chemical mechanism.
 !     The argument "gridBoxHeight" was also added in the subroutine
 !     Update_Qj for the above calculations.
-!     Pass on the values of optical depht (ODAER_ij, ODMDUST_ij)
+!     Pass on the values of optical depth (ODAER_ij, ODMDUST_ij)
 !     aerosols/dust to the fastj control routine.
 !   - 9March2005 * Jules Kouatchou
 !     The call of Control_Fastj can now be done for any chemical mechanism.
@@ -73,17 +74,18 @@
                   solarZenithAngle, mcor, surf_alb_uv,                      &
                   fracCloudCover, tau_cloud, tau_clw, tau_cli,              &
                   totalCloudFraction, qi, ql, ri, rl,                       &
-!                 cnv_frc, frland,                                          &
                   overheadO3col, qjgmi, gridBoxHeight, OptDepth,            &
                   Eradius, Tarea, Odaer, relativeHumidity, Odmdust, Dust,   &
                   Waersl, Daersl, humidity, num_AerDust, phot_opt,          &
-                  fastj_opt, fastj_offset_sec, do_clear_sky,                &
+                  fastj_opt, fastj_offset_sec, do_clear_sky, do_LymanAlpha, &
                   do_AerDust_Calc, do_ozone_inFastJX, do_synoz, qj_timpyr,  &
-                  io3_num, ih2o_num, isynoz_num, chem_mask_khi, nymd, nhms, &
+                  io3_num, ih2o_num, isynoz_num, nymd, nhms,                &
                   pr_diag, loc_proc, synoz_threshold, AerDust_Effect_opt, num_species, &
                   so4v_nden, so4v_sa, so4v_sareff, so4v_saexist,            &
+                  pyro_nden, pyro_sa, pyro_sareff, pyro_saexist, pyro_optDepth, &
                   num_qjs, num_qjo, ilo, ihi, julo, jhi,                    &
-                  i1, i2, ju1, j2, k1, k2, jNOindex, jNOamp, cldflag)
+                  i1, i2, ju1, j2, k1, k2, jNOindex, jNOamp, cldflag,       &
+                  do_CCM_OptProps )
 
 !
       implicit none
@@ -91,23 +93,24 @@
 #     include "gmi_phys_constants.h"
 #     include "gmi_time_constants.h"
 #     include "setkin_par.h"
+#     include "setkin_mw.h"
 #     include "gmi_AerDust_const.h"
 !
 ! !INPUT PARAMETERS:
       logical, intent(in) :: pr_diag
-      logical, intent(in) :: do_AerDust_calc, do_clear_sky
+      logical, intent(in) :: do_AerDust_calc, do_clear_sky, do_LymanAlpha
       logical, intent(in) :: do_ozone_inFastJX, do_synoz
-                             ! should special reaction O3->O1d be saved?
-      logical, intent(in) :: pr_qj_o3_o1d
-                             ! should optical depth be saved at the end of qj file?
-      logical, intent(in) :: pr_qj_opt_depth
+      logical, intent(in) :: pr_qj_o3_o1d    ! should special reaction O3->O1d be saved?
+      logical, intent(in) :: pr_qj_opt_depth ! should optical depth be saved at the end of qj file?
+      logical, intent(in) :: do_CCM_OptProps
+
       integer, intent(in) :: loc_proc
       integer, intent(in) :: num_species, num_qjs, num_qjo
       integer, intent(in) :: ilo, ihi, julo, jhi
       integer, intent(in) :: i1, i2, ju1, j2, k1, k2
       integer, intent(in) :: isynoz_num, io3_num, ih2o_num
       integer, intent(in) :: nymd, nhms
-      integer, intent(in) :: chem_mask_khi, qj_timpyr
+      integer, intent(in) :: qj_timpyr
       integer, intent(in) :: AerDust_Effect_opt
       integer, intent(in) :: phot_opt, fastj_opt
       integer, intent(in) :: num_AerDust
@@ -145,8 +148,14 @@
 !... SO4 Volc
       real*8 , intent(in) :: so4v_nden          (i1:i2, ju1:j2, k1:k2) ! SO4 Volc part dens calc'd in G2G
       real*8 , intent(in) :: so4v_sa            (i1:i2, ju1:j2, k1:k2) ! SO4 Volc Surf Area calc'd in G2G
-      real*8 , intent(in) :: so4v_sareff                               ! SO4 Volc Surf Area Reff calc'd in G2G
+      real*8 , intent(in) :: so4v_sareff        (i1:i2, ju1:j2, k1:k2) ! SO4 Volc Surf Area Reff calc'd in G2G
       logical, intent(in) :: so4v_saexist                              ! SO4 Volc Surf Area flag
+!... PyroCb 
+      real*8 , intent(in) :: pyro_nden          (i1:i2, ju1:j2, k1:k2) ! PyroCb part dens calc'd in G2G
+      real*8 , intent(in) :: pyro_sa            (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area calc'd in G2G
+      real*8 , intent(in) :: pyro_optDepth      (i1:i2, ju1:j2, k1:k2) ! PyroCb Opt Depth calc'd in G2G
+      real*8 , intent(in) :: pyro_sareff        (i1:i2, ju1:j2, k1:k2) ! PyroCb Surf Area Reff calc'd in G2G
+      logical, intent(in) :: pyro_saexist                              ! PyroCb Surf Area flag
 !
 ! !INPUT/OUTPUT PARAMETERS:
       real*8 , intent(inOut) :: OptDepth(i1:i2, ju1:j2, k1:k2, num_AerDust)
@@ -166,14 +175,15 @@
 !
 ! !LOCAL VARIABLES:
       integer :: idumday, idumyear
-      integer :: il, ij, it, ic, n
+      integer :: il, ij, it, ic, N, M, k, irh
       integer :: jday, ich4_num
-      integer :: month_gmi
+      integer :: month_gmi, flag
       integer, parameter :: four = 4
       real*8  :: time_sec, sza_ij, lat_ij
-      real*8  :: overheadO3col_ij (k1:k2)
+      real*8  :: overheadO3col_ij (k1:k2), overheadO2col_ij (k1:k2)
       real*8  ::           kel_ij (k1:k2)
       real*8  ::         cldOD_ij (k1:k2)
+      real*8  ::         aerOD_ij (k1:k2,num_AerDust-2)
       real*8  :: gridBoxHeight_ij (k1:k2)
       real*8  ::         ozone_ij (k1:k2)
       real*8  ::           ch4_ij (k1:k2)
@@ -184,18 +194,25 @@
       real*8  :: HYGRO_ij  (k1:k2,NSADaer)
                  ! Column optical depth for mineral dust
       real*8  :: ODMDUST_ij(k1:k2,NSADdust) 
-      real*8  :: qjgmi_ij   (k1:chem_mask_khi, num_qjs)
+      real*8  :: qjgmi_ij   (k1:k2, num_qjs)
       real*8  :: n2adj(i1:i2, ju1:j2, k1:k2)
       real*8  :: o2adj(i1:i2, ju1:j2, k1:k2)
       real*8  :: RAA_b(4, NP_b), QAA_b(4, NP_b)
       real*8  :: ERADIUS_ij (k1:k2, NSADdust+NSADaer)
       real*8  :: TAREA_ij   (k1:k2, NSADdust+NSADaer)
 !
+      integer :: num_CCM_WL, num_CCM_aers, num_CCM_mom
+      real*8, dimension(JXbundle%num_CCM_WL) :: CCM_WL_ij
+      real*8, dimension(JXbundle%num_CCM_WL, k1:k2+1, JXbundle%num_CCM_aers) :: CCM_SSALB_ij, CCM_OPTX_ij
+      real*8, dimension(JXbundle%num_CCM_mom, JXbundle%num_CCM_WL, k1:k2+1, JXbundle%num_CCM_aers) :: CCM_SSLEG_ij
+!....debug
+      real*8  :: tmp(i1:i2,ju1:j2,k1:k2)
+!
 !EOP
 !------------------------------------------------------------------------------
 !BOC
       if (pr_diag) then
-        Write (6,*) 'Update_Qj called by ', loc_proc
+        Write (6,*) 'calcPhotolysisRateConstants called by ', loc_proc
       end if
 
 !      if (first) then
@@ -254,7 +271,7 @@
 
         do ij = ju1, j2
           do il = i1, i2
-
+            qjgmi_ij(:,:) = 0.0d0
             sza_ij    = solarZenithAngle(il,ij)
             kel_ij(:) = temp3(il,ij,:)
             gridBoxHeight_ij(:) = gridBoxHeight(il,ij,:)
@@ -262,27 +279,52 @@
             lat_ij    = 0.
 !
 !... if we are doing aerosol effects on photolysis
+!... CCM provided aerosol optical characteristics
             if (do_AerDust_calc) then
+              if(do_CCM_OptProps) then
+                num_CCM_aers = JXbundle%num_CCM_aers
+                num_CCM_WL   = JXbundle%num_CCM_WL
+                num_CCM_mom  = JXbundle%num_CCM_mom
+                CCM_WL_ij(:) = JXbundle%CCM_WL(:)
+                CCM_SSALB_ij  (:,k2+1,:) = 0.0d0
+                CCM_OPTX_ij   (:,k2+1,:) = 0.0d0
+                CCM_SSLEG_ij(:,:,k2+1,:) = 0.0d0
+                do N=1,num_CCM_aers
+                  do M=1,num_CCM_WL
+                    CCM_SSALB_ij(  M,k1:k2,N) = JXbundle%CCM_SSALB(  M,il,ij,k1:k2,N)
+                    CCM_OPTX_ij (  M,k1:k2,N) = JXbundle%CCM_OPTX (  M,il,ij,k1:k2,N)
+                    CCM_SSLEG_ij(:,M,k1:k2,N) = JXbundle%CCM_SSLEG(:,M,il,ij,k1:k2,N)
+                  enddo
+                enddo
+!... use FastJX OD calc  
+              else
 !... for CloudJ aerosol OD calc input
-               if (fastj_opt .eq. 5) then 
+                if (fastj_opt .eq. 5) then 
 !... preprocess for CloudJ AOD calc
 !... hydrophobic BC aerosols
-                 ODcAER_ij(:,1) = daersl(il,ij,:,1)
+                  ODcAER_ij(:,1) = daersl(il,ij,:,1)
 !... hydrophobic OC aerosols 
-                 ODcAER_ij(:,2) = daersl(il,ij,:,2)
+                  ODcAER_ij(:,2) = daersl(il,ij,:,2)
 !... dust aerosols
-                 do N=1,NSADdust
-                   ODMDUST_ij(:,N) = DUST(il,ij,:,N)
-                 enddo
+                  do N=1,NSADdust
+                    ODMDUST_ij(:,N) = DUST(il,ij,:,N)
+                  enddo
 !... hydrophilic aerosols
-                 do N=1,NSADaer
-                   ODAER_ij(:,N) = waersl(il,ij,:,N)
-                 enddo
+                  do N=1,NSADaer
+                    ODAER_ij(:,N) = waersl(il,ij,:,N)
+                  enddo
 !... other FastJ calls need AOD calc'd from Aero_OptDep_SurfArea and Dust_OptDep_SurfArea
-               else
-                 ODAER_ij  (:,:) = ODAER  (il,ij,:,:)
-                 ODMDUST_ij(:,:) = ODMDUST(il,ij,:,:)
-               endif
+                else
+                  ODAER_ij  (:,:) = ODAER  (il,ij,:,:)
+                  ODMDUST_ij(:,:) = ODMDUST(il,ij,:,:)
+!... if PyroCb on add pyro OD to appropriate aerosol type for fastJX
+                  if(pyro_saexist) then
+                    do irh=NRH_b+1,2*NRH_b   ! loop over all RH bins for BC (the second aerosol)
+                      ODAER_ij(:,irh) = ODAER(il,ij,:,irh)+pyro_optDepth(il,ij,:)
+                    enddo
+                  endif
+                endif
+              endif
 !... if we are NOT doing aerosol effects on photolysis zero out aerosols
             else
               ODAER_ij  (:,:) = 0.0d0
@@ -294,7 +336,9 @@
 !... needed for longwave phot calc in CloudJ (SolarJ)
             if (fastj_opt .eq. 5) then
               ch4_ij(:) = concentration(ich4_num)%pArray3D(il,ij,:)
-              h2o_ij(:) = concentration(ih2o_num)%pArray3D(il,ij,:)
+!... water in mmr
+              h2o_ij(:) = concentration(ih2o_num)%pArray3D(il,ij,:) &
+                           *mw_data(ih2o_num)/MAPL_AIRMW
             endif
 !
 !... set up cloud OD for fastj_opt = 0 to 4
@@ -304,87 +348,136 @@
               cldOD_ij(:) = tau_cloud(il,ij,:)
             endif
 !
+!... use FastJX6.5)
             if (fastj_opt == 4) then
+               aerOD_ij(:,:)   = MAPL_UNDEF
                if (.not. do_ozone_inFastJX) then
-                  call controlFastJX65 (k1, k2, chem_mask_khi, num_qjs, month_gmi,          &
-     &                        jday, time_sec, sza_ij, do_clear_sky,                         &
-     &                        tau_clw(il,ij,k1:k2), tau_cli(il,ij,k1:k2),                   &
-     &                        pres3e(il,ij,k1:k2), pctm2(il,ij), kel_ij,                    &
-     &                        surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),  &
-     &                        overheadO3col_ij, ODAER_ij, ODMDUST_ij, cldOD_ij,             &
-     &                        JXbundle%fjx_solar_cycle_param, ozone_ij)
+                  call controlFastJX65 (k1, k2, num_qjs, month_gmi,                     &
+                         jday, time_sec, sza_ij, do_clear_sky,                          &
+                         tau_clw(il,ij,k1:k2), tau_cli(il,ij,k1:k2),                    &
+                         pres3e(il,ij,k1:k2), pctm2(il,ij), kel_ij,                     &
+                         surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),   &
+                         overheadO3col_ij, ODAER_ij, ODMDUST_ij, aerOD_ij, num_AerDust, &
+                         do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom,        &
+                         CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij,            &
+                         cldOD_ij, JXbundle%fjx_solar_cycle_param, ozone_ij)
                else
-                  call controlFastJX65 (k1, k2, chem_mask_khi, num_qjs, month_gmi,          &
-     &                        jday, time_sec, sza_ij, do_clear_sky,                         &
-     &                        tau_clw(il,ij,k1:k2), tau_cli(il,ij,k1:k2),                   &
-     &                        pres3e(il,ij,k1:k2), pctm2(il,ij), kel_ij,                    &
-     &                        surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),  &
-     &                        overheadO3col_ij, ODAER_ij, ODMDUST_ij, cldOD_ij,             &
-     &                        JXbundle%fjx_solar_cycle_param)
+                  call controlFastJX65 (k1, k2, num_qjs, month_gmi,                     &
+                         jday, time_sec, sza_ij, do_clear_sky,                          &
+                         tau_clw(il,ij,k1:k2), tau_cli(il,ij,k1:k2),                    &
+                         pres3e(il,ij,k1:k2), pctm2(il,ij), kel_ij,                     &
+                         surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),   &
+                         overheadO3col_ij, ODAER_ij, ODMDUST_ij, aerOD_ij, num_AerDust, &
+                         do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom,        &
+                         CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij,            &
+                         cldOD_ij, JXbundle%fjx_solar_cycle_param)
+               endif
+!
+               if(do_CCM_OptProps) then
+                 optDepth(il,ij,:,:) = 0.0d0
+                 do N = 1, min(num_CCM_aers,num_AerDust-2)
+                   ! See the do_CCM_OptProps clause below for "temp diags"
+                   optDepth(il,ij,:,3) = optDepth(il,ij,:,3) + aerOD_ij(1:k2-k1+1,N)   ! ONLY one diagnostic (?)
+                 enddo
                endif
 !
 !... use CloudJ (aka FastJX7.4)
             elseif (fastj_opt == 5) then
                cldOD_ij(:)     = MAPL_UNDEF
+               aerOD_ij(:,:)   = MAPL_UNDEF
                eradius_ij(:,:) = 0.0d0
                tArea_ij(:,:)   = 0.0d0
 !
                if (do_ozone_inFastJX) then
-                  call controlFastJX74 (k1, k2, chem_mask_khi, lat_ij, num_qjs, month_gmi,          &
-     &                        jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij(k1:k2),       &
-     &                        sza_ij, totalCloudFraction(il,ij,k1:k2),                              &
-     &                        qi(il,ij,k1:k2), ql(il,ij,k1:k2),                                     &
-     &                        ri(il,ij,k1:k2), rl(il,ij,k1:k2),                                     &
-!    &                        cnv_frc(il,ij), frland(il,ij),                                        &
-     &                        pres3e(il,ij,k1-1:k2), pctm2(il,ij), kel_ij,                          &
-     &                        surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),          &
-     &                        overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,          &
-     &                        do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij,  &
-     &                        JXbundle%fjx_solar_cycle_param, CH4_ij, H2O_ij)
+                  call controlFastJX74 (k1, k2, lat_ij, num_qjs, month_gmi,                    &
+                         jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij(k1:k2),       &
+                         sza_ij, totalCloudFraction(il,ij,k1:k2),                              &
+                         qi(il,ij,k1:k2), ql(il,ij,k1:k2),                                     &
+                         ri(il,ij,k1:k2), rl(il,ij,k1:k2),                                     &
+                         pres3e(il,ij,k1-1:k2), pctm2(il,ij), kel_ij,                          &
+                         surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),          &
+                         overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,          &
+                         do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, aerOD_ij, eradius_ij, tArea_ij, &
+                         JXbundle%fjx_solar_cycle_param, num_AerDust,                          &
+                         do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom,               &
+                         CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij,                   &
+                         CH4_ij, H2O_ij)
                else
-                  call controlFastJX74 (k1, k2, chem_mask_khi, lat_ij, num_qjs, month_gmi,          &
-     &                        jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij(k1:k2),       &
-     &                        sza_ij, totalCloudFraction(il,ij,k1:k2),                              &
-     &                        qi(il,ij,k1:k2), ql(il,ij,k1:k2),                                     &
-     &                        ri(il,ij,k1:k2), rl(il,ij,k1:k2),                                     &
-!    &                        cnv_frc(il,ij), frland(il,ij),                                        &
-     &                        pres3e(il,ij,k1-1:k2), pctm2(il,ij), kel_ij,                          &
-     &                        surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),          &
-     &                        overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,          &
-     &                        do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, eradius_ij, tArea_ij,  &
-     &                        JXbundle%fjx_solar_cycle_param, CH4_ij, H2O_ij, ozone_ij)
+                  call controlFastJX74 (k1, k2, lat_ij, num_qjs, month_gmi,                    &
+                         jday, time_sec, do_clear_sky, cldflag, gridBoxHeight_ij(k1:k2),       &
+                         sza_ij, totalCloudFraction(il,ij,k1:k2),                              &
+                         qi(il,ij,k1:k2), ql(il,ij,k1:k2),                                     &
+                         ri(il,ij,k1:k2), rl(il,ij,k1:k2),                                     &
+                         pres3e(il,ij,k1-1:k2), pctm2(il,ij), kel_ij,                          &
+                         surf_alb_uv(il,ij), qjgmi_ij, relativeHumidity(il,ij,k1:k2),          &
+                         overheadO3col_ij, ODAER_ij, ODMDUST_ij, ODcAER_ij, HYGRO_ij,          &
+                         do_AerDust_Calc, AerDust_Effect_opt, cldOD_ij, aerOD_ij, eradius_ij, tArea_ij, &
+                         JXbundle%fjx_solar_cycle_param, num_AerDust,                          &
+                         do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom,               &
+                         CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij,                   &
+                         CH4_ij, H2O_ij, ozone_ij)
                endif
-!
+!... aerosol optic properties - these are captured in bundles gmiERADIUS and gmiTAREA and used in GMI THERMAL module
                eradius(il,ij,:,:) = eradius_ij(:,:)
                tArea(il,ij,:,:)   = tArea_ij(:,:)
+!... if aero_provider supplies optical properties
+               if(do_CCM_OptProps) then
+                 optDepth(il,ij,:,:) = 0.0d0
+                 do N = 1, min(num_CCM_aers,num_AerDust-2)
+!.!. temp diags
+!.                optDepth(il,ij,:,4)  = CCM_SSLEG_ij(1,1,k1:k2,1)
+!.                optDepth(il,ij,:,5)  = CCM_SSLEG_ij(2,1,k1:k2,1)
+!.                optDepth(il,ij,:,6)  = CCM_SSLEG_ij(3,1,k1:k2,1)
+!.                optDepth(il,ij,:,7)  = CCM_SSLEG_ij(4,1,k1:k2,1)
+!.                optDepth(il,ij,:,8)  = CCM_SSLEG_ij(5,1,k1:k2,1)
+!.                optDepth(il,ij,:,9)  = CCM_SSLEG_ij(6,1,k1:k2,1)
+!.                optDepth(il,ij,:,10) = CCM_SSLEG_ij(7,1,k1:k2,1)
+!.                optDepth(il,ij,:,11) = CCM_SSLEG_ij(8,1,k1:k2,1)
+!.                optDepth(il,ij,:,12) = CCM_SSALB_ij  (1,k1:k2,1)
+!.                optDepth(il,ij,:,13) = CCM_SSALB_ij  (2,k1:k2,1)
+!.                optDepth(il,ij,:,14) = CCM_SSALB_ij  (3,k1:k2,1)
+!.                optDepth(il,ij,:,15) = CCM_SSALB_ij  (4,k1:k2,1)
+!.                optDepth(il,ij,:,16) = CCM_SSALB_ij  (5,k1:k2,1)
+!.                optDepth(il,ij,:,17) = CCM_OPTX_ij   (1,k1:k2,1)
+!.                optDepth(il,ij,:,18) = CCM_OPTX_ij   (2,k1:k2,1)
+!.                optDepth(il,ij,:,19) = CCM_OPTX_ij   (3,k1:k2,1)
+!.                optDepth(il,ij,:,20) = CCM_OPTX_ij   (4,k1:k2,1)
+!.                optDepth(il,ij,:,21) = CCM_OPTX_ij   (5,k1:k2,1)
+!.                optDepth(il,ij,:,22) = CCM_SSALB_ij  (2,k1:k2,1)
+!.                optDepth(il,ij,:,22) = CCM_SSALB_ij  (3,k1:k2,1)
+!.correct line
+                   optDepth(il,ij,:,3) = optDepth(il,ij,:,3) + aerOD_ij(1:k2-k1+1,N)   ! ONLY one diagnostic (?)
+                 enddo
+               else
 !... Dust surface areas - optDepth(5)
-               do N = 1, NSADdust
-                 optDepth(il,ij,:,5) = optDepth(il,ij,:,5) + tArea(il,ij,:,N)
-               enddo
+                 do N = 1, NSADdust
+                   optDepth(il,ij,:,5) = optDepth(il,ij,:,5) + tArea(il,ij,:,N)
+                 enddo
 !... wAersl and dAersl aerosol diagnostics
-               do N = 1, NSADaer
+                 do N = 1, NSADaer
 !... hydrophilic hygroscopic growth diagnostic  - optDepth(7,10,13,16,19,22)
-                 optDepth(il,ij,:,4+3*N) = optDepth(il,ij,:,4+3*N) + HYGRO_ij(:,N)
-               enddo
-!... hydrophilic surface areas diagnostic - optDepth(8,11,14,17,20)
-               do N = 1, NSADaer
-		 optDepth(il,ij,:,5+3*N) = optDepth(il,ij,:,5+3*N) + tArea(il,ij,:,NSADdust+N)
-               enddo
+                   optDepth(il,ij,:,4+3*N) = optDepth(il,ij,:,4+3*N) + HYGRO_ij(:,N)
+                 enddo
+!... hydrophilic surface areas diagnostic - optDepth(8,11,14,17,20,23)
+                 do N = 1, NSADaer
+                   optDepth(il,ij,:,5+3*N) = optDepth(il,ij,:,5+3*N) + tArea(il,ij,:,NSADdust+N)
+                 enddo
 !
 !... Dust optical depths - optDepth(4)
-               do N = 1, NSADdust
-                 optDepth(il,ij,:,4) = optDepth(il,ij,:,4) + ODMDUST_ij(:,N)
-               enddo
+                 do N = 1, NSADdust
+                   optDepth(il,ij,:,4) = optDepth(il,ij,:,4) + ODMDUST_ij(:,N)
+                 enddo
 !
-!... hydrophilic aerosol optical depths diagnostic - optDepth(6,9,12,15,18)
-               do N = 1, NSADaer
-                 optDepth(il,ij,:,3+3*N) = optDepth(il,ij,:,3+3*N) + ODAER_ij(:,N)
-               enddo
+!... hydrophilic aerosol optical depths diagnostic - optDepth(6,9,12,15,18,21)
+                 do N = 1, NSADaer
+                   optDepth(il,ij,:,3+3*N) = optDepth(il,ij,:,3+3*N) + ODAER_ij(:,N)
+                 enddo
 !
 !...  add in hydrophobic carbon (BC/OC) optical depths - optDepth(9,12)
-               do N = 2,3
-                 optDepth(il,ij,:,3+3*N) = optDepth(il,ij,:,3+3*N) + ODcAER_ij(:,N-1)
-               enddo
+                 do N = 2,3
+                   optDepth(il,ij,:,3+3*N) = optDepth(il,ij,:,3+3*N) + ODcAER_ij(:,N-1)
+                 enddo
+               endif
 !... convert cloud optical depth from in-cloud to gridbox average
                where(cldOD_ij(:).le.5.0d5) cldOD_ij(:) = cldOD_ij(:)*totalCloudFraction(il,ij,:)
 !... end CloudJ stuff
@@ -395,15 +488,42 @@
 !... FastJX used cloud fraction diagnostic - optDepth(2)
             optDepth(il,ij,:,2) = totalCloudFraction(il,ij,:)
 !
+!... do mesosphere photolysis
+!
+         tmp(il,ij,:) = qjgmi_ij(:,1)
+            if(do_LymanAlpha) then 
+! -------------------------------------------------------------------------
+! Compute photolysis rates for:	
+!           Reaction
+!-----------------------------------
+!  o2  + hv = o  + o       
+!  O3  + hv = o2 + o(1d)   
+!  O3  + hv = o2 + o       
+!  no  + hv = n    + o     
+!  o2  + hv = o    + o(1d) 
+!  h2o + hv = h    + oh    
+!  h2o + hv = h2   + o(1d) 
+!  ch4 + hv = 2h2o + co    
+!
+!... calc overhead O2 column
+              do k=k1,k2
+                overheadO2col_ij(k) = MXRO2 * &
+                  (pres3c(il,ij,k)*(100.d0*6.022d+23/(28.97d0*9.8d0*10.d0)))
+              enddo
+!... Lyman alpha rate calc
+              call GMI_MesoPhot(k1, k2, num_qjs, jday, sza_ij, JXbundle%lym_solar_cycle_param, &
+                         overheadO3col_ij, overheadO2col_ij, qjgmi_ij )
+            endif
+!... put phot rates into 4D array
             do ic = 1, num_qjs
-               qjgmi(ic)%pArray3D(il,ij,k1:chem_mask_khi) = qjgmi_ij(k1:chem_mask_khi,ic)
+               qjgmi(ic)%pArray3D(il,ij,k1:k2) = qjgmi_ij(k1:k2,ic)
             end do
 
-!           ----------------------------------------------------------------------------------------------------------
-!                                      Michael Prather recommends a run-time adjustment to j(NO)
-!           ----------------------------------------------------------------------------------------------------------
-            qjgmi(jNOindex)%pArray3D(il,ij,k1:chem_mask_khi) = qjgmi(jNOindex)%pArray3D(il,ij,k1:chem_mask_khi)*jNOamp
-!           ----------------------------------------------------------------------------------------------------------
+!----------------------------------------------------------------------------------------------------------
+!                           Michael Prather recommends a run-time adjustment to j(NO)
+!----------------------------------------------------------------------------------------------------------
+            qjgmi(jNOindex)%pArray3D(il,ij,k1:k2) = qjgmi(jNOindex)%pArray3D(il,ij,k1:k2)*jNOamp
+!----------------------------------------------------------------------------------------------------------
  
             overheadO3col(il,ij,:) = overheadO3col_ij(:)
 
@@ -447,6 +567,214 @@
 
       end subroutine calcPhotolysisRateConstants
 !
+!
+!----------------------------------------------------------------------------------------
+!
 !EOC
+      SUBROUTINE GMI_MesoPhot(k1, k2, num_qjs, jday, sza_ij, solar_cycle_param, &
+                         o3column, o2column, qjgmi_ij )
+!
+  use FJX_CMN_MOD
+!
+      IMPLICIT none
+!
+      INTEGER, PARAMETER :: nW = 5
+
+      INTEGER, INTENT(IN) :: k1, k2, jday, num_qjs
+      REAL*8,  INTENT(IN) :: sza_ij
+      REAL*8,  INTENT(IN) :: o3column(k1:k2)
+      REAL*8,  INTENT(IN) :: o2column(k1:k2)
+      REAL*8,  INTENT(IN) :: solar_cycle_param(nW)
+!
+      real*8,  INTENT(INOUT) :: qjgmi_ij   (k1:k2, num_qjs)
+!
+#include "gmi_phys_constants.h"
+#include "setkin_par.h"
+#include "setkin_fastj.h"
+!
+! -------------------------------------------------------------------------
+! Compute photolysis rates for:
+!		     
+!     Reactions      
+!  ----------------- 
+!  h2o + hv = h  + oh
+!  no  + hv = n  + o 
+!  h2o + hv = h2 + o(1d)
+!  o2  + hv = o  + o(1d)
+!  ch4 + hv = co + 2h2o
+!  o2  + hv = o  + o    
+!  O3  + hv = o2 + o(1d)
+!  O3  + hv = o2 + o    
+!      
+! All data included here are taken from GSFC 2-D model.  Assume branching 
+! ratios for these photoreactions is 1.0. These have NO Temperature Dependence
+!
+! Wavelength data is in Angstrom
+! -------------------------------------------------------------------------
+!
+      REAL, PARAMETER ::   wavel(nW) = (/1215.7, 1709.5, 1731.5, 1746.5, 1762.0/)
+
+      REAL, PARAMETER ::   sflux(nW) = (/4.006E+11, 1.764E+11, 1.017E+11, 1.302E+11, 1.722E+11/)
+
+      REAL, PARAMETER ::   o2xs1(nW) = (/3.000E-21, 1.336E-19, 1.000E-28, 1.000E-28, 1.500E-19/)
+
+      REAL, PARAMETER ::   o2xs2(nW) = (/7.000E-21, 3.851E-18, 4.580E-19, 2.740E-19, 0.000E+00/)
+
+      REAL, PARAMETER ::  o246xs(nW) = (/7.000E-21, 3.851E-18, 4.580E-19, 2.740E-19, 0.000E+00/)
+
+      REAL, PARAMETER ::   o3xs1(nW) = (/8.671E-18, 0.000E+00, 0.000E+00, 0.000E+00, 7.297E-19/)
+
+      REAL, PARAMETER ::   o3xs2(nW) = (/2.123E-17, 0.000E+00, 0.000E+00, 0.000E+00, 8.108E-20/)
+
+      REAL, PARAMETER ::  h2o4xs(nW) = (/1.317E-17, 4.660E-18, 3.879E-18, 3.309E-18, 2.742E-18/)
+
+      REAL, PARAMETER :: h2o25xs(nW) = (/1.628E-18, 0.000E+00, 0.000E+00, 0.000E+00, 0.000E+00/)
+
+      REAL, PARAMETER ::    noxs(nW) = (/2.420E-18, 8.681E-19, 4.000E-19, 0.000E+00, 0.000E+00/)
+
+      REAL, PARAMETER ::   ch4xs(nW) = (/1.850E-17, 0.000E+00, 0.000E+00, 0.000E+00, 0.000E+00/)
+
+! LDO Add Chapman function for high solar zenith angle grazing from 2D model
+! --------------------------------------------------------------------------
+      REAL :: cossza, sinsza, r,zgrz,sfaca,s
+
+      REAL, PARAMETER :: d1 = 1.060693
+      REAL, PARAMETER :: d2 = 0.55643831
+      REAL, PARAMETER :: d3 = 1.0619896
+      REAL, PARAMETER :: d4 = 1.7245609
+      REAL, PARAMETER :: d5 = 0.56498823
+      REAL, PARAMETER :: d6 = 0.06651874
+
+      REAL, PARAMETER :: hbar = 6.79
+      REAL, PARAMETER :: zbar = 30.0
+      REAL, PARAMETER :: r0   = RADEAR/1.0E3
+      REAL, PARAMETER :: zp   = 90.0  ! 60.0
+
+! End of parameters for chapman function from 2D model
+! ----------------------------------------------------
+
+      REAL :: opt_dep, sfluxsc(nW), sfluxz(nW)
+      REAL :: wavel1, afac, raycs, baseSOLF
+      INTEGER :: l, n, k
+      character*8 :: tmpstr
+
+!
+!... no orbital effects
+!      baseSOLF = 1.d0
+!... from orig SOLAR_JX - orbital effects in incoming radiation
+      baseSOLF = 1.0 - (0.034 * cos ( REAL(jday - 186) * 2.0 * MAPL_PI_R8 / 365.0) )
+!
+! WHS: Scale solar flux for solar cycle.
+! --------------------------------------
+      sfluxsc(1:nW) = sflux(1:nW)*solar_cycle_param(1:nW)     !solar cycle scaling
+      sfluxsc(1:nW) = sfluxsc(1:nW)*baseSOLF   !orbital effects scaling
+
+! Calculate the height and wavelength dependent optical depth and solar 
+! intensity for each cell. Rayleigh cross-section is in cm-2 (from 
+! Brasseur-Solomon, 1986; pp. 107)
+! ---------------------------------------------------------------------
+!
+! LDO Allow solar zenith angles up to the designated value
+! --------------------------------------------------------
+      Daytime: IF(sza_ij .le. SZAMAX) THEN
+   
+! LDO Chapman Function Calculation from 2D model
+! ----------------------------------------------
+        sinsza = SIN(sza_ij*RADPDEG)
+        cossza = COS(sza_ij*RADPDEG)
+  
+        IF(sza_ij <= 90.0) THEN
+          zgrz = 1000.0
+        ELSE
+          zgrz = sinsza*(zp+r0)-r0
+        ENDIF
+  
+        IF(sza_ij < 70.0) THEN
+          sfaca = 1.0/cossza
+        ELSE IF (zgrz > 0.0) THEN
+          r = SQRT(0.50*r0/hbar)
+          s = r*ABS(cossza)
+  
+          IF(s <= 8.0) THEN
+            s = (d1+d2*s)/(d3+d4*s+s**2)
+          ELSE
+            s = d5/(d6+s)
+          END IF
+  
+          r = r*SQRT(MAPL_PI_R8)
+          sfaca = r*s
+  
+          IF(sza_ij > 90.0) THEN
+            sfaca = 2.0*r*EXP((r0+zbar)*(1.0-sinsza)/hbar) - sfaca
+          END IF
+        ELSE
+          sfaca = 0.0
+        END IF
+!     if(k.eq.2) print *,'sds: ',sza_ij, sfluxz(l), sfaca, r, s, sinsza, cossza
+  
+! LDO End of Chapman Function Calculation 
+! ---------------------------------------
+
+        DO l = 1, nW
+
+          wavel1 = wavel(l)*1.0E-4
+          afac = wavel1**(3.916+0.074*wavel1+0.05/wavel1)
+          raycs = (4.0E-28)/afac
+!
+!... loop in vertical
+          Vertical: do k=k1,k2
+!  
+            opt_dep = o3column(k)*(o3xs1(l)+o3xs2(l))+ &
+          	      o2column(k)*(o2xs1(l)+o2xs2(l))+ &
+                      o2column(k)*(1.0/0.22)*raycs
+!
+! LDO now calculating airmass factor using Chapman Function from 2D model
+! -------------------------------------------------------------------------
+            sfluxz(l) = sfluxsc(l)*EXP(-opt_dep*sfaca)
+!
+!... put in appropriate qj's
+            do n=1,num_qjs
+              tmpstr = fastj_lookup(n)
+              FIND_REAC: select case (tmpstr)
+!... o2 + hv = o + o(1d)
+                case ('O2(1D)') FIND_REAC
+!... no photolysis in FastJ 18 wavelengths, only in meso_phot
+                  qjgmi_ij(k,n) = qjgmi_ij(k,n) + sfluxz(l) * o246xs(l)
+!... o2 + hv = o + o
+                case ('O2') FIND_REAC
+                  qjgmi_ij(k,n) = qjgmi_ij(k,n) + sfluxz(l) * o2xs1(l)
+!... O3 + hv = o2 + o(1d)
+                case ('O3(1D)') FIND_REAC
+                  qjgmi_ij(k,n) = qjgmi_ij(k,n) + sfluxz(l) * o3xs1(l)
+!... O3 + hv = o2 + o
+                case ('O3') FIND_REAC
+                  qjgmi_ij(k,n) = qjgmi_ij(k,n) + sfluxz(l) * o3xs2(l)
+!... ch4+ hv = 2h2o + co
+                case ('CH4') FIND_REAC
+!... no photolysis in FastJ 18 wavelengths, only in meso_phot
+                  qjgmi_ij(k,n) = qjgmi_ij(k,n) + sfluxz(l) * ch4xs(l)
+!... h2o + hv = h + oh
+                case ('H2Ob') FIND_REAC
+                  qjgmi_ij(k,n) = qjgmi_ij(k,n) + sfluxz(l) * h2o4xs(l)
+!... h2o + hv = h2o
+                case ('H2O') FIND_REAC
+                  qjgmi_ij(k,n) = qjgmi_ij(k,n) + sfluxz(l) * h2o25xs(l)
+!... h2o + hv = h2 + o
+                case ('H2Oc') FIND_REAC
+                  qjgmi_ij(k,n) = qjgmi_ij(k,n) + sfluxz(l) * h2o25xs(l)
+!... no + hv = n + o
+                case ('NO') FIND_REAC
+                  qjgmi_ij(k,n) = qjgmi_ij(k,n) + sfluxz(l) * noxs(l)
+!... else do nothing
+                case DEFAULT FIND_REAC
+              end select FIND_REAC
+            enddo
+          enddo Vertical
+        enddo
+      ENDIF Daytime
+
+      RETURN
+      END SUBROUTINE GMI_MesoPhot
+
 !------------------------------------------------------------------------------
       end module GmiPhotRateConst_mod

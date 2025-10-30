@@ -103,7 +103,7 @@
 ! !LOCAL VARIABLES:
       integer :: ic
 !.sds      real*8, allocatable  :: h2ocombo(:, :, :)
-      real*8, allocatable  :: sadcombo(:, :, :, :)
+      real*8, allocatable  :: loc_sadlbs(:, :, :)
 !
 !EOP
 !-----------------------------------------------------------------------------
@@ -115,7 +115,7 @@
      &          pr_diag, loc_proc, i1, i2, ju1, j2, k1, k2, num_sad, num_species)
       else if (sad_opt == 2) then
 
-        allocate(sadcombo(i1:i2,  ju1:j2,  k1:k2,  num_sad       ))
+        allocate(loc_sadlbs(i1:i2,  ju1:j2,  k1:k2))
 
         call Update_Sad2 (rateintv, tropp, press3c, press3e, kel,          &
      &             concentration, hno3cond, hno3gas,                       &
@@ -126,36 +126,28 @@
      &             ih2o_num, ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1,     &
      &             k2, num_sad, num_species)
 
-        do ic = 1, num_sad
-           sadcombo(:,:,:,ic) = sadgmi(ic)%pArray3D(:,:,:)
-        end do
-
+        loc_sadlbs(:,:,:) = sadgmi(ILBSSAD)%pArray3D(:,:,:)
+!... grow LBS SAD wrt rel hum
         call Update_Sad3 (press3c, kel, concentration, lbssad,             &
-     &             sadcombo, pr_diag, loc_proc, nymd, ih2o_num, i1, i2,    &
-     &             ju1, j2, k1, k2, ilo, ihi, julo, jhi,                   &
-     &             num_sad, num_species)
+     &             loc_sadlbs, pr_diag, loc_proc, nymd, ih2o_num, i1, i2,    &
+     &             ju1, j2, k1, k2, ilo, ihi, julo, jhi, num_species)
 
         where (press3c(i1:i2,ju1:j2,:) > Spread (tropp(:,:), 3, k2))
-           sadgmi(ILBSSAD)%pArray3D(:,:,:) = sadcombo(:,:,:,ILBSSAD)
+           sadgmi(ILBSSAD)%pArray3D(:,:,:) = loc_sadlbs(:,:,:)
         end where
 
-        deallocate(sadcombo)
+        deallocate(loc_sadlbs)
 
       else if (sad_opt == 3) then
-        allocate(sadcombo(i1:i2,  ju1:j2,  k1:k2,  num_sad       ))
-        do ic = 1, num_sad
-           sadcombo(:,:,:,ic) = sadgmi(ic)%pArray3D(:,:,:)
-        end do
-
+        allocate(loc_sadlbs(i1:i2,  ju1:j2,  k1:k2))
+        loc_sadlbs(:,:,:) = sadgmi(ILBSSAD)%pArray3D(:,:,:)
+!... grow LBS SAD wrt rel hum
         call Update_Sad3 (press3c, kel, concentration, lbssad,          &
-     &             sadcombo, pr_diag, loc_proc, nymd, ih2o_num, i1, i2, &
-     &             ju1, j2, k1, k2, ilo, ihi, julo, jhi,                &
-     &             num_sad, num_species)
+     &             loc_sadlbs, pr_diag, loc_proc, nymd, ih2o_num, i1, i2, &
+     &             ju1, j2, k1, k2, ilo, ihi, julo, jhi, num_species)
 
-        do ic = 1, num_sad
-           sadgmi(ic)%pArray3D(:,:,:) = sadcombo(:,:,:,ic)
-        end do
-        deallocate(sadcombo)
+        sadgmi(ILBSSAD)%pArray3D(:,:,:) = loc_sadlbs(:,:,:)
+        deallocate(loc_sadlbs)
       end if
 
       end subroutine updateSurfaceAreaDensities
@@ -312,6 +304,7 @@
       real*8  :: sadgmi_ilbs(i1:i2, ju1:j2, k1:k2)
       real*8  :: sadgmi_inat(i1:i2, ju1:j2, k1:k2)
       real*8  :: sadgmi_ists(i1:i2, ju1:j2, k1:k2)
+      real*8  :: sadgmi_ipyro(i1:i2, ju1:j2, k1:k2)
 !
 !EOP
 !------------------------------------------------------------------------------
@@ -360,6 +353,7 @@
       sadgmi_ilbs(:,:,:) = sadgmi(ILBSSAD)%pArray3D(:,:,:)
       sadgmi_inat(:,:,:) = sadgmi(INATSAD)%pArray3D(:,:,:)
       sadgmi_ists(:,:,:) = sadgmi(ISTSSAD)%pArray3D(:,:,:)
+      sadgmi_ipyro(:,:,:) = sadgmi(IPYROSAD)%pArray3D(:,:,:)
 
 !     =============
       call Condense  &
@@ -367,7 +361,7 @@
      &  (sadintv, tropp, pres3c, temp3, dehyd, dehyd_opt, dz,  &
      &   h2oback, hno3cond, hno3gas, sadgmi_ilbs,  &
      &   denssts, h2ocond, h2so4gas, sadgmi_iice,  &
-     &   sadgmi_inat, sadgmi_ists, reffice, reffnat, reffsts, vfall, &
+     &   sadgmi_inat, sadgmi_ists, sadgmi_ipyro, reffice, reffnat, reffsts, vfall, &
      &   pr_diag, loc_proc, londeg, latdeg, NoPSCZone, PSCMaxP, &
      &   ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
 
@@ -375,9 +369,7 @@
       sadgmi(ILBSSAD)%pArray3D(:,:,:) = sadgmi_ilbs(:,:,:)
       sadgmi(INATSAD)%pArray3D(:,:,:) = sadgmi_inat(:,:,:)
       sadgmi(ISTSSAD)%pArray3D(:,:,:) = sadgmi_ists(:,:,:)
-
-!     For now, just zero out sootsad.
-      sadgmi(ISOOTSAD)%pArray3D(:,:,:) = 0.0d0
+      sadgmi(IPYROSAD)%pArray3D(:,:,:) = sadgmi_ipyro(:,:,:)
 
       IF(dehyd_opt /= 0) THEN
         PRINT *,"Update_Sad2: dehyd_opt must be zero."
@@ -405,9 +397,8 @@
 ! !INTERFACE:
 !
       subroutine Update_Sad3 (pres3c, temp3, concentration, lbssad,                &
-     &                 loc_sadgmi, pr_diag, loc_proc, nymd, ih2o_num, i1, i2, ju1, &
-     &                 j2, k1, k2, ilo, ihi, julo, jhi, num_sad,                   &
-     &                 num_species)
+     &                 loc_sadlbs, pr_diag, loc_proc, nymd, ih2o_num, i1, i2, ju1, &
+     &                 j2, k1, k2, ilo, ihi, julo, jhi, num_species)
 !
       implicit none
 !
@@ -417,7 +408,7 @@
       integer, intent(in) :: nymd
       integer, intent(in) :: ih2o_num
       integer, intent(in) :: i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi
-      integer, intent(in) :: num_sad, num_species
+      integer, intent(in) :: num_species
       real*8 , intent(in) :: pres3c(ilo:ihi, julo:jhi, k1:k2)
       real*8 , intent(in) :: temp3 (ilo:ihi, julo:jhi, k1:k2)
       real*8 , intent(in) :: lbssad(i1:i2, ju1:j2, k1:k2)
@@ -426,7 +417,7 @@
 !
 ! !INPUT/OUTPUT PARAMETERS:
            ! surface area densities (cm^2/cm^3)
-      real*8, intent(inOut) :: loc_sadgmi(i1:i2, ju1:j2, k1:k2,num_sad)
+      real*8, intent(inOut) :: loc_sadlbs(i1:i2, ju1:j2, k1:k2)
 !
 ! !DESCRIPTION:
 !  Sets the tropospheric sulfuric aerosol surface area densities.
@@ -467,7 +458,7 @@
 !     This is a fit to data from Chuang in the form suggested by Grant.
 !     -----------------------------------------------------------------
 
-      loc_sadgmi(:,:,:, 1) =  &
+      loc_sadlbs(:,:,:) =  &
      &  lbssad(:,:,:) *  &
      &  (1.0d0 +  &
      &   1.25824d0 * (Exp (2.71811d0 * rh(:,:,:)**11.3214) - 1.0d0) +  &

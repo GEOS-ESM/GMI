@@ -12,8 +12,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 ### Deprecated
 
+## [1.5.0] - 2025-10-31
 
-## [1.4.0] - 2025-02-03 
+### Fixed
+
+- Fixed a memory leak in GmiSAD
+- Fixed the diagnostic GMITTO3
+- Fixed the K-rate of ClO+MO2 (personal comm - E Fleming)     [ALL mechanisms]
+- Fixed typo in skohmek (resolving artifacts at lid)          [Pyro and JPL19 mechanisms]
+- Fixed Phot reaction OCSg + hv = CO + SO2  (SO2 was missing) [Pyro  mechanism]
+- Corrected the use of PyroCB OptDepth - now add to all the RH bins for BC
+- Fixed LBS reactions in the Standard Mech (gamma values had been missing) [Standard mechanism]
+- Revised an array-size, in CloudJ  [Minimal mechanism]
+
+### Added
+
+- Added pyroCb chemistry mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism StratTrop_HFC_S_Pyro
+- Added coupling of GOCART provided SU and BR surface area density and effective radius to chemistry through aerosol state
+  NOTE: do_StratPyroHetChem is 'F' by default; this option requires a GOCART2G feature branch
+- Added a reference for lightning NOx emissions files in ExtData yaml file; uncomment to use this option.
+- Added GitHub Actions workflow for CI builds
+- Added minimal strat chem mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism StratTrop_Minimal
+- Added "Standard" mechanism as new choice:  parallel_build.csh -mil -gmi_mechanism Standard
+- Added GMI_MesoPhot routine to add Lyman-alpha photolysis (do_LymanAlpha: T by default)
+- Added flux attenuation due to water vapor, in CloudJ photolysis
+- Added callback functionality to get aerosol optical properties for photolysis from GOCART2G (do_CCM_OptProps: F by default)
+
+### Changed
+
+- Changed SO2 Fire emissions to be diurnal (non-zero-diff)
+- Now accomodate up to 181 vertical levels in FastJX65 photolysis
+- Small clean-up of condense.F90 (zero-diff)
+- Default value for effective radius of Pyro and SO4v is now 1 instead of 0, because it may be used as a denominator
+- Pyro  mechanism: Changed Thermal reaction ClONO2 + HCl = Cl2 + HNO3 - replaced product HNO3 with N2O5/2.0
+- Pyro  mechanism: Changed the CARN volcano file to be the version from 2024
+- Pyro  mechanism: Set default lbssad_opt to 6  (from GOCART2G)
+- Pyro  mechanism: added another het reaction
+- Changed the default Photolysis scheme to be CloudJ.
+
+### Removed
+
+- Removed references to Chem_Bundle (w_c), Chem_Array and Chem_Registry
+- Removed support for Aerosols coming from old GOCART
+- Eliminated chem_mask_klo/chem_mask_khi variables in GMI, not needed nor supported
+- Removed the trap for high values of RCOOH, no longer an issue
+- Removed all references to BCRealTime and usingGOCART_"XX" variables, not used
+
+### Deprecated
+
+
+## [1.4.0] - 2025-02-03
 
 ### Added
 
