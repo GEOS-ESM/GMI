@@ -48,6 +48,7 @@
 !
 ! !PUBLIC TYPES:
       TYPE GMI_GridComp
+
          CHARACTER(LEN=255) :: name = "GMI Stratospheric/Tropospheric Chemistry"
 
          ! Component derived type declarations
@@ -59,6 +60,15 @@
          TYPE(GmiChemistry_GridComp)  :: gcChem
          TYPE(GmiForcingBC_GridComp)  :: gcFBC
          TYPE(GmiPhotolysis_GridComp) :: gcPhot
+
+         LOGICAL :: doEmiss
+         LOGICAL :: doBoCo
+         LOGICAL :: doDepos
+         LOGICAL :: doSAD
+         LOGICAL :: doPhot
+         LOGICAL :: doTherm                           
+         LOGICAL :: doSolver                          
+
       END TYPE GMI_GridComp
 !
 ! !DESCRIPTION:
@@ -127,7 +137,9 @@
    CHARACTER(LEN=*), PARAMETER :: IAm    = 'GMI_GridCompInitialize'
 !
 ! !LOCAL VARIABLES:
-   INTEGER :: ios, m, n, STATUS, procID
+   INTEGER            :: ios, m, n, STATUS, procID
+   type (ESMF_Config) :: GMI_config
+   CHARACTER(LEN=255) :: rcfilen = 'GMI_GridComp.rc'
 !
 ! !REVISION HISTORY:
 !
@@ -157,6 +169,45 @@
       CALL GmiEmiss_initSurfEmissBundle    (gcGMI%gcEmiss,     bgg,               expChem,                             __RC__)
 
       gcGMI%gcThermalRC%so4v_saexist = gcGMI%gcPhot%so4v_saexist
+
+
+      GMI_config = ESMF_ConfigCreate( __RC__)
+
+      call ESMF_ConfigLoadFile(GMI_config, TRIM(rcfilen), __RC__)
+
+
+      call ESMF_ConfigGetAttribute(GMI_config, value=gcGMI%doEmiss,     &
+                                                    label="doEmiss:",   default=.true., __RC__)
+
+      call ESMF_ConfigGetAttribute(GMI_config, value=gcGMI%doBoCo,      &
+                                                    label="doBoCo:",    default=.true., __RC__)
+
+      call ESMF_ConfigGetAttribute(GMI_config, value=gcGMI%doDepos,     &
+                                                    label="doDepos:",   default=.true., __RC__)
+
+      call ESMF_ConfigGetAttribute(GMI_config, value=gcGMI%doSAD,       &
+                                                    label="doSAD:",     default=.true., __RC__)
+
+      call ESMF_ConfigGetAttribute(GMI_config, value=gcGMI%doPhot,      &
+                                                    label="doPhot:",    default=.true., __RC__)
+
+      call ESMF_ConfigGetAttribute(GMI_config, value=gcGMI%doTherm,     &
+                                                    label="doTherm:",   default=.true., __RC__)
+
+      call ESMF_ConfigGetAttribute(GMI_config, value=gcGMI%doSolver,    &
+                                                    label="doSolver:",  default=.true., __RC__)
+
+      call ESMF_ConfigDestroy(GMI_config, __RC__)
+
+      IF(MAPL_AM_I_ROOT()) THEN
+        PRINT*,'doEmiss = ' , gcGMI%doEmiss
+        PRINT*,'doBoCo = '  , gcGMI%doBoCo
+        PRINT*,'doDepos = ' , gcGMI%doDepos
+        PRINT*,'doSAD = '   , gcGMI%doSAD
+        PRINT*,'doPhot = '  , gcGMI%doPhot
+        PRINT*,'doTherm = ' , gcGMI%doTherm
+        PRINT*,'doSolver = ', gcGMI%doSolver
+      ENDIF
 
       RETURN
 
@@ -226,9 +277,12 @@
 
       mixPBL = .FALSE.
 
-      CALL GmiEmiss_GridCompRun     (gcGMI%gcEmiss, bgg, bxx, impChem, expChem, nymd, nhms, tdt, gc, clock, mixPBL, __RC__)
+! NOTE: the __ RC __ macro adds a call to VERIFY, which is not within scope of the conditional, but we avoid trouble by initializing STATUS
+      STATUS = 0
 
-      CALL GmiForcingBC_GridCompRun (gcGMI%gcFBC,   bgg, bxx, impChem, expChem, nymd, nhms, tdt,                    __RC__)
+      IF ( gcGMI%doEmiss )  CALL GmiEmiss_GridCompRun     (gcGMI%gcEmiss, bgg, bxx, impChem, expChem, nymd, nhms, tdt, gc, clock, mixPBL, __RC__)
+
+      IF ( gcGMI%doBoCo  )  CALL GmiForcingBC_GridCompRun (gcGMI%gcFBC,   bgg, bxx, impChem, expChem, nymd, nhms, tdt,                    __RC__)
 
       RETURN
 
@@ -295,17 +349,20 @@
 !BOC
       rc = 0
 
-      CALL GmiDepos_GridCompRun       (gcGMI%gcDepos,     bgg, bxx, impChem, expChem, nymd, nhms, tdt, __RC__)  ! tdt
+! NOTE: the __ RC __ macro adds a call to VERIFY, which is not within scope of the conditional, but we avoid trouble by initializing STATUS
+      STATUS = 0
+
+      IF ( gcGMI%doDepos )  CALL GmiDepos_GridCompRun       (gcGMI%gcDepos,     bgg, bxx, impChem, expChem, nymd, nhms, tdt, __RC__)  ! tdt
 
       IF ( doChem ) THEN
 
-        CALL GmiSAD_GridCompRun       (gcGMI%gcSAD,       bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
+        IF ( gcGMI%doSAD    ) CALL GmiSAD_GridCompRun       (gcGMI%gcSAD,       bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
 
-        CALL GmiPhotolysis_GridCompRun(gcGMI%gcPhot,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
+        IF ( gcGMI%doPhot   ) CALL GmiPhotolysis_GridCompRun(gcGMI%gcPhot,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
 
-        CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, gcGMI%gcSAD, gcGMI%gcPhot,  __RC__)
+        IF ( gcGMI%doTherm  ) CALL GmiThermalRC_GridCompRun (gcGMI%gcThermalRC, bgg, bxx, impChem, expChem, nymd, nhms, cdt, gcGMI%gcSAD, gcGMI%gcPhot,  __RC__)
 
-        CALL GmiChemistry_GridCompRun (gcGMI%gcChem,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
+        IF ( gcGMI%doSolver ) CALL GmiChemistry_GridCompRun (gcGMI%gcChem,      bgg, bxx, impChem, expChem, nymd, nhms, cdt, __RC__)
 
       ENDIF
 
