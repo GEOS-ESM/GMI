@@ -303,7 +303,7 @@
 !
       call ESMF_ConfigGetAttribute(config, self%phot_opt, &
                       label   = "phot_opt:",              &
-                      default = 1, rc=STATUS )
+                      default = 1, __RC__)
 !
 !     ---------
 !     qj / qqj:
@@ -313,7 +313,7 @@
       VERIFY_(STATUS)
       self%mw(1:numSpecies) = mw_data(1:numSpecies)
 
-      call rcEsmfReadTable(config, self%mw, "mw::", rc=STATUS)
+      call rcEsmfReadTable(config, self%mw, "mw::", __RC__)
 
       allocate(self%const_labels(numSpecies), STAT=STATUS)
       VERIFY_(STATUS)
@@ -321,7 +321,7 @@
       self%const_labels(1:numSpecies) = lchemvar(1:numSpecies)
      
       call rcEsmfReadTable(config, self%const_labels, &
-                           "const_labels::", rc=STATUS)
+                           "const_labels::", __RC__)
       
     ! ---------------------------------------------------------------
     ! Check option ranges.  Note that as new options are added, these
