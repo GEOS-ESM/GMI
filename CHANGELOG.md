@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added a flag for each major routine in Run1/Run2, to easily turn them off for debugging
 ### Changed
+- Now use setkins from KMG v1.1.0; zero-diff for Standard, Pyro; small updates for HFC_S, Minimal, JPL19
 ### Removed
 ### Deprecated
 
