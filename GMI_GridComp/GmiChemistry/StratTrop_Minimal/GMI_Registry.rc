@@ -1,5 +1,5 @@
 # 
-# For the mechanism: GeosCCM_Combo_Minimal2_Mechanism.txt
+# For the mechanism: StratTrop_Minimal.txt
 # 
 # This the GMI Grid Component Registry. It defines Import,
 # Internal and Export states for this component as well as
@@ -28,134 +28,134 @@
 #    Short           |                 |     | V |Item|Intervl| Sub | Def  | No | Long
 #    Name            |     Units       | Dim |Loc|Type| R | A |Tiles| ault |Rsrt| Name
 # -------------------|-----------------|-----|---|----|---|---|-----|------|----|--------------------------
-  DELP               |  Pa             | xyz | C |    |   |   |     |      |    | pressure_tickness
-  PLE                |  Pa             | xyz | E |    |   |   |     |      |    | air_pressure
-  Q                  |  kg kg-1        | xyz | C |    |   |   |     |      |    | specific_humidity
-  QCTOT              |  kg kg-1        | xyz | C |    |   |   |     |      |    | mass_fraction_of_total_cloud_water
-  T                  |  K              | xyz | C |    |   |   |     |      |    | air_temperature
-  AIRDENS            |  kg m-3         | xyz | C |    |   |   |     |      |    | air_density
-  ZLE                |  m              | xyz | E |    |   |   |     |      |    | geopotential_height
-  FCLD               |  fraction       | xyz | C |    |   |   |     |      |    | cloud_fraction_for_radiation
-  TAUCLW             |  1              | xyz | C |    |   |   |     |      |    | optical_thickness_for_liquid_clouds
-  TAUCLI             |  1              | xyz | C |    |   |   |     |      |    | optical_thickness_for_ice_clouds
-  QL                 |  kg kg-1        | xyz | C |    |   |   |     |      |    | cloud_liquid_for_radiation
-  QI                 |  kg kg-1        | xyz | C |    |   |   |     |      |    | cloud_ice_for_radiation
-  CNV_MFC            |  kg m-2 s-1     | xyz | E |    |   |   |     |      |    | cumulative_mass_flux
-  CNV_MFD            |  kg m-2 s-1     | xyz | C |    |   |   |     |      |    | detraining_mass_flux
-  RH2                |  1              | xyz | C |    |   |   |     |      |    | relative_humidity_after_moist
-  DQDT               |  s-1            | xyz | C |    |   |   |     |      |    | specific_humidity_tendency_due_to_moist
-  PFL_CN             |  kg m-2 s-1     | xyz | E |    |   |   |     |      |    | 3D_flux_of_liquid_convective_precipitation
-  PFL_LSAN           |  kg m-2 s-1     | xyz | E |    |   |   |     |      |    | 3D_flux_of_liquid_nonconvective_precipitation
-  CN_PRCP            |  kg m-2 s-1     | xy  |   |    |   |   |     |      |    | convective_precipitation
-  TPREC              |  kg m-2 s-1     | xy  |   |    |   |   |     |      |    | total_precipitation
-  TA                 |  K              | xy  |   |    |   |   |     |      |    | surface_air_temperature
-  T2M                |  K              | xy  |   |    |   |   |     |      |    | 2-meter_air_temperature
-  ALBVF              |  1              | xy  |   |    |   |   |     |      |    | surface_albedo_for_visible_diffuse
-  LWI                |  1              | xy  |   |    |   |   |     |      |    | land-ocean-ice_mask
-  ZPBL               |  m              | xy  |   |    |   |   |     |      |    | planetary_boundary_layer_height
-  LAI                |  1              | xy  |   |    |   |   |     |      |    | leaf_area_index
-  U10M               |  m s-1          | xy  |   |    |   |   |     |      |    | 10-meter_eastward_wind
-  V10M               |  m s-1          | xy  |   |    |   |   |     |      |    | 10-meter_northward_wind
-  FROCEAN            |  1              | xy  |   |    |   |   |     |      |    | Fraction of ocean
-  TS                 |  K              | xy  |   |    |   |   |     |      |    | Surface skin temperature
-  USTAR              |  m s-1          | xy  |   |    |   |   |     |      |    | surface_velocity_scale
-  Z0H                |  m              | xy  |   |    |   |   |     |      |    | surface_roughness_for_heat
-  SWNDSRF            |  W m-2          | xy  |   |    |   |   |     |      |    | surface_net_downward_shortwave_flux
-  CLDTT              |  1              | xy  |   |    |   |   |     |      |    | total_cloud_area_fraction
-  WET1               |  1              | xy  |   |    |   |   |     |      |    | surface_soil_wetness
-  TROPP              |  Pa             | xy  |   |    |   |   |     |      |    | tropopause_pressure_based_on_blended_estimate
-  DFPAR              |  W m-2          | xy  |   |    |   |   |     |      |    | surface_downwelling_par_diffuse_flux
-  DRPAR              |  W m-2          | xy  |   |    |   |   |     |      |    | surface_downwelling_par_beam_flux
-  FRLAND             |  1              | xy  |   |    |   |   |     |      |    | fraction_of_land
-  FRLANDICE          |  1              | xy  |   |    |   |   |     |      |    | fraction_of_land_ice
-  ASNOW              |  1              | xy  |   |    |   |   |     |      |    | fractional_area_of_land_snowcover
-  SNOWDP             |  1              | xy  |   |    |   |   |     |      |    | snow_depth
-  AREA               |  m^2            | xy  |   |    |   |   |     |      |    | agrid_cell_area
-  LFR                |  km-2 s-1       | xy  |   |    |   |   |     |      |    | lightning_flash_rate
-  ACET_FIXED         |  mol mol-1      | xyz | C |    |   |   |     |      |  x | acetone
-  SAD                |  cm+2 cm-3      | xyz | C |    |   |   |     |      |  x | sulfate_surface_area_density
-  SOILFERT           |  ng N m-2 s-1   | xy  |   |    |   |   |     |      |  x | fertilizers
-  SOILPRECIP         |  mm d-1         | xy  |   |    |   |   |     |      |  x | precipitation
-  ALD2_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALD2_Biofuel_Emissions
-  ALD2_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALD2_Biomass_Burning_Emissions
-  ALK4_fosf          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALK4_Fossil_Fuel_Emissions
-  ALK4_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALK4_Biofuel_Emissions
-  ALK4_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | ALK4_Biomass_Burning_Emissions
-  C2H6_fosf          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C2H6_Fossil_Fuel_Emissions
-  C2H6_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C2H6_Biofuel_Emissions
-  C2H6_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C2H6_Biomass_Burning_Emissions
-  PRPE_fosf          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H6_Fossil_Fuel_Emissions
-  PRPE_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H6_Biofuel_Emissions
-  PRPE_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H6_Biomass_Burning_Emissions
-  C3H8_fosf          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H8_Fossil_Fuel_Emissions
-  C3H8_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H8_Biofuel_Emissions
-  C3H8_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | C3H8_Biomass_Burning_Emissions
-  CH2O_biof          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CH2O_Fossil_Fuel_Emissions
-  CH2O_biom          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CH2O_Biofuel_Burning_Emissions
-  CH4_biom           |  kg CH4 m-2 s-1 | xy  |   |    |   |   |     |      |  x | CH4_Biomass_Emissions
-  CH4_aggr           |  kg CH4 m-2 s-1 | xy  |   |    |   |   |     |      |  x | CH4_Emissions_aggregated
-  MEK_fosf           |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | MEK_Fossil_Fuel_Emissions
-  MEK_biof           |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | MEK_Biofuel_Emissions
-  MEK_biom           |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | MEK_Biomass_Burning_Emissions
-  CO_fosf            |  kg CO m-2 s-1  | xy  |   |    |   |   |     |      |  x | CO_fossil_fuel_emissions
-  CO_biof            |  kg CO m-2 s-1  | xy  |   |    |   |   |     |      |  x | CO_biofuel_emissions
-  CO_biom            |  kg CO m-2 s-1  | xy  |   |    |   |   |     |      |  x | CO_biomass_burning_emissions
-  NO_air             |  kg NO m-2 s-1  | xyz | C |    |   |   |     |      |  x | NO_aircraft_emissions
-  NO_lgt             |  kg NO m-2 s-1  | xyz | C |    |   |   |     |      |  x | NO_lightning_emissions
-  NO_fosf            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_fossil_fuel_emissions_(non-PP)
-  NO_biof            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_biofuel_emissions
-  NO_biom            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_biomass_burning_emissions
-  NO_pwrp            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_power_plant_emissions
-  NO_ship            |  kg NO m-2 s-1  | xy  |   |    |   |   |     |      |  x | NO_shipping_emissions
-  CFC11_FLUX         |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CFC11_emissions
-  CFC12_FLUX         |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CFC12_emissions
-  CFC113_FLUX        |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CFC113_emissions
-  HCFC22_FLUX        |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | HCFC22_emissions
-  CH3CCL3_FLUX       |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CH3CCL3_emissions
-  CCL4_FLUX          |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CCL4_emissions
-  CHBR3_FLUX         |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CHBR3_emissions
-  CH2BR2_FLUX        |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | CH2BR2_emissions
-  N2O_OCEAN-FLUX     |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | N2OOCEAN_emissions
-  N2O_LAND-FLUX      |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | N2OLAND_emissions
-  N2O_ANTHRO-FLUX    |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | N2OANTHRO_emissions
-  SO2_FIRES-FLUX     |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | SO2FIRES_emissions
-  SO2_NONENERGY-FLUX |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | SO2NONENERGY_emissions
-  SO2_ENERGY-FLUX    |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | SO2ENERGY_emissions
-  SO2_SHIPPING-FLUX  |  kg m-2 s-1     | xy  |   |    |   |   |     |      |  x | SO2SHIPPING_emissions
-  SO2_AIRCRAFT-FLUX  |  kg m-2 s-1     | xyz | C |    |   |   |     |      |  x | SO2AIRCRAFT_emissions
-  DMS_OCEAN          |  kg / m3        | xy  |   |    |   |   |     |      |  x | DMSOCEAN
-  MEGAN_ISOP         |  mg C m-2 h-1   | xy  |   |    |   |   |     |      |  x | biogenic_source_isoprene
-  MEGAN_MBO          |  mg C m-2 h-1   | xy  |   |    |   |   |     |      |  x | biogenic_source_mbo
-  MEGAN_MPE          |  mg C m-2 h-1   | xy  |   |    |   |   |     |      |  x | biogenic_source_monoterpene
-  MEGAN_OVOC         |  mg C m-2 h-1   | xy  |   |    |   |   |     |      |  x | biogenic_source_other_VOC
-  MEGAN_LAI_001      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_jan_2000
-  MEGAN_LAI_002      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_feb_2000
-  MEGAN_LAI_003      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_mar_2000
-  MEGAN_LAI_004      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_apr_2000
-  MEGAN_LAI_005      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_may_2000
-  MEGAN_LAI_006      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_jun_2000
-  MEGAN_LAI_007      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_jul_2000
-  MEGAN_LAI_008      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_aug_2000
-  MEGAN_LAI_009      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_sep_2000
-  MEGAN_LAI_010      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_oct_2000
-  MEGAN_LAI_011      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_nov_2000
-  MEGAN_LAI_012      |  cm cm-2        | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_dec_2000
-  BCphobic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophobic_black_carbon
-  BCphilic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophilic_black_carbon
-  OCphobic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophobic_organic_carbon
-  OCphilic           |  kg m-3         | xyz | C |    |   |   |     |      |  x | hydrophilic_organic_carbon
-  ss001              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
-  ss002              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
-  ss003              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
-  ss004              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
-  ss005              |  kg m-3         | xyz | C |    |   |   |     |      |  x | sea_salt
-  SO4                |  kg m-3         | xyz | C |    |   |   |     |      |  x | sulfate
-  SO4v               |  kg m-3         | xyz | C |    |   |   |     |      |  x | sulfate_from_volcanos
-  du001              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  du002              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  du003              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  du004              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
-  du005              |  kg m-3         | xyz | C |    |   |   |     |      |  x | dust
+  DELP               | Pa              | xyz | C |    |   |   |     |      |    | pressure_tickness
+  PLE                | Pa              | xyz | E |    |   |   |     |      |    | air_pressure
+  Q                  | kg kg-1         | xyz | C |    |   |   |     |      |    | specific_humidity
+  QCTOT              | kg kg-1         | xyz | C |    |   |   |     |      |    | mass_fraction_of_total_cloud_water
+  T                  | K               | xyz | C |    |   |   |     |      |    | air_temperature
+  AIRDENS            | kg m-3          | xyz | C |    |   |   |     |      |    | air_density
+  ZLE                | m               | xyz | E |    |   |   |     |      |    | geopotential_height
+  FCLD               | fraction        | xyz | C |    |   |   |     |      |    | cloud_fraction_for_radiation
+  TAUCLW             | 1               | xyz | C |    |   |   |     |      |    | optical_thickness_for_liquid_clouds
+  TAUCLI             | 1               | xyz | C |    |   |   |     |      |    | optical_thickness_for_ice_clouds
+  QL                 | kg kg-1         | xyz | C |    |   |   |     |      |    | cloud_liquid_for_radiation
+  QI                 | kg kg-1         | xyz | C |    |   |   |     |      |    | cloud_ice_for_radiation
+  CNV_MFC            | kg m-2 s-1      | xyz | E |    |   |   |     |      |    | cumulative_mass_flux
+  CNV_MFD            | kg m-2 s-1      | xyz | C |    |   |   |     |      |    | detraining_mass_flux
+  RH2                | 1               | xyz | C |    |   |   |     |      |    | relative_humidity_after_moist
+  DQDT               | s-1             | xyz | C |    |   |   |     |      |    | specific_humidity_tendency_due_to_moist
+  PFL_CN             | kg m-2 s-1      | xyz | E |    |   |   |     |      |    | 3D_flux_of_liquid_convective_precipitation
+  PFL_LSAN           | kg m-2 s-1      | xyz | E |    |   |   |     |      |    | 3D_flux_of_liquid_nonconvective_precipitation
+  CN_PRCP            | kg m-2 s-1      | xy  |   |    |   |   |     |      |    | convective_precipitation
+  TPREC              | kg m-2 s-1      | xy  |   |    |   |   |     |      |    | total_precipitation
+  TA                 | K               | xy  |   |    |   |   |     |      |    | surface_air_temperature
+  T2M                | K               | xy  |   |    |   |   |     |      |    | 2-meter_air_temperature
+  ALBVF              | 1               | xy  |   |    |   |   |     |      |    | surface_albedo_for_visible_diffuse
+  LWI                | 1               | xy  |   |    |   |   |     |      |    | land-ocean-ice_mask
+  ZPBL               | m               | xy  |   |    |   |   |     |      |    | planetary_boundary_layer_height
+  LAI                | 1               | xy  |   |    |   |   |     |      |    | leaf_area_index
+  U10M               | m s-1           | xy  |   |    |   |   |     |      |    | 10-meter_eastward_wind
+  V10M               | m s-1           | xy  |   |    |   |   |     |      |    | 10-meter_northward_wind
+  FROCEAN            | 1               | xy  |   |    |   |   |     |      |    | Fraction of ocean
+  TS                 | K               | xy  |   |    |   |   |     |      |    | Surface skin temperature
+  USTAR              | m s-1           | xy  |   |    |   |   |     |      |    | surface_velocity_scale
+  Z0H                | m               | xy  |   |    |   |   |     |      |    | surface_roughness_for_heat
+  SWNDSRF            | W m-2           | xy  |   |    |   |   |     |      |    | surface_net_downward_shortwave_flux
+  CLDTT              | 1               | xy  |   |    |   |   |     |      |    | total_cloud_area_fraction
+  WET1               | 1               | xy  |   |    |   |   |     |      |    | surface_soil_wetness
+  TROPP              | Pa              | xy  |   |    |   |   |     |      |    | tropopause_pressure_based_on_blended_estimate
+  DFPAR              | W m-2           | xy  |   |    |   |   |     |      |    | surface_downwelling_par_diffuse_flux
+  DRPAR              | W m-2           | xy  |   |    |   |   |     |      |    | surface_downwelling_par_beam_flux
+  FRLAND             | 1               | xy  |   |    |   |   |     |      |    | fraction_of_land
+  FRLANDICE          | 1               | xy  |   |    |   |   |     |      |    | fraction_of_land_ice
+  ASNOW              | 1               | xy  |   |    |   |   |     |      |    | fractional_area_of_land_snowcover
+  SNOWDP             | 1               | xy  |   |    |   |   |     |      |    | snow_depth
+  AREA               | m^2             | xy  |   |    |   |   |     |      |    | agrid_cell_area
+  LFR                | km-2 s-1        | xy  |   |    |   |   |     |      |    | lightning_flash_rate
+  ACET_FIXED         | mol mol-1       | xyz | C |    |   |   |     |      |  x | acetone
+  SAD                | cm+2 cm-3       | xyz | C |    |   |   |     |      |  x | sulfate_surface_area_density
+  SOILFERT           | ng N m-2 s-1    | xy  |   |    |   |   |     |      |  x | fertilizers
+  SOILPRECIP         | mm d-1          | xy  |   |    |   |   |     |      |  x | precipitation
+  ALD2_biof          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | ALD2_Biofuel_Emissions
+  ALD2_biom          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | ALD2_Biomass_Burning_Emissions
+  ALK4_fosf          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | ALK4_Fossil_Fuel_Emissions
+  ALK4_biof          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | ALK4_Biofuel_Emissions
+  ALK4_biom          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | ALK4_Biomass_Burning_Emissions
+  C2H6_fosf          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C2H6_Fossil_Fuel_Emissions
+  C2H6_biof          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C2H6_Biofuel_Emissions
+  C2H6_biom          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C2H6_Biomass_Burning_Emissions
+  PRPE_fosf          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C3H6_Fossil_Fuel_Emissions
+  PRPE_biof          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C3H6_Biofuel_Emissions
+  PRPE_biom          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C3H6_Biomass_Burning_Emissions
+  C3H8_fosf          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C3H8_Fossil_Fuel_Emissions
+  C3H8_biof          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C3H8_Biofuel_Emissions
+  C3H8_biom          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C3H8_Biomass_Burning_Emissions
+  CH2O_biof          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CH2O_Fossil_Fuel_Emissions
+  CH2O_biom          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CH2O_Biofuel_Burning_Emissions
+  CH4_biom           | kg CH4 m-2 s-1  | xy  |   |    |   |   |     |      |  x | CH4_Biomass_Emissions
+  CH4_aggr           | kg CH4 m-2 s-1  | xy  |   |    |   |   |     |      |  x | CH4_Emissions_aggregated
+  MEK_fosf           | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | MEK_Fossil_Fuel_Emissions
+  MEK_biof           | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | MEK_Biofuel_Emissions
+  MEK_biom           | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | MEK_Biomass_Burning_Emissions
+  CO_fosf            | kg CO m-2 s-1   | xy  |   |    |   |   |     |      |  x | CO_fossil_fuel_emissions
+  CO_biof            | kg CO m-2 s-1   | xy  |   |    |   |   |     |      |  x | CO_biofuel_emissions
+  CO_biom            | kg CO m-2 s-1   | xy  |   |    |   |   |     |      |  x | CO_biomass_burning_emissions
+  NO_air             | kg NO m-2 s-1   | xyz | C |    |   |   |     |      |  x | NO_aircraft_emissions
+  NO_lgt             | kg NO m-2 s-1   | xyz | C |    |   |   |     |      |  x | NO_lightning_emissions
+  NO_fosf            | kg NO m-2 s-1   | xy  |   |    |   |   |     |      |  x | NO_fossil_fuel_emissions_(non-PP)
+  NO_biof            | kg NO m-2 s-1   | xy  |   |    |   |   |     |      |  x | NO_biofuel_emissions
+  NO_biom            | kg NO m-2 s-1   | xy  |   |    |   |   |     |      |  x | NO_biomass_burning_emissions
+  NO_pwrp            | kg NO m-2 s-1   | xy  |   |    |   |   |     |      |  x | NO_power_plant_emissions
+  NO_ship            | kg NO m-2 s-1   | xy  |   |    |   |   |     |      |  x | NO_shipping_emissions
+  CFC11_FLUX         | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CFC11_emissions
+  CFC12_FLUX         | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CFC12_emissions
+  CFC113_FLUX        | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CFC113_emissions
+  HCFC22_FLUX        | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | HCFC22_emissions
+  CH3CCL3_FLUX       | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CH3CCL3_emissions
+  CCL4_FLUX          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CCL4_emissions
+  CHBR3_FLUX         | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CHBR3_emissions
+  CH2BR2_FLUX        | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CH2BR2_emissions
+  N2O_OCEAN-FLUX     | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | N2OOCEAN_emissions
+  N2O_LAND-FLUX      | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | N2OLAND_emissions
+  N2O_ANTHRO-FLUX    | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | N2OANTHRO_emissions
+  SO2_FIRES-FLUX     | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | SO2FIRES_emissions
+  SO2_NONENERGY-FLUX | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | SO2NONENERGY_emissions
+  SO2_ENERGY-FLUX    | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | SO2ENERGY_emissions
+  SO2_SHIPPING-FLUX  | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | SO2SHIPPING_emissions
+  SO2_AIRCRAFT-FLUX  | kg m-2 s-1      | xyz | C |    |   |   |     |      |  x | SO2AIRCRAFT_emissions
+  DMS_OCEAN          | kg / m3         | xy  |   |    |   |   |     |      |  x | DMSOCEAN
+  MEGAN_ISOP         | mg C m-2 h-1    | xy  |   |    |   |   |     |      |  x | biogenic_source_isoprene
+  MEGAN_MBO          | mg C m-2 h-1    | xy  |   |    |   |   |     |      |  x | biogenic_source_mbo
+  MEGAN_MPE          | mg C m-2 h-1    | xy  |   |    |   |   |     |      |  x | biogenic_source_monoterpene
+  MEGAN_OVOC         | mg C m-2 h-1    | xy  |   |    |   |   |     |      |  x | biogenic_source_other_VOC
+  MEGAN_LAI_001      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_jan_2000
+  MEGAN_LAI_002      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_feb_2000
+  MEGAN_LAI_003      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_mar_2000
+  MEGAN_LAI_004      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_apr_2000
+  MEGAN_LAI_005      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_may_2000
+  MEGAN_LAI_006      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_jun_2000
+  MEGAN_LAI_007      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_jul_2000
+  MEGAN_LAI_008      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_aug_2000
+  MEGAN_LAI_009      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_sep_2000
+  MEGAN_LAI_010      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_oct_2000
+  MEGAN_LAI_011      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_nov_2000
+  MEGAN_LAI_012      | cm cm-2         | xy  |   |    |   |   |     |      |  x | AVHRR_leaf_area_index_dec_2000
+  BCphobic           | kg m-3          | xyz | C |    |   |   |     |      |  x | hydrophobic_black_carbon
+  BCphilic           | kg m-3          | xyz | C |    |   |   |     |      |  x | hydrophilic_black_carbon
+  OCphobic           | kg m-3          | xyz | C |    |   |   |     |      |  x | hydrophobic_organic_carbon
+  OCphilic           | kg m-3          | xyz | C |    |   |   |     |      |  x | hydrophilic_organic_carbon
+  ss001              | kg m-3          | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss002              | kg m-3          | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss003              | kg m-3          | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss004              | kg m-3          | xyz | C |    |   |   |     |      |  x | sea_salt
+  ss005              | kg m-3          | xyz | C |    |   |   |     |      |  x | sea_salt
+  SO4                | kg m-3          | xyz | C |    |   |   |     |      |  x | sulfate
+  SO4v               | kg m-3          | xyz | C |    |   |   |     |      |  x | sulfate_from_volcanos
+  du001              | kg m-3          | xyz | C |    |   |   |     |      |  x | dust
+  du002              | kg m-3          | xyz | C |    |   |   |     |      |  x | dust
+  du003              | kg m-3          | xyz | C |    |   |   |     |      |  x | dust
+  du004              | kg m-3          | xyz | C |    |   |   |     |      |  x | dust
+  du005              | kg m-3          | xyz | C |    |   |   |     |      |  x | dust
 # -------------------|-----------------|-----|---|----|---|---|-----|------|----|---------------------
 </ImportSpec>
 

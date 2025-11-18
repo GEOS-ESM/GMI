@@ -1,7 +1,7 @@
-Modeler input mechanism:        GeosCCM_Combo_2020_HFC_S_VSLCL_JPL19.txt
+Modeler input mechanism:        StratTrop_JPL19.txt
 Principal reaction reference:   GMI_reactions_JPL19.db
 Species nomenclature:           GMI_species.db
-Mechanism timestamp:            Tue Oct 22 16:51:18 2024
+Mechanism timestamp:            Thu Nov 13 18:18:38 2025
 
 Species indices:
   1: A3O2

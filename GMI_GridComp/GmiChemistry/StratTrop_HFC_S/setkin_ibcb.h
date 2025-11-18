@@ -13,9 +13,9 @@
 !   This include file contains information about treatment of surface
 !   boundary conditions.
 !
-!  Input mechanism:        GeosCCM_Combo_2015mechanism.txt
+!  Input mechanism:        StratTrop_HFC_S.txt
 !  Reaction dictionary:    GMI_reactions_JPL15.db
-!  Setkin files generated: Tue Mar 30 16:58:02 2021
+!  Setkin files generated: Thu Nov 13 18:11:16 2025
 !
 !=======================================================================
 !
@@ -38,19 +38,19 @@
 !      ibcb(13) = 1
 !                CF2Br2
 !      ibcb(14) = 1
-!                CFC12
-!      ibcb(15) = 1
 !                CF2ClBr
-!      ibcb(16) = 1
+!      ibcb(15) = 1
 !                CF3Br
-!      ibcb(17) = 1
+!      ibcb(16) = 1
 !                CFC113
-!      ibcb(18) = 1
+!      ibcb(17) = 1
 !                CFC114
-!      ibcb(19) = 1
+!      ibcb(18) = 1
 !                CFC115
-!      ibcb(20) = 1
+!      ibcb(19) = 1
 !                CFC11
+!      ibcb(20) = 1
+!                CFC12
 !      ibcb(21) = 1
 !                CH3Br
 !      ibcb(24) = 1
@@ -62,20 +62,20 @@
 !      ibcb(27) = 1
 !                CO
 !      ibcb(34) = 1
-!                H2402
-!      ibcb(41) = 1
 !                H2
 !      ibcb(42) = 1
+!                H2402
+!      ibcb(43) = 1
 !                H2O
-!      ibcb(44) = 1
+!      ibcb(45) = 1
 !                HCFC141b
-!      ibcb(47) = 1
-!                HCFC142b
 !      ibcb(48) = 1
-!                HCFC22
+!                HCFC142b
 !      ibcb(49) = 1
-!                HCl
+!                HCFC22
 !      ibcb(50) = 1
+!                HCl
+!      ibcb(51) = 1
 !                ISOP
 !      ibcb(72) = 1
 !                N2O

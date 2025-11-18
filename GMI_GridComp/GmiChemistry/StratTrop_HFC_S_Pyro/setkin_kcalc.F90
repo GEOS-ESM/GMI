@@ -22,11 +22,7 @@
 !
 !  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Tue Aug 26 20:52:13 2025
-!
-!  Special edit (to be captured in KMG): Took ptrop out of consideration for  rcarr(#,:)
-!  where # = 321,322,323,324,325  (the skpyro calls)
-!  so the functions operate over the entire vertical domain
+!  Setkin files generated: Thu Nov 13 18:13:29 2025
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
@@ -82,7 +78,7 @@
 !
       real*8, DIMENSION (npres0) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
 !... effective radii of stratospheric aerosols
-!      real*8 reff_lbs, reff_sts, reff_nat, reff_ice, reff_pyro
+      real*8 reff_lbs   ! reff_sts, reff_nat, reff_ice, reff_pyro
 !
       mw(:) = mw_data(:)
 
@@ -101,11 +97,11 @@
       oxygen(:)   = adcol(:) * MXRO2
       water(:)    = specarr(45 ,:)
 !... * 0.0d0
-!      reff_lbs  = 0.221d-4
-!      reff_sts  = 0.221d-4
-!      reff_nat  = 0.221d-4
-!      reff_ice  = 0.221d-4
-!      reff_pyro = 0.221d-4
+      reff_lbs  = 0.221d-4
+!     reff_sts  = 0.221d-4
+!     reff_nat  = 0.221d-4
+!     reff_ice  = 0.221d-4
+!     reff_pyro = 0.221d-4
 !
       sad_lbs(:)  = sadcol(ILBSSAD, :)
       sad_sts(:)  = sadcol(ISTSSAD, :)
@@ -1459,20 +1455,17 @@
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
       rcarr(322,:) = skpyro_clono2_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_pyro ,specarr(    33,:) ,specarr(  51,:) ,water  & 
-     &           )
+     &           ,adcol ,pressure ,sad_pyro ,specarr(    33,:) ,specarr(  51,:) ,water)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
       rcarr(323,:) = skpyro_hocl_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_pyro ,specarr(  64,:) ,specarr( 51,:) ,water  & 
-     &           )
+     &           ,adcol ,pressure ,sad_pyro ,specarr(  64,:) ,specarr( 51,:) ,water)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
       rcarr(324,:) = skpyro_hobr_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_pyro ,specarr(  63,:) ,specarr( 51,:) ,water  & 
-     &           )
+     &           ,adcol ,pressure ,sad_pyro ,specarr(  63,:) ,specarr( 51,:) ,water)
 !
 !....           N2O5 = 2 HNO3
 !
@@ -4317,7 +4310,7 @@
 !
         END FUNCTION skice_hcl_hobr
 !
-!.... skpyro_clono2 (temperature ,adcol ,pressure ,sad_pyro ,specarr(HCl,:) ,water ,ptrop)
+!.... skpyro_clono2 (temperature ,adcol ,pressure ,sad_pyro ,specarr(HCl,:) ,water)
 !
 !_6_
 !
@@ -4419,7 +4412,7 @@
 !
         END FUNCTION skpyro_clono2
 !
-!.... skpyro_clono2_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(ClONO2,:) ,specarr( HCl,:) ,water ,ptrop)
+!.... skpyro_clono2_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(ClONO2,:) ,specarr( HCl,:) ,water)
 !
 !_2_
 !
@@ -4529,7 +4522,7 @@
 !
         END FUNCTION skpyro_clono2_hcl
 !
-!.... skpyro_hocl_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOCl,:) ,specarr(HCl,:) ,water ,ptrop)
+!.... skpyro_hocl_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOCl,:) ,specarr(HCl,:) ,water)
 !
 !_3_
 !
@@ -4689,7 +4682,7 @@
 !
         END FUNCTION skpyro_hocl_hcl
 !
-!.... skpyro_hobr_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOBr,:) ,specarr(HCl,:) ,water ,ptrop)
+!.... skpyro_hobr_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOBr,:) ,specarr(HCl,:) ,water)
 !
 !_4_
 !
@@ -4810,7 +4803,7 @@
 !
         END FUNCTION skpyro_hobr_hcl
 !
-!.... skpyro_n2o5 (temperature ,pressure ,sad_pyro ,ptrop)
+!.... skpyro_n2o5 (temperature ,pressure ,sad_pyro)
 !
 !_5_
 !

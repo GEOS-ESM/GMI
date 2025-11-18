@@ -20,9 +20,9 @@
 !   rcarr       : cm3 molecule-1 s-1 - rate constant values in units as
 !                 appropriate
 !
-!  Input mechanism:        GeosCCM_Combo_Minimal2_Mechanism.txt
+!  Input mechanism:        StratTrop_Minimal.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Wed Mar  5 20:39:38 2025
+!  Setkin files generated: Thu Nov 13 18:20:37 2025
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
@@ -49,10 +49,11 @@
       REAL*8,  INTENT (IN)  :: pressure    (       npres0)
       REAL*8,  INTENT (IN)  :: temperature (       npres0)
       REAL*8,  INTENT (IN)  :: sadcol      (NSAD  ,npres0)
+!      REAL*8,  INTENT (IN)  :: sadreff     (NSAD  ,npres0)
       REAL*8,  INTENT (IN)  :: sadcol2     (NSADaer+NSADdust,npres0)
+      REAL*8,  INTENT (IN)  :: radA        (NSADaer+NSADdust,npres0)
       REAL*8,  INTENT (IN)  :: specarr     (NMF   ,npres0)
       REAL*8,  INTENT (IN)  :: FRH         (       npres0)
-      REAL*8,  INTENT (IN)  :: radA        (NSADaer+NSADdust,npres0)
 
       REAL*8,  INTENT (OUT) :: rcarr       (NUM_K ,npres0)
 
@@ -70,14 +71,14 @@
      &  sad_ice  (npres0) &
      & ,sad_lbs  (npres0) &
      & ,sad_nat  (npres0) &
-     & ,sad_soot (npres0) &
+     & ,sad_pyro (npres0) &
      & ,sad_sts  (npres0)
 
       real*8 mw(NSP), gammas_code
 !
       real*8, DIMENSION (npres0) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
 !... effective radii of stratospheric aerosols
-      real*8 reff_lbs, reff_sts, reff_nat, reff_ice, reff_soot
+      real*8 reff_lbs   ! reff_sts, reff_nat, reff_ice, reff_pyro
 !
       mw(:) = mw_data(:)
 
@@ -97,18 +98,18 @@
       water(:)    = specarr(33 ,:)
 !... * 0.0d0
       reff_lbs  = 0.221d-4
-      reff_sts  = 0.221d-4
-      reff_nat  = 0.221d-4
-      reff_ice  = 0.221d-4
-      reff_soot = 0.221d-4
+!     reff_sts  = 0.221d-4
+!     reff_nat  = 0.221d-4
+!     reff_ice  = 0.221d-4
+!     reff_pyro = 0.221d-4
 !
       sad_lbs(:)  = sadcol(ILBSSAD, :)
       sad_sts(:)  = sadcol(ISTSSAD, :)
       sad_nat(:)  = sadcol(INATSAD, :)
       sad_ice(:)  = sadcol(IICESAD, :)
-!.old      sad_soot(:) = sadcol(ISOOTSAD, :)
-!... Use GOCART soot (BC+OC) for this reaction
-      sad_soot(:) = sadcol2(NSADdust+2,:)+sadcol2(NSADdust+3,:)
+      sad_pyro(:) = sadcol(IPYROSAD,:)
+!... Use GOCART pyro (BC+OC) for this reaction
+!.old      sad_pyro(:) = sadcol2(NSADdust+2,:)+sadcol2(NSADdust+3,:)
 !
 !
 !....          Start thermal rate constants
@@ -268,7 +269,7 @@
 !
 !....           ClO + MO2 = CH2O + Cl + HO2 + O2
 !
-      rcarr(38,:) = skarr(  1.800D-12 ,600.0D+00 ,temperature)
+      rcarr(38,:) = skarr(  1.800D-11 ,600.0D+00 ,temperature)
 !
 !....           MO2 + NO = CH2O + HO2 + NO2
 !
@@ -979,7 +980,7 @@
 !
 !....           HNO3 = NO2 + OH
 !
-      rcarr(204,:) = sksoot_hno3 (temperature ,sad_soot)
+      rcarr(204,:) = skpyro_hno3 (temperature ,sad_pyro)
 !
 !....           NO3 + NO3 = 2 NO2 + O2
 !
@@ -1251,11 +1252,8 @@
 !
           real*8  tk(:)
           real*8, DIMENSION(size(tk)) :: skmo2dis_1
-!.old
-!          skmo2dis_1(:) = 9.50D-14 * exp(390.0d0 / tk(:)) * (1.0d0 /  &
-!     &                    (1.0d0 + 26.2d0 * exp(-1130.0d0 / tk(:))))
 !
-          skmo2dis_1(:) = (9.50D-14 * exp(390.0d0/tk(:))) &
+          skmo2dis_1(:) = 9.50D-14 * exp(390.0d0/tk(:)) &
                          / (1.0d0 + 26.2d0 * exp(-1130.0d0/tk(:)))
 !
         END FUNCTION skmo2dis_1
@@ -1276,12 +1274,9 @@
 !
           real*8  tk(:)
           real*8, DIMENSION(size(tk)) :: skmo2dis_2
-!.old
-!          skmo2dis_2(:) = 9.50D-14 * exp(390.0d0 / tk(:))  &
-!     &                   * (1.0d0 / (1.0d0 + 0.0382d0 * exp(1130.0d0 / tk(:))))
 !
-          skmo2dis_2(:) = (9.50D-14 * exp(390.0d0/tk(:))) &
-                         / (1.0D0 + 1.0D0/(26.2*exp(-1130.0d0/tk(:))))
+          skmo2dis_2(:) = 9.50D-14 * exp(390.0d0 / tk(:))  &
+     &                   / (1.0d0 + 1.0d0 / (26.2d0 * exp(-1130.0d0 / tk(:))))
 !
         END FUNCTION skmo2dis_2
 !
@@ -1764,8 +1759,10 @@
 !... Following: Shi, Q., et al, JGR, V106, D20, pp24,259-24,274, OCTOBER 27, 2001.
 !
   use ieee_arithmetic
+!... return value
+      real*8  sk_clono2_gammas
 !... input variables
-      real*8  tk(:), ad(:), pr(:), clono2(:), hcl(:), h2o(:), FRH(:), sk_clono2_gammas
+      real*8  tk(:), ad(:), pr(:), clono2(:), hcl(:), h2o(:), FRH(:), reff
 !... output variables
       real*8, DIMENSION (size(tk)) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
 !
@@ -1778,7 +1775,7 @@
       real*8, DIMENSION (size(tk)) :: gamma_s, F_hcl, gamma_prime_s, gamma_prime_hcl, gamma_b
       real*8, DIMENSION (size(tk)) :: D_hocl, k_hocl_hcl, H_hocl, l_hocl, f_hocl, gamma_hocl_rxn
       integer :: l
-      real*8  :: Rgas, reff
+      real*8  :: Rgas
 !
 !
       sk_clono2_gammas = 999.0
@@ -1798,7 +1795,7 @@
       aw(:) = p_h2o(:)/p0_h2o(:)
 !      aw(:) = FRH(:)
 !
-      do l=1,size(tk) 
+      do l=1,size(tk)
         if(aw(l) .le. 0.05) then
            a1(l) = 12.37208932
            b1(l) = -0.16125516114
@@ -1817,7 +1814,7 @@
            a2(l) = 12.891938068
            b2(l) = -0.23233847708
            c2(l) = -6.4261237757
-           d2(l) = -4.9005471319 
+           d2(l) = -4.9005471319
          else
            a1(l) = -180.06541028
            b1(l) = -0.38601102592
@@ -1829,7 +1826,7 @@
            d2(l) = 267.45509988
          endif
        enddo
-        
+
       y1(:) = a1(:)*aw(:)**b1(:) + c1(:)*aw(:) + d1(:)
       y2(:) = a2(:)*aw(:)**b2(:) + c2(:)*aw(:) + d2(:)
       m(:) = y1(:) + (tk(:)-190.0d0)*(y2(:)-y1(:))/70.0d0
@@ -1875,7 +1872,7 @@
       gamma_h2o(:) = 4.0*H_clono2(:)*Rgas*tk(:)*sqrt(D_clono2(:)*k_hydr(:)) &
                      / (1474.0*sqrt(tk(:)))
 
-!... 
+!...
       H_hcl(:) = (0.094 - 0.61*chi(:) + 1.2*chi(:)**2) &
                  * exp(-8.68 + (8515.0 - 10718.0*chi(:)**0.7)/tk(:))
       k_hcl(:) = 7.9d11*alphaH(:)*D_clono2(:)*H_hcl(:)*p_hcl(:)
@@ -1891,13 +1888,13 @@
       gamma_prime_s(:) = F_hcl(:)*gamma_s(:)
       gamma_prime_hcl(:) = F_hcl(:)*gamma_hcl(:)
       gamma_b(:) = gamma_prime_hcl(:) + gamma_clono2_rxn(:)*k_hydr(:)/(k_hcl(:)+k_hydr(:))
-! 
+!
       g_clono2(:) = 1.0/(1.0+1.0/(gamma_prime_s(:)+gamma_b(:)))
 !
       g_clono2_hcl(:) = g_clono2(:) &
                         * (gamma_prime_s(:)+gamma_prime_hcl(:)) &
                          / (gamma_prime_s(:)+gamma_b(:))
-      g_clono2_h2o(:) = g_clono2(:)-g_clono2_hcl(:)      
+      g_clono2_h2o(:) = g_clono2(:)-g_clono2_hcl(:)
       where(g_clono2_h2o.lt.0.0d0) g_clono2_h2o = 0.0d0
 !
 !... now do HOCl+HCl uptake
@@ -1916,7 +1913,7 @@
 !
       return
 !
-      END FUNCTION sk_clono2_gammas
+      end FUNCTION sk_clono2_gammas
 !
 !.... sklbs_n2o5 (temperature ,pressure ,sad_lbs ,wt_h2so4 ,ptrop)
 !
@@ -2238,9 +2235,9 @@
 !
 !.... sksts_n2o5 (temperature ,pressure ,sad_sts ,ptrop)
 !
-!_7_
+!_1_
 !
-!.... (7) JPL 15-10
+!.... (1) JPL 15-10
 !
       FUNCTION sksts_n2o5 (tk,pr,sad,ptrop)
 !
@@ -2293,9 +2290,9 @@
 !
 !.... sksts_clono2 (temperature ,adcol ,pressure ,sad_sts ,specarr( HCl,:) ,water ,ptrop)
 !
-!_8_
+!_2_
 !
-!.... (8) JPL 97-4
+!.... (2) JPL 97-4
 !
         FUNCTION sksts_clono2 (tk,ad,pr,sad,hcl,h2o,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -2395,9 +2392,9 @@
 !
 !.... sksts_brono2 (temperature ,pressure ,sad_sts ,ptrop)
 !
-!_9_
+!_2_
 !
-!.... (9) JPL 15-10
+!.... (3) JPL 15-10
 !
       FUNCTION sksts_brono2 (tk,pr,sad,ptrop)
 !
@@ -2453,9 +2450,9 @@
 !
 !.... sksts_clono2_hcl (temperature ,adcol ,pressure ,sad_sts ,specarr(ClONO2,:) ,specarr( HCl,:) ,water ,ptrop)
 !
-!_10_
+!_4_
 !
-!.... (10) JPL 97-4
+!.... (4) JPL 97-4
 !
         FUNCTION sksts_clono2_hcl (tk,ad,pr,sad,clono2,hcl,h2o,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -2566,9 +2563,9 @@
 !
 !.... sksts_hocl_hcl (temperature ,adcol ,pressure ,sad_sts ,specarr(HOCl,:) ,specarr(HCl,:) ,water ,ptrop)
 !
-!_11_
+!_5_
 !
-!.... (11) JPL 97-4
+!.... (5) JPL 97-4
 !
         FUNCTION sksts_hocl_hcl (tk,ad,pr,sad,hocl,hcl,h2o,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -2724,9 +2721,9 @@
 !
 !.... sksts_hobr_hcl (temperature ,adcol ,pressure ,sad_sts ,specarr(HOBr,:) ,specarr(HCl,:) ,water ,ptrop)
 !
-!_12_
+!_6_
 !
-!.... (12) JPL 97-4
+!.... (6) JPL 97-4
 !
         FUNCTION sksts_hobr_hcl (tk,ad,pr,sad,hobr,hcl,h2o,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -3334,20 +3331,20 @@
 !
         END FUNCTION skice_hcl_hobr
 !
-!.... sksoot_hno3 (temperature ,sad_soot)
+!.... skpyro_hno3 (temperature ,sad_pyro)
 !
 !.... (1)
 !
-        FUNCTION sksoot_hno3 (tk,sad)
+        FUNCTION skpyro_hno3 (tk,sad)
           real*8  tk(:) ,sad(:)
-          real*8, DIMENSION(size(tk)) :: sksoot_hno3
+          real*8, DIMENSION(size(tk)) :: skpyro_hno3
           real*8  gprob ,pi
           real*8  avgvel(size(tk))
 !
           pi = acos(-1.0d0)
 !
 !=======================================================================
-!     HNO3 + soot particles = OH + NO2
+!     HNO3 + pyro particles = OH + NO2
 !=======================================================================
 !
 !.... First order reaction rate constant
@@ -3357,9 +3354,9 @@
           avgvel(:)       = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
      &                      (pi * mw(IHNO3)))**0.5d0
 !
-          sksoot_hno3(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+          skpyro_hno3(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
-        END FUNCTION sksoot_hno3
+        END FUNCTION skpyro_hno3
 !
 !.... sktrs_ho2 (temperature, sadcol2, adcol, radA, NSADaer, NSADdust, cPBLcol, pressure)
 !

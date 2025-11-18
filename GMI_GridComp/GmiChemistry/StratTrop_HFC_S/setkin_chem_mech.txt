@@ -1,7 +1,7 @@
-Modeler input mechanism:        GeosCCM_Combo_2015mechanism.txt
+Modeler input mechanism:        StratTrop_HFC_S.txt
 Principal reaction reference:   GMI_reactions_JPL15.db
 Species nomenclature:           GMI_species.db
-Mechanism timestamp:            Tue Mar 30 16:58:02 2021
+Mechanism timestamp:            Thu Nov 13 18:11:16 2025
 
 Species indices:
   1: A3O2
@@ -18,13 +18,13 @@ Species indices:
  12: C3H8
  13: CCl4
  14: CF2Br2
- 15: CFC12
- 16: CF2ClBr
- 17: CF3Br
- 18: CFC113
- 19: CFC114
- 20: CFC115
- 21: CFC11
+ 15: CF2ClBr
+ 16: CF3Br
+ 17: CFC113
+ 18: CFC114
+ 19: CFC115
+ 20: CFC11
+ 21: CFC12
  22: CH2Br2
  23: CH2O
  24: CH3Br
@@ -44,24 +44,24 @@ Species indices:
  38: ETP
  39: GLYC
  40: GLYX
- 41: H2402
+ 41: H
  42: H2
- 43: H2O2
- 44: H2O
- 45: HAC
- 46: HBr
- 47: HCFC141b
- 48: HCFC142b
- 49: HCFC22
- 50: HCl
- 51: HCOOH
- 52: HFC125
- 53: HFC134a
- 54: HFC143a
- 55: HFC152a
- 56: HFC23
- 57: HFC32
- 58: H
+ 43: H2402
+ 44: H2O2
+ 45: H2O
+ 46: HAC
+ 47: HBr
+ 48: HCFC141b
+ 49: HCFC142b
+ 50: HCFC22
+ 51: HCl
+ 52: HCOOH
+ 53: HFC125
+ 54: HFC134a
+ 55: HFC143a
+ 56: HFC152a
+ 57: HFC23
+ 58: HFC32
  59: HNO2
  60: HNO3
  61: HNO4
@@ -91,18 +91,18 @@ Species indices:
  85: MRO2
  86: MRP
  87: MVK
- 88: N2O5
+ 88: N
  89: N2O
- 90: N
- 91: NO2
- 92: NO3
- 93: NO
- 94: O1D
- 95: O3
- 96: OClO
- 97: OCSg
- 98: OH
- 99: O
+ 90: N2O5
+ 91: NO
+ 92: NO2
+ 93: NO3
+ 94: O
+ 95: O1D
+ 96: O3
+ 97: OClO
+ 98: OCSg
+ 99: OH
 100: PAN
 101: PMN
 102: PO2
@@ -462,7 +462,7 @@ Thermal reactions:
 324: NO2 =  0.50 HNO2 +  0.50 HNO3
 325: NO3 = HNO3
 326: N2O5 = 2 HNO3
-327: DMS + OH = O2 + SO2
+327: DMS + OH = SO2
 328: DMS + NO3 = HNO3 + SO2
 329: O + SO2 = H2SO4
 330: OH + SO2 = H2SO4
@@ -546,4 +546,4 @@ Photolyses:
 406: R4N2 + hv =  0.05 A3O2 +  0.32 ACET +  0.32 ALD2 +  0.18 B3O2 +  0.32 ETO2 +  0.27 HO2 +  0.19 MEK +  0.18 MO2 + NO2 +  0.13 RCHO
 407: MAP + hv = MO2 + OH
 408: OCSg + hv = CO + SO2
-409: H2SO4 + hv = H2O + SO2
+409: H2SO4 + hv = 2 OH + SO2

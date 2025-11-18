@@ -22,7 +22,7 @@
 !
 !  Input mechanism:        Standard.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Wed Sep 17 16:30:54 2025
+!  Setkin files generated: Thu Nov 13 18:07:19 2025
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
@@ -1186,12 +1186,12 @@
 !
       rcarr(259,:) = skarr(  2.000D-12 ,-70.0D+00 ,temperature)
 !
+!....           N2O5 = 2 HNO3
+!
 !... function to calc SO4 percent weight and gammas for ClONO2 + LBs het reacs
       gammas_code = sk_clono2_gammas (temperature, adcol, pressure &
                     , specarr(iclono2,:), specarr(ihcl,:), specarr(ih2o,:) &
                     , FRH, reff_lbs, wt_h2so4, g_clono2, g_clono2_h2o, g_clono2_hcl, g_hocl_hcl)
-!
-!....           N2O5 = 2 HNO3
 !
       rcarr(260,:) = sklbs_n2o5 (temperature ,pressure ,sad_lbs ,wt_h2so4 ,ptrop)
 !
@@ -2579,26 +2579,26 @@
       skvro2_no  = k4 * EXP( b0 / tk ) * k3
       skvro2_no  = MAX( skvro2_no, 0.0d0 )
       END FUNCTION skvro2_no
-!     
+!
 !.... sk_clono2_gammas (temperature ,adcol ,pressure ,specarr(ClONO2,:) ,specarr(HCl,:) ,water ,wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl)
-!                   
+!
 !_13_
 !
 !.... JPL 19-5
-!     
+!
       FUNCTION sk_clono2_gammas (tk, ad, pr, clono2, hcl, h2o, FRH, reff &
                   , wt_h2so4, g_clono2, g_clono2_h2o, g_clono2_hcl, g_hocl_hcl)
 !
 !... Following: Shi, Q., et al, JGR, V106, D20, pp24,259-24,274, OCTOBER 27, 2001.
-!    
+!
   use ieee_arithmetic
 !... return value
       real*8  sk_clono2_gammas
-!... input variables 
+!... input variables
       real*8  tk(:), ad(:), pr(:), clono2(:), hcl(:), h2o(:), FRH(:), reff
 !... output variables
       real*8, DIMENSION (size(tk)) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
-!     
+!
 !... local variables
       real*8, DIMENSION (size(tk)) :: p_clono2, p_hcl, aw, y1, y2, m, tmp, wt, p0_h2o, p_h2o
       real*8, DIMENSION (size(tk)) :: a1, b1, c1, d1, a2, b2, c2, d2
@@ -2705,7 +2705,7 @@
       gamma_h2o(:) = 4.0*H_clono2(:)*Rgas*tk(:)*sqrt(D_clono2(:)*k_hydr(:)) &
                      / (1474.0*sqrt(tk(:)))
 
-!... 
+!...
       H_hcl(:) = (0.094 - 0.61*chi(:) + 1.2*chi(:)**2) &
                  * exp(-8.68 + (8515.0 - 10718.0*chi(:)**0.7)/tk(:))
       k_hcl(:) = 7.9d11*alphaH(:)*D_clono2(:)*H_hcl(:)*p_hcl(:)
@@ -2721,7 +2721,7 @@
       gamma_prime_s(:) = F_hcl(:)*gamma_s(:)
       gamma_prime_hcl(:) = F_hcl(:)*gamma_hcl(:)
       gamma_b(:) = gamma_prime_hcl(:) + gamma_clono2_rxn(:)*k_hydr(:)/(k_hcl(:)+k_hydr(:))
-! 
+!
       g_clono2(:) = 1.0/(1.0+1.0/(gamma_prime_s(:)+gamma_b(:)))
 !
       g_clono2_hcl(:) = g_clono2(:) &
