@@ -13,9 +13,9 @@
 !   This include file contains information about grouping species for
 !   transport purposes.
 !
-!  Input mechanism:        GeosCCM_Combo_2015mechanism.txt
+!  Input mechanism:        StratTrop_HFC_S.txt
 !  Reaction dictionary:    GMI_reactions_JPL15.db
-!  Setkin files generated: Tue Mar 30 16:58:02 2021
+!  Setkin files generated: Thu Nov 13 18:11:16 2025
 !
 !=======================================================================
 
@@ -34,8 +34,8 @@
 
       data  ((sgrp_elem_map(mge1,ng1), mge1=1,MAXGRP_ELEM), &
      &                                 ng1 =1,NUMGRP) / &
-     &  7, 8, 9,10,46,63, 0, 0, 0, 0, &
-     & 29,30,31,32,33,50,64,96, 0, 0 /
+     &   7,  8,  9, 10, 47, 63,  0,  0,  0,  0, &
+     &  29, 30, 31, 32, 33, 51, 64, 97,  0,  0 /
 
       real*8,  save :: sgrp_fac(MAXGRP_ELEM, NUMGRP)
 

@@ -13,9 +13,9 @@
 !   This include file contains information about surface boundary
 !   conditions.
 !
-!  Input mechanism:        GeosCCM_Combo_2015mechanism.txt
+!  Input mechanism:        StratTrop_HFC_S.txt
 !  Reaction dictionary:    GMI_reactions_JPL15.db
-!  Setkin files generated: Tue Mar 30 16:58:02 2021
+!  Setkin files generated: Thu Nov 13 18:11:16 2025
 !
 !=======================================================================
 

@@ -20,19 +20,21 @@
 !   rcarr       : cm3 molecule-1 s-1 - rate constant values in units as
 !                 appropriate
 !
-!  Input mechanism:        GeosCCM_Combo_2015mechanism.txt
+!  Input mechanism:        StratTrop_HFC_S.txt
 !  Reaction dictionary:    GMI_reactions_JPL15.db
-!  Setkin files generated: Tue Mar 30 16:58:02 2021
+!  Setkin files generated: Thu Nov 13 18:11:16 2025
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
      &  temperature,fcld,lwc,adcol,specarr,rcarr,radA,FRH)
-!
+
       implicit none
 
 #     include "gmi_phys_constants.h"
 #     include "setkin_par.h"
 #     include "setkin_mw.h"
+#     include "setkin_depos.h"
+#     include "gmi_sad_constants.h"
 
 !.... Argument declarations
 
@@ -47,10 +49,11 @@
       REAL*8,  INTENT (IN)  :: pressure    (       npres0)
       REAL*8,  INTENT (IN)  :: temperature (       npres0)
       REAL*8,  INTENT (IN)  :: sadcol      (NSAD  ,npres0)
+!      REAL*8,  INTENT (IN)  :: sadreff     (NSAD  ,npres0)
       REAL*8,  INTENT (IN)  :: sadcol2     (NSADaer+NSADdust,npres0)
+      REAL*8,  INTENT (IN)  :: radA        (NSADaer+NSADdust,npres0)
       REAL*8,  INTENT (IN)  :: specarr     (NMF   ,npres0)
       REAL*8,  INTENT (IN)  :: FRH         (       npres0)
-      REAL*8,  INTENT (IN)  :: radA        (NSADaer+NSADdust,npres0)
 
       REAL*8,  INTENT (OUT) :: rcarr       (NUM_K ,npres0)
 
@@ -68,14 +71,14 @@
      &  sad_ice  (npres0) &
      & ,sad_lbs  (npres0) &
      & ,sad_nat  (npres0) &
-     & ,sad_soot (npres0) &
+     & ,sad_pyro (npres0) &
      & ,sad_sts  (npres0)
 
-      real*8 mw(NSP)
+      real*8 mw(NSP), gammas_code
 !
-      real*8, DIMENSION (npres0) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl
+      real*8, DIMENSION (npres0) :: wt_h2so4, g_clono2, g_clono2_hcl, g_clono2_h2o, g_hocl_hcl
 !... effective radii of stratospheric aerosols
-      real*8 reff_lbs, reff_sts, reff_nat, reff_ice, reff_soot
+      real*8 reff_lbs   ! reff_sts, reff_nat, reff_ice, reff_pyro
 !
       mw(:) = mw_data(:)
 
@@ -92,24 +95,21 @@
 !
       nitrogen(:) = adcol(:) * MXRN2
       oxygen(:)   = adcol(:) * MXRO2
-      water(:)    = specarr(44 ,:)
+      water(:)    = specarr(45 ,:)
 !... * 0.0d0
       reff_lbs  = 0.221d-4
-      reff_sts  = 0.221d-4
-      reff_nat  = 0.221d-4
-      reff_ice  = 0.221d-4
-      reff_soot = 0.221d-4
+!     reff_sts  = 0.221d-4
+!     reff_nat  = 0.221d-4
+!     reff_ice  = 0.221d-4
+!     reff_pyro = 0.221d-4
 !
-      sad_lbs(:)  = sadcol(1, :)
-      sad_sts(:)  = sadcol(2, :)
-      sad_nat(:)  = sadcol(3, :)
-      sad_ice(:)  = sadcol(4, :)
-!.old      sad_soot(:) = sadcol(5, :)
-!... Use GOCART soot (BC+OC) for this reaction
-      sad_soot(:) = sadcol2(NSADdust+2,:)+sadcol2(NSADdust+3,:)
-!
-!... since STS is not calculated at present put Volc SO4 in there
-
+      sad_lbs(:)  = sadcol(ILBSSAD, :)
+      sad_sts(:)  = sadcol(ISTSSAD, :)
+      sad_nat(:)  = sadcol(INATSAD, :)
+      sad_ice(:)  = sadcol(IICESAD, :)
+      sad_pyro(:) = sadcol(IPYROSAD,:)
+!... Use GOCART pyro (BC+OC) for this reaction
+!.old      sad_pyro(:) = sadcol2(NSADdust+2,:)+sadcol2(NSADdust+3,:)
 !
 !
 !....          Start thermal rate constants
@@ -725,7 +725,7 @@
 !
 !....           C2H6 + Cl = ETO2 + HCl
 !
-      rcarr(147,:) = skarr(  7.200D-12 ,70.0D+00 ,temperature)
+      rcarr(147,:) = skarr(  7.200D-11 ,70.0D+00 ,temperature)
 !
 !....           C3H8 + OH = A3O2
 !
@@ -1333,33 +1333,33 @@
 !
 !....           N2O5 = 2 HNO3
 !
-      rcarr(297,:) = sksts_n2o5 (temperature ,pressure ,sad_lbs ,ptrop)
+      rcarr(297,:) = sklbs_n2o5 (temperature ,pressure ,sad_lbs ,ptrop)
 !
 !....           ClONO2 = HNO3 + HOCl
 !
-      rcarr(298,:) = sksts_clono2 (temperature  & 
-     &           ,adcol ,pressure ,sad_lbs ,specarr(  50,:) ,water ,ptrop)
+      rcarr(298,:) = sklbs_clono2 (temperature  & 
+     &           ,adcol ,pressure ,sad_lbs ,specarr(  51,:) ,water ,ptrop)
 !
 !....           BrONO2 = HNO3 + HOBr
 !
-      rcarr(299,:) = sksts_brono2 (temperature ,pressure ,sad_lbs ,ptrop)
+      rcarr(299,:) = sklbs_brono2 (temperature ,pressure ,sad_lbs ,ptrop)
 !
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
-      rcarr(300,:) = sksts_clono2_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_lbs ,specarr(    33,:) ,specarr(  50,:) ,water  & 
+      rcarr(300,:) = sklbs_clono2_hcl (temperature  & 
+     &           ,adcol ,pressure ,sad_lbs ,specarr(    33,:) ,specarr(  51,:) ,water  & 
      &           ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
-      rcarr(301,:) = sksts_hocl_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_lbs ,specarr(  64,:) ,specarr( 50,:) ,water  & 
+      rcarr(301,:) = sklbs_hocl_hcl (temperature  & 
+     &           ,adcol ,pressure ,sad_lbs ,specarr(  64,:) ,specarr( 51,:) ,water  & 
      &           ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
-      rcarr(302,:) = sksts_hobr_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_lbs ,specarr(  63,:) ,specarr( 50,:) ,water  & 
+      rcarr(302,:) = sklbs_hobr_hcl (temperature  & 
+     &           ,adcol ,pressure ,sad_lbs ,specarr(  63,:) ,specarr( 51,:) ,water  & 
      &           ,ptrop)
 !
 !....           N2O5 = 2 HNO3
@@ -1369,7 +1369,7 @@
 !....           ClONO2 = HNO3 + HOCl
 !
       rcarr(304,:) = sksts_clono2 (temperature  & 
-     &           ,adcol ,pressure ,sad_sts ,specarr(  50,:) ,water ,ptrop)
+     &           ,adcol ,pressure ,sad_sts ,specarr(  51,:) ,water ,ptrop)
 !
 !....           BrONO2 = HNO3 + HOBr
 !
@@ -1378,19 +1378,19 @@
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
       rcarr(306,:) = sksts_clono2_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_sts ,specarr(    33,:) ,specarr(  50,:) ,water  & 
+     &           ,adcol ,pressure ,sad_sts ,specarr(    33,:) ,specarr(  51,:) ,water  & 
      &           ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
       rcarr(307,:) = sksts_hocl_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_sts ,specarr(  64,:) ,specarr( 50,:) ,water  & 
+     &           ,adcol ,pressure ,sad_sts ,specarr(  64,:) ,specarr( 51,:) ,water  & 
      &           ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
       rcarr(308,:) = sksts_hobr_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_sts ,specarr(  63,:) ,specarr( 50,:) ,water  & 
+     &           ,adcol ,pressure ,sad_sts ,specarr(  63,:) ,specarr( 51,:) ,water  & 
      &           ,ptrop)
 !
 !....           ClONO2 = HNO3 + HOCl
@@ -1404,22 +1404,22 @@
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
       rcarr(311,:) = sknat_hcl_clono2 (temperature  & 
-     &           ,pressure ,sad_nat ,specarr(  50,:) ,ptrop)
+     &           ,pressure ,sad_nat ,specarr(  51,:) ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
       rcarr(312,:) = sknat_hcl_hocl (temperature  & 
-     &           ,pressure ,sad_nat ,specarr(  50,:) ,ptrop)
+     &           ,pressure ,sad_nat ,specarr(  51,:) ,ptrop)
 !
 !....           BrONO2 + HCl = BrCl + HNO3
 !
       rcarr(313,:) = sknat_hcl_brono2 (temperature  & 
-     &           ,pressure ,sad_nat ,specarr(  50,:) ,ptrop)
+     &           ,pressure ,sad_nat ,specarr(  51,:) ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
       rcarr(314,:) = sknat_hcl_hobr (temperature  & 
-     &           ,pressure ,sad_nat ,specarr(  50,:) ,ptrop)
+     &           ,pressure ,sad_nat ,specarr(  51,:) ,ptrop)
 !
 !....           ClONO2 = HNO3 + HOCl
 !
@@ -1432,26 +1432,26 @@
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
       rcarr(317,:) = skice_hcl_clono2 (temperature  & 
-     &           ,pressure ,sad_ice ,specarr(  50,:) ,ptrop)
+     &           ,pressure ,sad_ice ,specarr(  51,:) ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
       rcarr(318,:) = skice_hcl_hocl (temperature  & 
-     &           ,pressure ,sad_ice ,specarr(  50,:) ,ptrop)
+     &           ,pressure ,sad_ice ,specarr(  51,:) ,ptrop)
 !
 !....           BrONO2 + HCl = BrCl + HNO3
 !
       rcarr(319,:) = skice_hcl_brono2 (temperature  & 
-     &           ,pressure ,sad_ice ,specarr(  50,:) ,ptrop)
+     &           ,pressure ,sad_ice ,specarr(  51,:) ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
       rcarr(320,:) = skice_hcl_hobr (temperature  & 
-     &           ,pressure ,sad_ice ,specarr(  50,:) ,ptrop)
+     &           ,pressure ,sad_ice ,specarr(  51,:) ,ptrop)
 !
 !....           HNO3 = NO2 + OH
 !
-      rcarr(321,:) = sksoot_hno3 (temperature ,sad_soot)
+      rcarr(321,:) = skpyro_hno3 (temperature ,sad_pyro)
 !
 !....           NO3 + NO3 = 2 NO2 + O2
 !
@@ -1477,7 +1477,7 @@
       rcarr(326,:) = sktrs_n2o5 (temperature, & 
      &           sadcol2,adcol,radA,FRH,NSADaer,NSADdust, ptrop, pressure)
 !
-!....           DMS + OH = O2 + SO2
+!....           DMS + OH = SO2
 !
       rcarr(327,:) = skoh_dms (temperature, oxygen, adcol)
 !
@@ -1519,16 +1519,16 @@
           skarr(:) = af * exp(-ae / tk(:))
         END FUNCTION skarr
         FUNCTION sklp (af,npwr,tk,ad)
-          real*8 &
-     &      af ,npwr ,tk(:) ,ad(:)
+          real*8 af ,npwr ,tk(:) ,ad(:)
+          real*8, PARAMETER :: TSTD=300.0d0
           real*8, dimension(size(tk)) :: sklp
-          sklp(:) = ad(:) * af * (300.0d0/tk(:))**npwr
+          sklp(:) = ad(:) * af * (TSTD/tk(:))**npwr
         END FUNCTION sklp
         FUNCTION skhp (ai,mpwr,tk)
-          real*8 &
-     &      ai ,mpwr ,tk(:)
+          real*8 ai ,mpwr ,tk(:)
+          real*8, PARAMETER :: TSTD=300.0d0
           real*8, dimension(size(tk)) :: skhp
-          skhp(:) = ai * (300.0d0/tk(:))**mpwr
+          skhp(:) = ai * (TSTD/tk(:))**mpwr
         END FUNCTION skhp
         FUNCTION skfo (af,npwr,ai,mpwr,tk,ad)
           real*8 &
@@ -1556,11 +1556,86 @@
      &                (1.0d0+skfo(af,npwr,ai,mpwr,tk,ad))
         END FUNCTION sktroe
 !
+!.... Harvard/GMI
+        FUNCTION fyrno3(xcarbn,tk,ad)
+          real*8  xcarbn
+          real*8  tk(:) ,ad(:)
+          real*8, DIMENSION(size(tk)) :: fyrno3
+          real*8  aaa(size(tk)) ,rarb(size(tk)) ,xxyn(size(tk)) ,yyyn(size(tk)) ,zzyn(size(tk))
+!
+          xxyn(:)   = 1.94D-22 * exp(0.97d0 * xcarbn) * ad(:) * (300.0d0 / tk(:))**0.0d0
+          yyyn(:)   = 0.826d0 * (300.0d0 / tk(:))**8.1d0
+          aaa(:)    = log10(xxyn(:) / yyyn(:))
+          zzyn(:)   = 1.0d0 / (1.0d0 + aaa(:) * aaa(:))
+          rarb(:)   = (xxyn(:) / (1.0d0 + (xxyn(:) / yyyn(:)))) * 0.411d0**zzyn(:)
+          fyrno3(:) = rarb(:) / (1.0d0 + rarb(:))
+!
+        END FUNCTION fyrno3
+!.... Harvard/GMI from GEOSCHEM 14.3.1
+!
+      FUNCTION skro2_no_b (tk, ad, a0, c0, a1)
+!
+       real*8                      :: tk(:), ad(:)
+       real*8, DIMENSION(size(tk)) :: skro2_no_b
+       real*8                      :: a0, c0, a1
+       real*8, DIMENSION(size(tk)) :: k0,  k, yyyn, xxyn
+       real*8, DIMENSION(size(tk)) :: aaa, rarb, zzyn, fyrno3
+!
+!
+! Reaction rate for the "B" branch of these RO2 + NO reactions:
+!    ETO2 + NO = NO2 +     HO2 + ...
+!    A3O2 + NO = NO2 +     HO2 + ...
+!    R4O2 + NO = NO2 + 0.27HO2 + ...
+!    B3O2 + NO = NO2 +     HO2 + ...
+! in which the "a1" parameter is greater than 1.0.
+!
+!
+       k0(:)     = a0 * EXP( c0 / tk(:) )
+       xxyn   = 1.94d-22 * EXP(  0.97d0 * a1 ) * ad(:)
+       yyyn(:)   = 0.826d0 * ( (300.d0/tk(:))**8.1d0 )
+       aaa(:)    = LOG10( xxyn / yyyn(:) )
+       zzyn(:)   = ( 1.0d0 / ( 1.0d0 + ( aaa(:)  * aaa(:)  ) ) )
+       rarb(:)   = ( xxyn   / ( 1.0d0 + ( xxyn / yyyn(:) ) ) ) * ( 0.411d0**zzyn(:) )
+       fyrno3(:) = ( rarb(:)   / ( 1.0d0 +   rarb(:)          ) )
+       skro2_no_b(:) = k0(:) * ( 1.0d0 - fyrno3(:) )
+!
+      END FUNCTION skro2_no_b
+!
+!.... Harvard/GMI from GEOSCHEM 14.3.1
+!
+      FUNCTION skro2_no_a (tk, ad, a0, c0, a1)
+!
+       real*8                      :: tk(:), ad(:)
+       real*8, DIMENSION(size(tk)) :: skro2_no_a
+       real*8                      :: a0, c0, a1
+       real*8, DIMENSION(size(tk)) :: k0,  k, yyyn, xxyn
+       real*8, DIMENSION(size(tk)) :: aaa, rarb, zzyn, fyrno3
+!
+!
+! Reaction rate for the "B" branch of these RO2 + NO reactions:
+!    ETO2 + NO = NO2 +     HO2 + ...
+!    A3O2 + NO = NO2 +     HO2 + ...
+!    R4O2 + NO = NO2 + 0.27HO2 + ...
+!    B3O2 + NO = NO2 +     HO2 + ...
+! in which the "a1" parameter is greater than 1.0.
+!
+!
+       k0(:)     = a0 * EXP( c0 / tk(:) )
+       xxyn   = 1.94d-22 * EXP(  0.97d0 * a1 ) * ad(:)
+       yyyn(:)   = 0.826d0 * ( (300.d0/tk(:))**8.1d0 )
+       aaa(:)    = LOG10( xxyn / yyyn(:) )
+       zzyn(:)   = ( 1.0d0 / ( 1.0d0 + ( aaa(:)  * aaa(:)  ) ) )
+       rarb(:)   = ( xxyn   / ( 1.0d0 + ( xxyn / yyyn(:) ) ) ) * ( 0.411d0**zzyn(:) )
+       fyrno3(:) = ( rarb(:)   / ( 1.0d0 +   rarb(:)          ) )
+       skro2_no_a(:) = k0(:) * fyrno3(:)
+!
+      END FUNCTION skro2_no_a
+!
 !.... skho2dis (temperature ,adcol)
 !
 !_1_
 !
-!.... JPL 10-6
+!.... JPL 19-5
 !
         FUNCTION skho2dis (tk,ad)
 !
@@ -1580,7 +1655,7 @@
 !
 !_2_
 !
-!.... JPL 10-6
+!.... JPL 19-5
 !
         FUNCTION skho2h2o (tk,ad)
 !
@@ -1596,9 +1671,9 @@
 !
 !.... skcooh (temperature ,adcol)
 !
-!_1_
+!_2_
 !
-!.... JPL 15-10 ; now CO + OH is composed of two separate reactions!
+!.... JPL15 ; CO + OH is composed of two separate reactions!
 !.... Now it's density and temperature dependent.
 !         M
 ! OH + CO -> HOCO , but HOCO + O2 -> HO2 + CO2 quickly ; termolecular
@@ -1649,7 +1724,7 @@
 !.... skohch4 (temperature)
 ! _1_
 !
-!.... Harvard/GMI JPL 10-6
+!.... JPL 19-5
 !
         FUNCTION skohch4 (tk)
 !
@@ -1676,8 +1751,8 @@
           real*8  tk(:)
           real*8, DIMENSION(size(tk)) :: skmo2dis_1
 !
-          skmo2dis_1(:) = 9.50D-14 * exp(390.0d0 / tk(:)) * (1.0d0 /  &
-     &                    (1.0d0 + 26.2d0 * exp(-1130.0d0 / tk(:))))
+          skmo2dis_1(:) = 9.50D-14 * exp(390.0d0/tk(:)) &
+                         / (1.0d0 + 26.2d0 * exp(-1130.0d0/tk(:)))
 !
         END FUNCTION skmo2dis_1
 !
@@ -1688,15 +1763,13 @@
 !
         FUNCTION skmo2dis_2 (tk)
 !
-!....      MO2 + MO2 = 2 CH2O + 2 HO2
-!....
 !======================================================================
 !
           real*8  tk(:)
           real*8, DIMENSION(size(tk)) :: skmo2dis_2
 !
-          skmo2dis_2(:) = 9.50D-14 * exp(390.0d0 / tk(:)) * (1.0d0 /  &
-     &                    (1.0d0 + 0.04d0 * exp(1130.0d0 / tk(:))))
+          skmo2dis_2(:) = 9.50D-14 * exp(390.0d0 / tk(:))  &
+     &                   * (1.0d0 / (1.0d0 + 0.04d0 * exp(1130.0d0 / tk(:))))
 !
         END FUNCTION skmo2dis_2
 !
@@ -1749,12 +1822,12 @@
 !
 !.... Harvard/GMI
 !
-        FUNCTION ska3o2_ho2 (tk)
+      FUNCTION ska3o2_ho2 (tk)
 !
 !.... A3O2 + HO2 = RA3P
 !
-          real*8  tk(:)
-          real*8, DIMENSION(size(tk)) :: ska3o2_ho2
+      real*8  tk(:)
+      real*8, DIMENSION(size(tk)) :: ska3o2_ho2
 !
 ! A3O2 +  HO2 => RA3P : 
 !A  486 2.91E-13  0.0E+00   1300 1 HR  0.00     0.     0.         
@@ -1762,12 +1835,12 @@
 !
        ska3o2_ho2(:) = 2.91D-13 * exp(1300.0d0 / tk(:)) / (1.0D0+3.00E+00)
 !
-        END FUNCTION ska3o2_ho2
+      END FUNCTION ska3o2_ho2
 !
 !.... skacetoh (temperature)
 ! _24_
 !
-!.... Harvard/GMI JPL 10-6
+!.... Harvard/GMI
 !
         FUNCTION skacetoh (tk)
 !
@@ -1778,21 +1851,21 @@
           real*8  tk(:)
           real*8, dimension(size(tk)) :: skacetoh
 !
-      skacetoh(:) = skarr(3.8200D-11 ,2000.0D+00 ,tk(:)) +1.330D-13
+       skacetoh(:) = skarr(3.8200D-11 ,2000.0D+00 ,tk(:)) + 1.330D-13
 !
         END FUNCTION skacetoh
 !
 !.... skb3o2_ho2 (temperature)
 ! _26_
 !
-!.... Harvard/GMI
+!.... Harvard/GMI from GEOSCHEM 14.3.1
 !
-        FUNCTION skb3o2_ho2 (tk)
+      FUNCTION skb3o2_ho2 (tk)
 !
 !.... B3O2 + HO2 = RB3P
 !
-          real*8  tk(:)
-          real*8, DIMENSION(size(tk)) :: skb3o2_ho2
+      real*8  tk(:)
+      real*8, DIMENSION(size(tk)) :: skb3o2_ho2
 !
 ! B3O2 +  HO2 => RB3P : 
 !A  472 2.91E-13  0.0E+00   1300 1 HR  0.00     0.     0.         
@@ -1800,16 +1873,14 @@
 !
        skb3o2_ho2(:) = 2.91D-13 * exp(1300.0d0 / tk(:)) / (1.0D0+3.00E+00)
 !
-        END FUNCTION skb3o2_ho2
+      END FUNCTION skb3o2_ho2
 !
 !.... skc3h8ox_2 (temperature)
-! _23_
+! _52_
 !
-!.... Harvard/GMI
+!.... GMI JPL 15 - Primary propane oxidation
 !
         FUNCTION skc3h8ox_2 (tk)
-!
-! ***********************NOT USED********************************
 !
 !....      C3H8 + OH = A3O2
 !....
@@ -1824,13 +1895,11 @@
         END FUNCTION skc3h8ox_2
 !
 !.... skc3h8ox_1 (temperature)
-! _22_
+! _51_
 !
 !.... Harvard/GMI
 !
         FUNCTION skc3h8ox_1 (tk)
-!
-! ***********************NOT USED********************************
 !
 !....      C3H8 + OH = B3O2
 !....
@@ -1861,7 +1930,7 @@
           real*8, DIMENSION(size(tk)) :: skno3glyx
 !
           skno3glyx(:) = 1.40D-12 * exp(-1860.0d0 / tk(:)) *  &
-     &                   (o2(:) + 3.5D+18) / (2.0d0 * o2(:) + 3.5D+18)
+     &                  (o2(:) + 3.5D+18) / (2.0d0 * o2(:) + 3.5D+18)
 !
         END FUNCTION skno3glyx
 !
@@ -1944,24 +2013,24 @@
 !
 !.... Harvard/GMI
 !
-        FUNCTION skko2_ho2 (tk)
+      FUNCTION skko2_ho2 (tk)
 !
 !.... KO2 + HO2 = MO2 + MGLY
 !.... MAN2 + HO2 = ISNP
 !.... MRO2 + HO2 = MRP 
 !.... O2 + HO2 = MO2 + MGLY
 !
-          real*8  tk(:)
-          real*8, DIMENSION(size(tk)) :: skko2_ho2
+      real*8  tk(:)
+      real*8, DIMENSION(size(tk)) :: skko2_ho2
 !
 ! KO2 +  HO2 => MO2 + MGLY (ours)
 ! KO2 +  HO2 => 0.15 OH + 0.15 ALD2 + 0.15 MCO3 + 0.85 ATOOH  (GEOSCHEM)
 !A  472 2.91E-13  0.0E+00   1300 1 HR  0.00     0.     0.         
 !       4.00E+00  0.0E+00      0 0     0.00     0.     0.         
 !
-       skko2_ho2(:) = 2.91D-13 * exp(1300.0d0 / tk(:)) / (1.0D0+4.00E+00)
+      skko2_ho2(:) = 2.91D-13 * exp(1300.0d0 / tk(:)) / (1.0D0+4.00E+00)
 !
-        END FUNCTION skko2_ho2
+      END FUNCTION skko2_ho2
 !
 !.... skohmek (temperature)
 ! _6_
@@ -2030,24 +2099,24 @@
 !.... skpanan (temperature,adcol)
 ! _19_
 !
-!.... Harvard/GMI JPL 10-6
+!.... Harvard/GMI JPL 19-5
 !
-        FUNCTION skpanan (tk,ad)
+      FUNCTION skpanan (tk,ad)
 !
 !.... PAN = MCO3 + NO2
 !....
-          real*8  tk(:),ad(:)
-          real*8, DIMENSION(size(tk)) :: skpanan
+      real*8, INTENT(IN) :: tk(:), ad(:)
+      real*8, DIMENSION(size(tk)) :: skpanan
 !
-       skpanan(:) =  sktroe(9.700D-29,5.60D0,9.300D-12,1.50D0,0.0D0,tk(:),ad(:))  &
+      skpanan(:) =  sktroe(9.700D-29,5.60D0,9.300D-12,1.50D0,0.0D0,tk(:),ad(:))  &
      &  / skarr(9.000D-29, -14000.0D0,tk(:))
 !
-        END FUNCTION skpanan
+      END FUNCTION skpanan
 !
 !.... skppndecomp (temperature,adcol)
 ! _25_
 !
-!.... Harvard/GMI JPL 10-6
+!.... Harvard/GMI
 !
         FUNCTION skppndecomp (tk,ad)
 !
@@ -2057,33 +2126,19 @@
 !....
 !======================================================================
 !
-          real*8  tk(:), ad(:)
-          real*8, dimension(size(tk)) :: skppndecomp
+      real*8 , INTENT(IN) :: tk(:), ad(:)
+      real*8, DIMENSION(size(tk)) :: skppndecomp
 !
       skppndecomp(:) = sktroe(9.000D-28, 8.9d0,7.700D-12, 0.2d0, 0.0d0, tk(:), ad(:))  &
      &     /skarr(9.00D-29 ,-14000.0D+00, tk(:))
 !
-        END FUNCTION skppndecomp
+      END FUNCTION skppndecomp
 !
 !.... skro2noabs_1 (temperature ,adcol)
 ! _13_
 !
 !.... Harvard/GMI
 !
-        FUNCTION fyrno3(xcarbn,tk,ad)
-          real*8  xcarbn
-          real*8  tk(:) ,ad(:)
-          real*8, DIMENSION(size(tk)) :: fyrno3
-          real*8  aaa(size(tk)) ,rarb(size(tk)) ,xxyn(size(tk)) ,yyyn(size(tk)) ,zzyn(size(tk))
-!
-          xxyn(:)   = 1.94D-22 * exp(0.97d0 * xcarbn) * ad(:) * (300.0d0 / tk(:))**0.0d0
-          yyyn(:)   = 0.826d0 * (300.0d0 / tk(:))**8.1d0
-          aaa(:)    = log10(xxyn(:) / yyyn(:))
-          zzyn(:)   = 1.0d0 / (1.0d0 + aaa(:) * aaa(:))
-          rarb(:)   = (xxyn(:) / (1.0d0 + (xxyn(:) / yyyn(:)))) * 0.411d0**zzyn(:)
-          fyrno3(:) = rarb(:) / (1.0d0 + rarb(:))
-!
-        END FUNCTION fyrno3
         FUNCTION skro2noabs_1 (tk,ad)
 !
 !....      R4O2 + NO = NO2 + 0.320 ACET + 0.190 MEK +
@@ -2147,8 +2202,6 @@
 !.... skro2noabs_2 (temperature ,adcol)
 ! _14_
 !
-!.... Harvard/GMI
-!
         FUNCTION skro2noabs_2 (tk,ad)
 !
 !.... RIO2 + NO = NO2 + 0.864 HO2 + 0.690 CH2O +
@@ -2167,22 +2220,23 @@
 !
         END FUNCTION skro2noabs_2
 !
-!.... sksts_n2o5 (temperature ,pressure ,sad_lbs ,ptrop)
+!.... sklbs_n2o5 (temperature ,pressure ,sad_lbs ,ptrop)
 !
 !_1_
 !
-!.... JPL 19-5
+!.... (1) JPL 15-10
 !
-      FUNCTION sksts_n2o5 (tk,pr,sad,ptrop)
+      FUNCTION sklbs_n2o5 (tk,pr,sad,ptrop)
 !
       real*8, OPTIONAL :: ptrop
       real*8  tk(:) ,pr(:) ,sad(:)
-      real*8, DIMENSION (size(tk)) :: sksts_n2o5
+      real*8, DIMENSION (size(tk)) :: sklbs_n2o5
+
       real*8  pi
-      real*8  avgvel(size(tk))
 !.sds..      real*8  gamma
+      real*8  wt
 !... update
-      real*8  gamma(size(tk)), wt, k0, k1, k2
+      real*8, DIMENSION (size(tk)) :: gamma, k0, k1, k2, avgvel
 !
       pi = acos(-1.0d0)
 !
@@ -2194,44 +2248,44 @@
 !.sds..!.... PSC 3/30/99
 !.sds..      gamma     = 0.10d0
 !
-!... update gamma calc (older than JPL15)
+!... updated gamma calc (JPL10-6 or older)
 !
-!... weight % of H2SO4
+!... constant weight % of H2SO4
 !.STS..      wt = 60.0d0
       wt = 75.0d0
 !
-!... JPL19
-      k0 = -25.5265 - 0.133188*wt + 0.00930846*wt*wt - 9.0194e-5*wt*wt*wt
-      k1 =  9283.76 +  115.345*wt -    5.19258*wt*wt + 0.0483464*wt*wt*wt
-      k2 = -851801. -  22191.2*wt +    766.916*wt*wt -   6.85427*wt*wt*wt
-      gamma(:) = exp (k0 + k1/tk(:) + k2/(tk(:)*tk(:)))
+!... JPL10-6 (or earlier?)
+      k0(:) = -25.5265 - 0.133188*wt + 0.00930846*wt**2 - 9.0194e-5*wt**3
+      k1(:) =  9283.76 +  115.345*wt -    5.19258*wt**2 + 0.0483464*wt**3
+      k2(:) = -851801. -  22191.2*wt +    766.916*wt**2 -   6.85427*wt**3
+      gamma(:) = exp (k0 + k1/tk(:) + k2/(tk(:)**2))
 !.end update
 !
-      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-                 (pi * mw(IN2O5)))**0.5d0
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 &
+                   / (pi * mw(IN2O5)))**0.5d0
 !
-      where ( sad > 0.0d0 )
-        sksts_n2o5   = 0.25d0 * gamma * avgvel * sad
-      elsewhere
-        sksts_n2o5   = 0.0d0
-      endwhere
+      where( sad > 0.0d0 )
+        sklbs_n2o5(:) = 0.25d0 * gamma * avgvel * sad
+       elsewhere
+        sklbs_n2o5(:) = 0.0d0
+       endwhere
 !
       if ( present(ptrop) ) then
-        where ( pr > ptrop ) sksts_n2o5 = 0.0d0
+        where( pr > ptrop ) sklbs_n2o5 = 0.0d0
       endif
 !
-      END FUNCTION sksts_n2o5
+      END FUNCTION sklbs_n2o5
 !
-!.... sksts_clono2 (temperature ,adcol ,pressure ,sad_lbs ,specarr( HCl,:) ,water ,ptrop)
+!.... sklbs_clono2 (temperature ,adcol ,pressure ,sad_lbs ,specarr( HCl,:) ,water ,ptrop)
 !
 !_2_
 !
-!.... JPL 97-4
+!.... (2) JPL 97-4
 !
-        FUNCTION sksts_clono2 (tk,ad,pr,sad,hcl,h2o,ptrop)
+        FUNCTION sklbs_clono2 (tk,ad,pr,sad,hcl,h2o,ptrop)
           real*8, OPTIONAL :: ptrop
-          real*8  tk(:), ad(:), pr(:), sad(:), h2o(:), hcl(:)
-          real*8, DIMENSION (size(tk)) :: sksts_clono2
+          real*8  tk(:) ,ad(:) ,pr(:) ,sad(:) ,h2o(:) ,hcl(:)
+          real*8, DIMENSION (size(tk)) :: sklbs_clono2
           real*8  adrop ,alpha ,ksur ,minconc ,pi ,ro
           real*8  adivl(size(tk)) ,ah2o(size(tk)) ,avgvel(size(tk))  &
      &     ,fterm(size(tk))  &
@@ -2265,17 +2319,16 @@
           ph2o(:) = ((h2o(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
 !
           where( hcl(:) <= minconc )
-            phcl  = ((1.0d0 / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+            phcl = ((1.0d0 / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
           elsewhere
-            phcl  = ((hcl(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+            phcl = ((hcl(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
           end where
 !
 !....    NOTE: Activity of H2O not allowed to exceed 1.1
 !....          ah2o and Hstar taken from Table 2, JPC,
 !....          Hanson and Ravi, 98, 5734, 1994
 !
-          ah2o(:) = 1013.25d0 * ph2o(:) / 10.0d0**  &
-     &              (9.217d0 - (2190.0d0 / (tk(:) - 12.7d0)))
+          ah2o(:) = 1013.25d0 * ph2o(:) / 10.0d0**(9.217d0 - (2190.0d0 / (tk(:) - 12.7d0)))
 !
           where( ah2o(:) > 1.1d0)
             ah2o = 1.1d0
@@ -2307,41 +2360,39 @@
 !
           gprob_tot(:) = 1.0d0 / (1.0d0 / (gsurf(:) + fterm(:) * gcalc(:)) + 1.0d0 / alpha)
 !
-          gprob_hcl(:) = gprob_tot(:) *  &
-     &                   (gsurf(:) +  &
-     &                    fterm(:) * gcalc(:) * prate(:) /  &
-     &                   (1.0d0 + prate(:))) /  &
-     &                    (gsurf(:) + fterm(:) * gcalc(:))
+          gprob_hcl(:) = gprob_tot(:) * (gsurf(:) + fterm(:) * gcalc(:) * prate(:) /  &
+     &                   (1.0d0 + prate(:))) / (gsurf(:) + fterm(:) * gcalc(:))
 !
-          gamma(:) = gprob_tot(:) - gprob_hcl(:)
+          gamma = gprob_tot(:) - gprob_hcl(:)
 !
-          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 / (pi * mw(ICLONO2)))**0.5d0
+          avgvel = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+     &                   (pi * mw(ICLONO2)))**0.5d0
 !
-          sksts_clono2 = 0.25d0 * gamma * avgvel * sad
+          sklbs_clono2 = 0.25d0 * gamma * avgvel * sad
 !
-          where( sad < 0.0d0 ) sksts_clono2  = 0.0d0
+          where( sad < 0.0d0 ) sklbs_clono2   = 0.0d0
 !
           if ( present(ptrop) ) then
-            where( pr > ptrop ) sksts_clono2 = 0.0d0
+            where( pr > ptrop ) sklbs_clono2 = 0.0d0
           end if
 !
-        END FUNCTION sksts_clono2
+        END FUNCTION sklbs_clono2
 !
-!.... sksts_brono2 (temperature ,pressure ,sad_lbs ,ptrop)
+!.... sklbs_brono2 (temperature ,pressure ,sad_lbs ,ptrop)
 !
 !_3_
 !
-!.... JPL 15-10
+!.... (3) JPL 15-10
 !
-        FUNCTION sksts_brono2 (tk,pr,sad,ptrop)
-          real*8, OPTIONAL :: ptrop
-          real*8  tk(:) ,pr(:) ,sad(:)
-          real*8, DIMENSION (size(tk)) :: sksts_brono2
-          real*8  gamma ,pi
-          real*8  avgvel(size(tk))
-          real*8  wt
+      FUNCTION sklbs_brono2 (tk,pr,sad,ptrop)
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:)
+      real*8, DIMENSION (size(tk)) :: sklbs_brono2
+      real*8  pi
+      real*8, DIMENSION (size(tk)) :: gamma, avgvel
+      real*8  wt
 !
-          pi = acos(-1.0d0)
+      pi = acos(-1.0d0)
 !
 !=======================================================================
 !     BrONO2 + stratospheric sulfate aerosol = HOBr + HNO3
@@ -2354,7 +2405,7 @@
 !.orig          gamma = 0.8d0
 !
 !... JPL15-6 formulation
-!   Hanson has fit an empirical expression for measured gammas for BrONO2 + H2O in the form
+!   Hanson has fit an empirical expression for measured gammas for BrONO2 + H2O in the form 
 !    of:
 !      1/gamma = 1/alpha + 1/gamma(rxn)
 !    where
@@ -2365,31 +2416,31 @@
 !... assumed %wt for GMI
       wt = 75.0d0
 !
-      gamma = 1.0d0 / ( 1.0d0/0.80d0 + 1.0d0/(exp(29.2d0-0.40d0*wt)) )
+      gamma(:) = 1.0d0 / ( 1.0d0/0.80d0 + 1.0d0/(exp(29.2d0-0.40d0*wt)) )
 !
-          avgvel = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-                  (pi * mw(IBRONO2)))**0.5d0
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 &
+               / (pi * mw(IBRONO2)))**0.5d0
 !
-          sksts_brono2 = 0.25d0 * gamma * avgvel * sad
+      sklbs_brono2 = 0.25d0 * gamma * avgvel * sad
 !
-          where( sad < 0.0d0 ) sksts_brono2   = 0.0d0
+      where( sad < 0.0d0 ) sklbs_brono2   = 0.0d0
 !
-          if ( present(ptrop) ) then
-            where( pr > ptrop ) sksts_brono2 = 0.0d0
-          end if
+      if ( present(ptrop) ) then
+        where( pr > ptrop ) sklbs_brono2 = 0.0d0
+      end if
 !
-        END FUNCTION sksts_brono2
+      END FUNCTION sklbs_brono2
 !
-!.... sksts_clono2_hcl (temperature ,adcol ,pressure ,sad_lbs ,specarr(ClONO2,:) ,specarr( HCl,:) ,water ,ptrop)
+!.... sklbs_clono2_hcl (temperature ,adcol ,pressure ,sad_lbs ,specarr(ClONO2,:) ,specarr( HCl,:) ,water ,ptrop)
 !
 !_4_
 !
-!.... JPL 97-4
+!.... (4) JPL 97-4
 !
-        FUNCTION sksts_clono2_hcl (tk,ad,pr,sad,clono2,hcl,h2o,ptrop)
+        FUNCTION sklbs_clono2_hcl (tk,ad,pr,sad,clono2,hcl,h2o,ptrop)
           real*8, OPTIONAL :: ptrop
           real*8  tk(:) ,ad(:) ,pr(:) ,sad(:) ,h2o(:) ,hcl(:) ,clono2(:)
-          real*8, DIMENSION (size(tk)) :: sksts_clono2_hcl
+          real*8, DIMENSION (size(tk)) :: sklbs_clono2_hcl
           real*8  adrop ,alpha ,ksur ,minconc ,pi ,ro
           real*8  adivl(size(tk)) ,ah2o(size(tk)) ,avgvel(size(tk))  &
      &     ,fterm(size(tk))  &
@@ -2477,13 +2528,616 @@
      &                   (pi * mw(ICLONO2)))**0.5d0
 !
           where( hcl > minconc )
-            sksts_clono2_hcl = 0.25d0 * gprob_hcl * avgvel * sad / hcl
+            sklbs_clono2_hcl   = 0.25d0 * gprob_hcl * avgvel * sad / hcl
           elsewhere
-!.old            sksts_clono2_hcl = 0.25d0 * gprob_hcl * avgvel * sad
-            sksts_clono2_hcl = 0.0d0
+!.old            sklbs_clono2_hcl   = 0.25d0 * gprob_hcl * avgvel * sad
+            sklbs_clono2_hcl   = 0.0d0
           end where
 !
-          where( sad < 0.0d0 ) sksts_clono2_hcl = 0.0d0
+          where( sad < 0.0d0 ) sklbs_clono2_hcl   = 0.0d0
+!
+          if ( present(ptrop) ) then
+            where( pr > ptrop ) sklbs_clono2_hcl = 0.0d0
+          end if
+!
+        END FUNCTION sklbs_clono2_hcl
+!
+!.... sklbs_hocl_hcl (temperature ,adcol ,pressure ,sad_lbs ,specarr(HOCl,:) ,specarr(HCl,:) ,water ,ptrop)
+!
+!_5_
+!
+!.... (5) JPL 97-4
+!
+        FUNCTION sklbs_hocl_hcl (tk,ad,pr,sad,hocl,hcl,h2o,ptrop)
+          real*8, OPTIONAL :: ptrop
+          real*8  tk(:) ,ad(:) ,pr(:) ,sad(:) ,h2o(:) ,hcl(:) ,hocl(:)
+          real*8, DIMENSION (size(tk)) :: sklbs_hocl_hcl
+          real*8  adrop ,alpha ,d1 ,minconc ,pi,minadivl
+          real*8  adivl(size(tk)) ,ah2o(size(tk)) ,avgvel(size(tk))  &
+     &     ,c1(size(tk)) ,c2(size(tk)) ,c3(size(tk)) ,conv(size(tk))  &
+     &     ,fterm(size(tk))  &
+     &     ,gcalc(size(tk))  &
+     &     ,gprob_tot(size(tk))  &
+     &     ,hhuth(size(tk)) ,hm(size(tk))  &
+     &     ,hsqrtd(size(tk)) ,hstar(size(tk)) ,hstar_hocl(size(tk))  &
+     &     ,k(size(tk)) ,kii(size(tk))  &
+     &     ,mterm(size(tk))  &
+     &     ,ph2o(size(tk)) ,phcl(size(tk))  &
+     &     ,rho(size(tk))  &
+     &     ,tk_150(size(tk))  &
+     &     ,wtper(size(tk))  &
+     &     ,z(size(tk))
+!
+          pi = acos(-1.0d0)
+!
+!=======================================================================
+!     HOCl + HCl on stratospheric sulfate aerosol = Cl2 + H2O
+!=======================================================================
+!
+!.... First order reaction rate constant
+!
+!.... Hanson and Ravi, JPC, 98, 5728, 1994
+!.... DEK, 1/10/97
+!
+!....   NOTE: alpha is modified from 0.3 in Table 2, JPC,
+!....         Hanson and Ravi, 98, 5734, 1994 to 1.0 based on
+!....         Ravi and Hanson, 101, pg 3887, JGR, 1996.
+!
+          minconc  = 1.0d0
+          adrop    = 1.0D-05
+          alpha    = 1.0d0
+          d1       = 9.0D-09
+          minadivl = 1.00D-15
+!
+!....    NOTE: Partial pressure of HCl and H2O (in atmospheres)
+!
+          ph2o(:) = (h2o(:) / ad(:)) * pr(:)
+!
+          z(:) = log(ph2o(:))
+!
+          ph2o(:) = ph2o(:) / 1013.25d0
+!
+!
+          where( hcl(:) <= minconc )
+            phcl = ((1.0d0 / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          elsewhere
+            phcl = ((hcl(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          end where
+!
+!....    NOTE: Activity of H2O not allowed to exceed 1.1
+!....          ah2o and Hstar taken from Table 2, JPC,
+!....          Hanson and Ravi, 98, 5734, 1994
+!
+          ah2o(:) = 1013.25d0 * ph2o(:) / 10.0d0**(9.217d0 - (2190.0d0 / (tk(:) - 12.7d0)))
+!
+          where( ah2o(:) > 1.1d0)
+            ah2o = 1.1d0
+          end where
+!
+          wtper(:) = ((-14.0508d0 + 0.708928d0 * z(:)) * tk(:) + 3578.6d0) /  &
+     &               (45.5374d0 + 1.55981d0 * z(:) - 0.197298d0 * tk(:))
+!
+          where( wtper < 40.0d0 )
+            wtper = 40.0d0
+          end where
+!
+          where( wtper > 80.0d0 )
+            wtper = 80.0d0
+          end where
+!
+          kii(:) = exp(2.303d0 * (6.08d0 - 1050.0d0 / tk(:) + 0.0747d0 * wtper(:)))
+!
+          tk_150(:) = tk(:)
+!
+          where( tk(:) < 150.0d0 )
+            tk_150 = 150.0d0
+          endwhere
+!
+          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!
+          k(:) = kii(:) * hstar(:) * phcl(:)
+!
+          adivl(:) = adrop / sqrt(d1 / k(:))
+!
+           where( adivl(:) < minadivl)
+              adivl = minadivl
+           endwhere
+!
+          fterm(:) = ((exp(adivl(:)) + exp(-adivl(:))) /  &
+     &                (exp(adivl(:)) - exp(-adivl(:)))) -  &
+     &               (1.0d0 / adivl(:))
+!
+          mterm(:) = 10.196d0 * wtper(:) / (100.0d0 - wtper(:))
+!
+          c1(:) = 123.64d0 - 5.6D-04 * tk(:)**2.0d0
+!
+          c2(:) = -29.54d0 + 1.814D-04 * tk(:)**2.0d0
+!
+          c3(:) = 2.243d0 - 1.487D-03 * tk(:) + 1.324D-05 * tk(:)**2.0d0
+!
+          rho(:) = 1000.0d0 + c1(:) * mterm(:) +  &
+     &                        c2(:) * mterm(:)**1.5d0 +  &
+     &                        c3(:) * mterm(:)**2.0d0
+!
+          conv(:) = (rho(:) / 1000.0d0) / (1.0d0 + mterm(:) * 0.09808d0)
+!
+          hhuth(:) = exp(6.4946d0 - mterm(:) *  &
+     &                   (-0.04107d0 + 54.56d0 / tk(:)) -  &
+     &                   5862.0d0 * (1.0d0 / 298.15d0 - 1.0d0 / tk(:)))
+!
+          hm(:) = hhuth(:) * conv(:)
+!
+          hstar_hocl(:) = hm(:) * (1.0d0 + 1.052d0 * exp(0.273d0 * (wtper(:) - 65.66d0)))
+!
+          hsqrtd(:) = hstar_hocl(:) * sqrt(d1)
+!
+          gcalc(:) = 2.2548D-05 * hsqrtd(:) * sqrt(tk(:) * mw(IHOCL) * k(:))
+!
+!
+!....   NOTE: gprob_tot is the overall uptake coeff for HOCl
+!
+          where( fterm > 0.0d0 )
+            gprob_tot = 1.0d0 / (1.0d0 / (fterm(:) * gcalc(:)) + 1.0d0 / alpha)
+          elsewhere
+            gprob_tot = 0.0d0
+          end where
+!
+          avgvel(:)   = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 &
+                       / (pi * mw(IHOCL)))**0.5d0
+!
+          where( hcl > minconc )
+            sklbs_hocl_hcl = 0.25d0 * gprob_tot * avgvel * sad / hcl
+          elsewhere
+!.old            sklbs_hocl_hcl = 0.25d0 * gprob_tot * avgvel * sad
+            sklbs_hocl_hcl = 0.0d0
+          end where
+!
+          where( sad < 0.0d0 ) sklbs_hocl_hcl   = 0.0d0
+!
+          if ( present(ptrop) ) then
+            where( pr > ptrop ) sklbs_hocl_hcl = 0.0d0
+          end if
+!
+        END FUNCTION sklbs_hocl_hcl
+!
+!.... sklbs_hobr_hcl (temperature ,adcol ,pressure ,sad_lbs ,specarr(HOBr,:) ,specarr(HCl,:) ,water ,ptrop)
+!
+!_6_
+!
+!.... (6) JPL 97-4
+!
+        FUNCTION sklbs_hobr_hcl (tk,ad,pr,sad,hobr,hcl,h2o,ptrop)
+          real*8, OPTIONAL :: ptrop
+          real*8  tk(:) ,ad(:) ,pr(:) ,sad(:) ,h2o(:) ,hcl(:) ,hobr(:)
+          real*8, DIMENSION (size(tk)) :: sklbs_hobr_hcl
+          real*8 adrop ,alpha ,d1 ,hsqrtd ,kii ,minconc ,pi,minadivl
+          real*8 adivl(size(tk)) ,ah2o(size(tk)) ,avgvel(size(tk)) &
+     &     ,fterm(size(tk)) &
+     &     ,gcalc(size(tk)) &
+     &     ,gprob_tot(size(tk)) &
+     &     ,hstar(size(tk)) &
+     &     ,k(size(tk)) &
+     &     ,ph2o(size(tk)) ,phcl(size(tk)) &
+     &     ,tk_150(size(tk))
+!
+          pi = acos(-1.0d0)
+!
+!=======================================================================
+!     HOBr + HCl on stratospheric sulfate aerosol = BrCl + H2O
+!=======================================================================
+!
+!.... First order reaction rate constant
+!
+!.... Hanson and Ravi, JPC, 98, 5728, 1994
+!.... DEK, 1/10/97
+!
+!....   NOTE: alpha is modified from 0.3 in Table 2, JPC,
+!....         Hanson and Ravi, 98, 5734, 1994 to 1.0 based on
+!....         Ravi and Hanson, 101, pg 3887, JGR, 1996.
+!
+          minconc  = 1.0d0
+          adrop    = 1.0D-05
+          alpha    = 1.0d0
+          d1       = 1.2D-08
+          minadivl = 1.00D-15
+!
+!....    NOTE: Partial pressure of HCl and H2O (in atmospheres)
+!
+          ph2o(:) = (h2o(:) / ad(:)) * pr(:)
+!
+          ph2o(:) = ph2o(:) / 1013.25d0
+!
+          where( hcl(:) <= minconc )
+            phcl = ((1.0d0 / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          elsewhere
+            phcl = ((hcl(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          end where
+!
+!....    NOTE: Activity of H2O not allowed to exceed 1.1
+!....          ah2o and Hstar taken from Table 2, JPC,
+!....          Hanson and Ravi, 98, 5734, 1994
+!
+          ah2o(:) = 1013.25d0 * ph2o(:) / 10.0d0**(9.217d0 - (2190.0d0 / (tk(:) - 12.7d0)))
+!
+          where( ah2o(:) > 1.1d0)
+            ah2o = 1.1d0
+          end where
+!
+          tk_150(:) = tk(:)
+!
+          where( tk(:) < 150.0d0 )
+            tk_150 = 150.0d0
+          endwhere
+!
+          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!
+          kii      = 1.0D+05
+!
+          k(:)     = kii * hstar(:) * phcl(:)
+!
+          hsqrtd   = 110.0d0
+!
+          gcalc(:) = 2.2548D-05 * hsqrtd * sqrt(tk(:) * mw(IHOBR) * k(:))
+!
+          adivl(:) = adrop / sqrt(d1 / k(:))
+!
+           where( adivl(:) < minadivl)
+              adivl = minadivl
+           endwhere
+!
+          fterm(:) = ((exp(adivl(:)) + exp(-adivl(:))) / &
+     &                (exp(adivl(:)) - exp(-adivl(:)))) - &
+     &               (1.0d0 / adivl(:))
+!
+!....   NOTE: gprob_tot is the overall uptake coeff for HOCl
+!
+          where( fterm > 0.0d0 )
+            gprob_tot = 1.0d0 / (1.0d0 / (fterm(:) * gcalc(:)) + 1.0d0 / alpha)
+          elsewhere
+            gprob_tot = 0.0d0
+          end where
+!
+          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 &
+                     / (pi * mw(IHOBR)))**0.5d0
+!
+          where( hcl > minconc )
+            sklbs_hobr_hcl = 0.25d0 * gprob_tot * avgvel * sad / hcl
+         elsewhere
+!.old            sklbs_hobr_hcl = 0.25d0 * gprob_tot * avgvel * sad
+            sklbs_hobr_hcl = 0.0d0
+         end where
+!
+          where( sad < 0.0d0 ) sklbs_hobr_hcl = 0.0d0
+!
+          if ( present(ptrop) ) then
+            where( pr > ptrop ) sklbs_hobr_hcl = 0.0d0
+          endif
+!
+!... JPL02 has lots of caveats and uncertainity - ignore for now
+!!!!!!          sklbs_hobr_hcl = 0.0d0
+!
+        END FUNCTION sklbs_hobr_hcl
+!
+!.... sksts_n2o5 (temperature ,pressure ,sad_sts ,ptrop)
+!
+!_1_
+!
+!.... (1) JPL 15-10
+!
+      FUNCTION sksts_n2o5 (tk,pr,sad,ptrop)
+!
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:)
+      real*8, DIMENSION (size(tk)) :: sksts_n2o5
+      real*8, DIMENSION (size(tk)) :: gamma, avgvel
+      real*8  pi
+!.sds..      real*8  gamma
+!... update
+      real*8  wt, k0, k1, k2
+!
+      pi = acos(-1.0d0)
+!
+!=======================================================================
+!     N2O5 + stratospheric sulfate aerosol = 2 HNO3
+!=======================================================================
+!
+!.sds..!.... First order reaction rate constant
+!.sds..!.... PSC 3/30/99
+!.sds..      gamma     = 0.10d0
+!
+!... update gamma calc (older than JPL15)
+!
+!... weight % of H2SO4
+!     wt = 60.0d0   !.STS.. 
+      wt = 75.0d0   !.LBS..
+!
+!... JPL10-6 (or earlier?)
+      k0 = -25.5265 - 0.133188*wt + 0.00930846*wt**2 - 9.0194e-5*wt**3
+      k1 =  9283.76 +  115.345*wt -    5.19258*wt**2 + 0.0483464*wt**3
+      k2 = -851801. -  22191.2*wt +    766.916*wt**2 -   6.85427*wt**3
+      gamma(:) = exp (k0 + k1/tk(:) + k2/(tk(:)**2))
+!.end update
+!
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 &
+                  / (pi * mw(IN2O5)))**0.5d0
+!
+      where( sad > 0.0d0 )
+        sksts_n2o5 = 0.25d0 * gamma * avgvel * sad
+       elsewhere
+        sksts_n2o5 = 0.0d0
+       endwhere
+!
+      if ( present(ptrop) ) then
+        where( pr > ptrop ) sksts_n2o5 = 0.0d0
+       endif
+!
+      END FUNCTION sksts_n2o5
+!
+!.... sksts_clono2 (temperature ,adcol ,pressure ,sad_sts ,specarr( HCl,:) ,water ,ptrop)
+!
+!_2_
+!
+!.... (2) JPL 97-4
+!
+        FUNCTION sksts_clono2 (tk,ad,pr,sad,hcl,h2o,ptrop)
+          real*8, OPTIONAL :: ptrop
+          real*8  tk(:) ,ad(:) ,pr(:) ,sad(:) ,h2o(:) ,hcl(:)
+          real*8, DIMENSION (size(tk)) :: sksts_clono2
+          real*8  adrop ,alpha ,ksur ,minconc ,pi ,ro
+          real*8  adivl(size(tk)) ,ah2o(size(tk)) ,avgvel(size(tk))  &
+     &     ,fterm(size(tk))  &
+     &     ,gamma(size(tk)) ,gam0(size(tk)) ,gcalc(size(tk))  &
+     &     ,gprob_hcl(size(tk)) ,gprob_tot(size(tk)) ,gsurf(size(tk))  &
+     &     ,hstar(size(tk))  &
+     &     ,ph2o(size(tk)) ,phcl(size(tk)) ,prate(size(tk))  &
+     &     ,tk_150(size(tk))
+!
+          pi = acos(-1.0d0)
+!
+!=======================================================================
+!     ClONO2 + stratospheric sulfate aerosol = HOCl + HNO3
+!=======================================================================
+!
+!.... First order reaction rate constant
+!.... PSC 3/30/99
+!
+!....   NOTE: alpha is modified from 0.3 in Table 2, JPC,
+!....         Hanson and Ravi, 98, 5734, 1994 to 1.0 based on
+!....         Ravi and Hanson, 101, pg 3887, JGR, 1996.
+!
+          minconc = 1.0d0
+          alpha   = 1.0d0
+          ksur    = 576.0d0
+          ro      = 2000.0d0
+          adrop   = 1.0d-05
+!
+!....    NOTE: Partial pressure of HCl and H2O (in atmospheres)
+!
+          ph2o(:) = ((h2o(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+!
+          where( hcl(:) <= minconc )
+            phcl = ((1.0d0 / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          elsewhere
+            phcl = ((hcl(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          end where
+!
+!....    NOTE: Activity of H2O not allowed to exceed 1.1
+!....          ah2o and Hstar taken from Table 2, JPC,
+!....          Hanson and Ravi, 98, 5734, 1994
+!
+          ah2o(:) = 1013.25d0 * ph2o(:) &
+           / 10.0d0**(9.217d0 - (2190.0d0 / (tk(:) - 12.7d0)))
+!
+          where( ah2o(:) > 1.1d0)
+            ah2o = 1.1d0
+          end where
+!
+          tk_150(:) = tk(:)
+!
+          where( tk(:) < 150.0d0 )
+            tk_150 = 150.0d0
+          endwhere
+!
+          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!
+          gsurf(:) = ah2o(:) * ksur * hstar(:) * phcl(:)
+!
+          prate(:) = ro * hstar(:) * phcl(:) / ah2o(:)
+!
+          gam0(:)  = 1.18d-04 + (9.1d-03 * ah2o(:)) + (0.5d0 * ah2o(:)**2.0d0)
+!
+          gcalc(:) = gam0(:) * sqrt(1.0d0 + prate(:))
+!
+          adivl(:) = adrop / (1.4d-06 * sqrt(1.0d0 / ah2o(:)))
+!
+          fterm(:) = ((exp(adivl(:)) + exp(-adivl(:))) /  &
+     &                (exp(adivl(:)) - exp(-adivl(:)))) -  &
+     &                (1.0d0 / adivl(:))
+!
+!....   NOTE: gprob_tot is the overall uptake coeff for ClONO2
+!
+          gprob_tot(:) = 1.0d0 / (1.0d0 / (gsurf(:) + fterm(:) * gcalc(:)) + 1.0d0 / alpha)
+!
+          gprob_hcl(:) = gprob_tot(:) * (gsurf(:) + fterm(:) * gcalc(:) * prate(:) /  &
+     &                   (1.0d0 + prate(:))) / (gsurf(:) + fterm(:) * gcalc(:))
+!
+          gamma(:)     = gprob_tot(:) - gprob_hcl(:)
+!
+          avgvel(:)    = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+     &                   (pi * mw(ICLONO2)))**0.5d0
+!
+          sksts_clono2 = 0.25d0 * gamma * avgvel * sad
+!
+          where( sad < 0.0d0 ) sksts_clono2   = 0.0d0
+!
+          if ( present(ptrop) ) then
+            where( pr > ptrop ) sksts_clono2 = 0.0d0
+          end if
+!
+        END FUNCTION sksts_clono2
+!
+!.... sksts_brono2 (temperature ,pressure ,sad_sts ,ptrop)
+!
+!_2_
+!
+!.... (3) JPL 15-10
+!
+      FUNCTION sksts_brono2 (tk,pr,sad,ptrop)
+!
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:)
+      real*8, DIMENSION (size(tk)) :: sksts_brono2
+      real*8  pi
+      real*8  avgvel(size(tk))
+      real*8  gamma
+!... JPL15
+      real*8  wt
+!
+          pi = acos(-1.0d0)
+!
+!=======================================================================
+!     BrONO2 + stratospheric sulfate aerosol = HOBr + HNO3
+!=======================================================================
+!
+!.... First order reaction rate constant
+!
+!.... David Hanson, personal communication, May 13, 1997
+!
+!.orig          gamma = 0.8d0
+!
+!... JPL15-6 formulation
+!   Hanson has fit an empirical expression for measured gammas for BrONO2 + H2O in the form 
+!    of:
+!      1/gamma = 1/alpha + 1/gamma(rxn)
+!    where
+!      gamma(rxn) = exp(a+b*wt)
+!      alpha = 0.80,
+!      a = 29.2,
+!      b = -0.40.
+!... assumed %wt for GMI
+      wt = 75.0d0
+!
+      gamma = 1.0d0 / ( 1.0d0/0.80d0 + 1.0d0/(exp(29.2d0-0.40d0*wt)) )
+!
+      avgvel = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 &
+               / (pi * mw(IBRONO2)))**0.5d0
+!
+      sksts_brono2 = 0.25d0 * gamma * avgvel * sad
+!
+      where( sad < 0.0d0 ) sksts_brono2 = 0.0d0
+!
+      if ( present(ptrop) ) then
+        where( pr > ptrop ) sksts_brono2 = 0.0d0
+      end if
+!
+      END FUNCTION sksts_brono2
+!
+!.... sksts_clono2_hcl (temperature ,adcol ,pressure ,sad_sts ,specarr(ClONO2,:) ,specarr( HCl,:) ,water ,ptrop)
+!
+!_4_
+!
+!.... (4) JPL 97-4
+!
+        FUNCTION sksts_clono2_hcl (tk,ad,pr,sad,clono2,hcl,h2o,ptrop)
+          real*8, OPTIONAL :: ptrop
+          real*8  tk(:) ,ad(:) ,pr(:) ,sad(:) ,h2o(:) ,hcl(:) ,clono2(:)
+          real*8, DIMENSION (size(tk)) :: sksts_clono2_hcl
+          real*8  adrop ,alpha ,ksur ,minconc ,pi ,ro
+          real*8  adivl(size(tk)) ,ah2o(size(tk)) ,avgvel(size(tk))  &
+     &     ,fterm(size(tk))  &
+     &     ,gam0(size(tk)) ,gcalc(size(tk))  &
+     &     ,gprob_hcl(size(tk)) ,gprob_tot(size(tk)) ,gsurf(size(tk))  &
+     &     ,hstar(size(tk))  &
+     &     ,ph2o(size(tk)) ,phcl(size(tk)) ,prate(size(tk))  &
+     &     ,tk_150(size(tk))
+!
+          pi = acos(-1.0d0)
+!
+!=======================================================================
+!     ClONO2 + HCl on stratospheric sulfate aerosol = Cl2 + HNO3
+!=======================================================================
+!
+!.... First order reaction rate constant
+!
+!.... Hanson and Ravi, JPC, 98, 5728, 1994
+!.... DEK, 1/10/97
+!
+!....   NOTE: alpha is modified from 0.3 in Table 2, JPC,
+!....         Hanson and Ravi, 98, 5734, 1994 to 1.0 based on
+!....         Ravi and Hanson, 101, pg 3887, JGR, 1996.
+!
+          minconc = 1.0d0
+          alpha   = 1.0d0
+          ksur    = 576.0d0
+          ro      = 2000.0d0
+          adrop   = 1.0d-05
+!
+!....    NOTE: Partial pressure of HCl and H2O (in atmospheres)
+!
+          ph2o(:) = ((h2o(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+!
+          where( hcl(:) <= minconc )
+            phcl = ((1.0d0 / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          elsewhere
+            phcl = ((hcl(:) / ad(:)) * pr(:)) * (1.0d0 / 1013.25d0)
+          end where
+!
+!....    NOTE: Activity of H2O not allowed to exceed 1.1
+!....          ah2o and Hstar taken from Table 2, JPC,
+!....          Hanson and Ravi, 98, 5734, 1994
+!
+          ah2o(:) = 1013.25d0 * ph2o(:) / 10.0d0**(9.217d0 - (2190.0d0 / (tk(:) - 12.7d0)))
+!
+          where( ah2o(:) > 1.1d0)
+            ah2o = 1.1d0
+          end where
+!
+          tk_150(:) = tk(:)
+!
+          where( tk(:) < 150.0d0 )
+            tk_150 = 150.0d0
+          endwhere
+!
+          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!
+          gsurf(:) = ah2o(:) * ksur * hstar(:) * phcl(:)
+!
+          prate(:) = ro * hstar(:) * phcl(:) / ah2o(:)
+!
+          gam0(:)  = 1.18d-04 + (9.1d-03 * ah2o(:)) + (0.5d0 * ah2o(:)**2.0d0)
+!
+          gcalc(:) = gam0(:) * sqrt(1.0d0 + prate(:))
+!
+          adivl(:) = adrop / (1.4d-06 * sqrt(1.0d0 / ah2o(:)))
+!
+          fterm(:) = ((exp(adivl(:)) + exp(-adivl(:))) /  &
+     &                (exp(adivl(:)) - exp(-adivl(:)))) -  &
+     &               (1.0d0 / adivl(:))
+!
+!....   NOTE: gprob_tot is the overall uptake coeff for ClONO2
+!
+!....   NOTE: alpha is modified from 0.3 in Table 2, JPC,
+!....         Hanson and Ravi, 98, 5734, 1994 to 1.0 based on
+!....         Ravi and Hanson, 101, pg 3887, JGR, 1996.
+!
+          gprob_tot(:) = 1.0d0 / (1.0d0 /  &
+     &                   (gsurf(:) + fterm(:) * gcalc(:)) + 1.0d0 / alpha)
+!
+          gprob_hcl(:) = gprob_tot(:) * (gsurf(:) +  &
+     &                    fterm(:) * gcalc(:) * prate(:) /  &
+     &                   (1.0d0 + prate(:))) / (gsurf(:) + fterm(:) * gcalc(:))
+!
+          avgvel(:)    = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+     &                   (pi * mw(ICLONO2)))**0.5d0
+!
+          where( hcl > minconc )
+            sksts_clono2_hcl   = 0.25d0 * gprob_hcl * avgvel * sad / hcl
+          elsewhere
+!.old            sksts_clono2_hcl   = 0.25d0 * gprob_hcl * avgvel * sad
+            sksts_clono2_hcl   = 0.0d0
+          end where
+!
+          where( sad < 0.0d0 ) sksts_clono2_hcl   = 0.0d0
 !
           if ( present(ptrop) ) then
             where( pr > ptrop ) sksts_clono2_hcl = 0.0d0
@@ -2491,11 +3145,11 @@
 !
         END FUNCTION sksts_clono2_hcl
 !
-!.... sksts_hocl_hcl (temperature ,adcol ,pressure ,sad_lbs ,specarr(HOCl,:) ,specarr(HCl,:) ,water ,ptrop)
+!.... sksts_hocl_hcl (temperature ,adcol ,pressure ,sad_sts ,specarr(HOCl,:) ,specarr(HCl,:) ,water ,ptrop)
 !
 !_5_
 !
-!.... JPL 97-4
+!.... (5) JPL 97-4
 !
         FUNCTION sksts_hocl_hcl (tk,ad,pr,sad,hocl,hcl,h2o,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -2598,29 +3252,29 @@
 !
           mterm(:) = 10.196d0 * wtper(:) / (100.0d0 - wtper(:))
 !
-          c1(:)    = 123.64d0 - 5.6D-04 * tk(:)**2.0d0
+          c1(:) = 123.64d0 - 5.6D-04 * tk(:)**2.0d0
 !
-          c2(:)    = -29.54d0 + 1.814D-04 * tk(:)**2.0d0
+          c2(:) = -29.54d0 + 1.814D-04 * tk(:)**2.0d0
 !
-          c3(:)    = 2.243d0 - 1.487D-03 * tk(:) + 1.324D-05 * tk(:)**2.0d0
+          c3(:) = 2.243d0 - 1.487D-03 * tk(:) + 1.324D-05 * tk(:)**2.0d0
 !
-          rho(:)   = 1000.0d0 + c1(:) * mterm(:) +  &
-     &                          c2(:) * mterm(:)**1.5d0 +  &
-     &                          c3(:) * mterm(:)**2.0d0
+          rho(:) = 1000.0d0 + c1(:) * mterm(:) +  &
+     &                        c2(:) * mterm(:)**1.5d0 +  &
+     &                        c3(:) * mterm(:)**2.0d0
 !
-          conv(:)  = (rho(:) / 1000.0d0) / (1.0d0 + mterm(:) * 0.09808d0)
+          conv(:) = (rho(:) / 1000.0d0) / (1.0d0 + mterm(:) * 0.09808d0)
 !
-          hhuth(:) = exp(6.4946d0 - mterm(:) * (-0.04107d0 + 54.56d0 / tk(:)) -  &
+          hhuth(:) = exp(6.4946d0 - mterm(:) *  &
+     &                   (-0.04107d0 + 54.56d0 / tk(:)) -  &
      &                   5862.0d0 * (1.0d0 / 298.15d0 - 1.0d0 / tk(:)))
 !
-          hm(:)    = hhuth(:) * conv(:)
+          hm(:) = hhuth(:) * conv(:)
 !
-          hstar_hocl(:) = hm(:) * (1.0d0 + 1.052d0 *  &
-     &                     exp(0.273d0 * (wtper(:) - 65.66d0)))
+          hstar_hocl(:) = hm(:) * (1.0d0 + 1.052d0 * exp(0.273d0 * (wtper(:) - 65.66d0)))
 !
           hsqrtd(:) = hstar_hocl(:) * sqrt(d1)
 !
-          gcalc(:)  = 2.2548D-05 * hsqrtd(:) * sqrt(tk(:) * mw(IHOCL) * k(:))
+          gcalc(:) = 2.2548D-05 * hsqrtd(:) * sqrt(tk(:) * mw(IHOCL) * k(:))
 !
 !
 !....   NOTE: gprob_tot is the overall uptake coeff for HOCl
@@ -2631,7 +3285,8 @@
             gprob_tot = 0.0d0
           end where
 !
-          avgvel(:)   = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 / (pi * mw(IHOCL)))**0.5d0
+          avgvel(:)   = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 &
+                       / (pi * mw(IHOCL)))**0.5d0
 !
           where( hcl > minconc )
             sksts_hocl_hcl = 0.25d0 * gprob_tot * avgvel * sad / hcl
@@ -2648,24 +3303,24 @@
 !
         END FUNCTION sksts_hocl_hcl
 !
-!.... sksts_hobr_hcl (temperature ,adcol ,pressure ,sad_lbs ,specarr(HOBr,:) ,specarr(HCl,:) ,water ,ptrop)
+!.... sksts_hobr_hcl (temperature ,adcol ,pressure ,sad_sts ,specarr(HOBr,:) ,specarr(HCl,:) ,water ,ptrop)
 !
 !_6_
 !
-!.... JPL 97-4
+!.... (6) JPL 97-4
 !
         FUNCTION sksts_hobr_hcl (tk,ad,pr,sad,hobr,hcl,h2o,ptrop)
           real*8, OPTIONAL :: ptrop
           real*8  tk(:) ,ad(:) ,pr(:) ,sad(:) ,h2o(:) ,hcl(:) ,hobr(:)
           real*8, DIMENSION (size(tk)) :: sksts_hobr_hcl
-          real*8 adrop ,alpha ,d1 ,hsqrtd ,kii ,minconc ,pi,minadivl
-          real*8 adivl(size(tk)) ,ah2o(size(tk)) ,avgvel(size(tk)) &
-     &     ,fterm(size(tk)) &
-     &     ,gcalc(size(tk)) &
-     &     ,gprob_tot(size(tk)) &
-     &     ,hstar(size(tk)) &
-     &     ,k(size(tk)) &
-     &     ,ph2o(size(tk)) ,phcl(size(tk)) &
+          real*8  adrop ,alpha ,d1 ,hsqrtd ,kii ,minconc ,pi,minadivl
+          real*8  adivl(size(tk)) ,ah2o(size(tk)) ,avgvel(size(tk))  &
+     &     ,fterm(size(tk))  &
+     &     ,gcalc(size(tk))  &
+     &     ,gprob_tot(size(tk))  &
+     &     ,hstar(size(tk))  &
+     &     ,k(size(tk))  &
+     &     ,ph2o(size(tk)) ,phcl(size(tk))  &
      &     ,tk_150(size(tk))
 !
           pi = acos(-1.0d0)
@@ -2729,12 +3384,12 @@
 !
           adivl(:) = adrop / sqrt(d1 / k(:))
 !
-           where( adivl(:) < minadivl)
-              adivl = minadivl
-           endwhere
+          where( adivl(:) < minadivl)
+             adivl = minadivl
+          endwhere
 !
-          fterm(:) = ((exp(adivl(:)) + exp(-adivl(:))) / &
-     &                (exp(adivl(:)) - exp(-adivl(:)))) - &
+          fterm(:) = ((exp(adivl(:)) + exp(-adivl(:))) /  &
+     &                (exp(adivl(:)) - exp(-adivl(:)))) -  &
      &               (1.0d0 / adivl(:))
 !
 !....   NOTE: gprob_tot is the overall uptake coeff for HOCl
@@ -2745,24 +3400,22 @@
             gprob_tot = 0.0d0
           end where
 !
-          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 / &
-     &                (pi * mw(IHOBR)))**0.5d0
+          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 &
+                     / (pi * mw(IHOBR)))**0.5d0
 !
           where( hcl > minconc )
             sksts_hobr_hcl = 0.25d0 * gprob_tot * avgvel * sad / hcl
-         elsewhere
+          elsewhere
 !.old            sksts_hobr_hcl = 0.25d0 * gprob_tot * avgvel * sad
             sksts_hobr_hcl = 0.0d0
-         end where
+          end where
 !
           where( sad < 0.0d0 ) sksts_hobr_hcl = 0.0d0
+!
 !
           if ( present(ptrop) ) then
             where( pr > ptrop ) sksts_hobr_hcl = 0.0d0
           endif
-!
-!... JPL02 has lots of caveats and uncertainity - ignore for now
-!!!!!!          sksts_hobr_hcl = 0.0d0
 !
         END FUNCTION sksts_hobr_hcl
 !
@@ -2770,237 +3423,251 @@
 !
 !_1_
 !
-!.... (1) JPL 00-003
+!.... (1) JPL 15-10
 !
-        FUNCTION sknat_clono2 (tk,pr,sad,ptrop)
-          real*8, OPTIONAL :: ptrop
-          real*8  tk(:) ,pr(:) ,sad(:)
-          real*8, DIMENSION(size(tk)) :: sknat_clono2
-          real*8  gprob ,pi
-          real*8  avgvel(size(tk))
+      FUNCTION sknat_clono2 (tk,pr,sad,ptrop)
 !
-          pi = acos(-1.0d0)
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:)
+      real*8, DIMENSION(size(tk)) :: sknat_clono2
+      real*8  gprob ,pi
+      real*8  avgvel(size(tk))
+!
+      pi = acos(-1.0d0)
 !
 !=======================================================================
 !     ClONO2 + PSC Type I NAT particles = HOCl + HNO3
 !=======================================================================
 !
 !.... First order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
-          gprob     = 0.004d0
-          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                (pi * mw(ICLONO2)))**0.5d0
+!.... JPL 15-10
+      gprob     = 0.004d0
 !
-          sknat_clono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
-          if ( present(ptrop) ) then
-            where( pr > ptrop ) sknat_clono2 = 0.0d0
-          end if
-        END FUNCTION sknat_clono2
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+                 (pi * mw(ICLONO2)))**0.5d0
+!
+      sknat_clono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+      if ( present(ptrop) ) then
+        where( pr > ptrop ) sknat_clono2 = 0.0d0
+      end if
+!
+      END FUNCTION sknat_clono2
 !
 !.... sknat_brono2 (temperature ,pressure ,sad_nat ,ptrop)
 !
 !_2_
 !
-!.... (2) JPL 00-003
+!.... (2) JPL 15-10
 !
-        FUNCTION sknat_brono2 (tk,pr,sad,ptrop)
-          real*8, OPTIONAL :: ptrop
-          real*8  tk(:) ,pr(:) ,sad(:)
-          real*8, DIMENSION(size(tk)) :: sknat_brono2
-          real*8  gprob ,pi
-          real*8  avgvel(size(tk))
+      FUNCTION sknat_brono2 (tk,pr,sad,ptrop)
 !
-          pi = acos(-1.0d0)
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:)
+      real*8, DIMENSION(size(tk)) :: sknat_brono2
+      real*8  gprob ,pi
+      real*8  avgvel(size(tk))
+!
+      pi = acos(-1.0d0)
 !
 !=======================================================================
 !     BrONO2 + PSC Type I NAT particles = HOBr + HNO3
 !=======================================================================
 !
 !.... First order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
-          gprob     = 0.004d0
-          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                (pi * mw(IBRONO2)))**0.5d0
+!.orig          gprob     = 0.004d0
+!... JPL15-10
+      gprob     = 0.0d0
 !
-          sknat_brono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
-          if ( present(ptrop) ) then
-            where( pr > ptrop ) sknat_brono2 = 0.0d0
-          end if
-        END FUNCTION sknat_brono2
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+                  (pi * mw(IBRONO2)))**0.5d0
+!
+      sknat_brono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+      if ( present(ptrop) ) then
+        where( pr > ptrop ) sknat_brono2 = 0.0d0
+      end if
+!
+      END FUNCTION sknat_brono2
 !
 !.... sknat_hcl_clono2 (temperature ,pressure ,sad_nat ,specarr( HCl,:) ,ptrop)
 !
 !_3_
 !
-!.... (3) JPL 00-003
+!.... (3) JPL 15-10
 !
-        FUNCTION sknat_hcl_clono2 (tk,pr,sad,hcl,ptrop)
-          real*8, OPTIONAL :: ptrop
-          real*8  tk(:) ,pr(:) ,sad(:) ,hcl(:)
-          real*8, DIMENSION(size(tk)) :: sknat_hcl_clono2
-          real*8  gprob ,minconc ,pi
-          real*8  avgvel(size(tk))
+      FUNCTION sknat_hcl_clono2 (tk,pr,sad,hcl,ptrop)
 !
-          pi = acos(-1.0d0)
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:) ,hcl(:)
+      real*8, DIMENSION(size(tk)) :: sknat_hcl_clono2
+      real*8  gprob ,minconc ,pi
+      real*8  avgvel(size(tk))
+!
+      pi = acos(-1.0d0)
 !
 !=======================================================================
 !     HCl + ClONO2 on PSC Type I NAT particles = Cl2 + HNO3
 !=======================================================================
 !
 !.... Pseudo first order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
-          minconc   = 1.0d0
-          gprob     = 0.20d0
-          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                (pi * mw(ICLONO2)))**0.5d0
+      minconc   = 1.0d0
 !
-          sknat_hcl_clono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+!.... JPL 15-10
+      gprob     = 0.20d0
 !
-          where (hcl < minconc)
-!.old            sknat_hcl_clono2  = sknat_hcl_clono2 / minconc
-            sknat_hcl_clono2  = 0.0d0
-          elsewhere
-            sknat_hcl_clono2  = sknat_hcl_clono2 / hcl
-          end where
-          if ( present(ptrop) ) then
-            where( pr > ptrop ) sknat_hcl_clono2 = 0.0d0
-          end if
-        END FUNCTION sknat_hcl_clono2
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+                 (pi * mw(ICLONO2)))**0.5d0
+!
+      sknat_hcl_clono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+!
+      where (hcl < minconc)
+!.old        sknat_hcl_clono2  = sknat_hcl_clono2 / minconc
+        sknat_hcl_clono2  = 0.0d0
+      elsewhere
+        sknat_hcl_clono2  = sknat_hcl_clono2 / hcl
+      end where
+      if ( present(ptrop) ) then
+        where( pr > ptrop ) sknat_hcl_clono2 = 0.0d0
+      end if
+!
+      END FUNCTION sknat_hcl_clono2
 !
 !.... sknat_hcl_hocl (temperature ,pressure ,sad_nat ,specarr( HCl,:) ,ptrop)
 !
 !_4_
 !
-!.... (4) JPL 00-003
+!.... (4) JPL 15-10
 !
-        FUNCTION sknat_hcl_hocl (tk,pr,sad,hcl,ptrop)
-          real*8, OPTIONAL :: ptrop
-          real*8  tk(:) ,pr(:) ,sad(:) ,hcl(:)
-          real*8, DIMENSION(size(tk)) :: sknat_hcl_hocl
-          real*8  gprob ,minconc ,pi
-          real*8  avgvel(size(tk))
+      FUNCTION sknat_hcl_hocl (tk,pr,sad,hcl,ptrop)
 !
-          pi = acos(-1.0d0)
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:) ,hcl(:)
+      real*8, DIMENSION(size(tk)) :: sknat_hcl_hocl
+      real*8  gprob ,minconc ,pi
+      real*8  avgvel(size(tk))
+!
+      pi = acos(-1.0d0)
 !
 !=======================================================================
 !     HCl + HOCl on PSC Type I NAT particles = Cl2 + H2O
 !=======================================================================
 !
 !.... Pseudo first order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
-          minconc   = 1.0d0
-          gprob     = 0.10d0
-          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                (pi * mw(IHOCL)))**0.5d0
+      minconc   = 1.0d0
+!.... JPL 15-10
+      gprob     = 0.10d0
 !
-          sknat_hcl_hocl(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+                 (pi * mw(IHOCL)))**0.5d0
 !
-          where (hcl < minconc)
-!.old            sknat_hcl_hocl  = sknat_hcl_hocl / minconc
-            sknat_hcl_hocl  = 0.0d0
-          elsewhere
-            sknat_hcl_hocl  = sknat_hcl_hocl / hcl
-          end where
-          if ( present(ptrop) ) then
-            where( pr > ptrop ) sknat_hcl_hocl = 0.0d0
-          end if
-        END FUNCTION sknat_hcl_hocl
+      sknat_hcl_hocl(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+!
+      where (hcl < minconc)
+!.old        sknat_hcl_hocl  = sknat_hcl_hocl / minconc
+        sknat_hcl_hocl  = 0.0d0
+      elsewhere
+        sknat_hcl_hocl  = sknat_hcl_hocl / hcl
+      end where
+      if ( present(ptrop) ) then
+        where( pr > ptrop ) sknat_hcl_hocl = 0.0d0
+      end if
+!
+      END FUNCTION sknat_hcl_hocl
 !
 !.... sknat_hcl_brono2 (temperature ,pressure ,sad_nat ,specarr( HCl,:) ,ptrop)
 !
 !_5_
 !
-!.... (5) JPL 00-003
+!.... (5) JPL 15-10
 !
-        FUNCTION sknat_hcl_brono2 (tk,pr,sad,hcl,ptrop)
-          real*8, OPTIONAL :: ptrop
-          real*8  tk(:) ,pr(:) ,sad(:) ,hcl(:)
-          real*8, DIMENSION(size(tk)) :: sknat_hcl_brono2
-          real*8  gprob ,minconc ,pi
-          real*8  avgvel(size(tk))
+      FUNCTION sknat_hcl_brono2 (tk,pr,sad,hcl,ptrop)
 !
-          pi = acos(-1.0d0)
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:) ,hcl(:)
+      real*8, DIMENSION(size(tk)) :: sknat_hcl_brono2
+      real*8  gprob ,minconc ,pi
+      real*8  avgvel(size(tk))
+!
+      pi = acos(-1.0d0)
 !
 !=======================================================================
 !     HCl + BrONO2 on PSC Type I NAT particles = BrCl + HNO3
 !=======================================================================
 !
 !.... Pseudo first order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
-          minconc   = 1.0d0
-          gprob     = 0.20d0
-          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                (pi * mw(IBRONO2)))**0.5d0
+      minconc   = 1.0d0
+      gprob     = 0.20d0
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+                 (pi * mw(IBRONO2)))**0.5d0
 !
-          sknat_hcl_brono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+      sknat_hcl_brono2(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
-          where (hcl < minconc)
-!.old            sknat_hcl_brono2  = sknat_hcl_brono2 / minconc
-            sknat_hcl_brono2  = 0.0d0
-          elsewhere
-            sknat_hcl_brono2  = sknat_hcl_brono2 / hcl
-          end where
-          if ( present(ptrop) ) then
-            where( pr > ptrop ) sknat_hcl_brono2 = 0.0d0
-          end if
-        END FUNCTION sknat_hcl_brono2
+      where (hcl < minconc)
+!.old        sknat_hcl_brono2  = sknat_hcl_brono2 / minconc
+        sknat_hcl_brono2  = 0.0d0
+      elsewhere
+        sknat_hcl_brono2  = sknat_hcl_brono2 / hcl
+      end where
+      if ( present(ptrop) ) then
+        where( pr > ptrop ) sknat_hcl_brono2 = 0.0d0
+      end if
+!
+      END FUNCTION sknat_hcl_brono2
 !
 !.... sknat_hcl_hobr (temperature ,pressure ,sad_nat ,specarr( HCl,:) ,ptrop)
 !
 !_6_
 !
-!.... (6) JPL 00-003
+!.... (6) JPL 15-10
 !
-        FUNCTION sknat_hcl_hobr (tk,pr,sad,hcl,ptrop)
-          real*8, OPTIONAL :: ptrop
-          real*8  tk(:) ,pr(:) ,sad(:) ,hcl(:)
-          real*8, DIMENSION(size(tk)) :: sknat_hcl_hobr
-          real*8  gprob ,minconc ,pi
-          real*8  avgvel(size(tk))
+      FUNCTION sknat_hcl_hobr (tk,pr,sad,hcl,ptrop)
 !
-          pi = acos(-1.0d0)
+      real*8, OPTIONAL :: ptrop
+      real*8  tk(:) ,pr(:) ,sad(:) ,hcl(:)
+      real*8, DIMENSION(size(tk)) :: sknat_hcl_hobr
+      real*8  gprob ,minconc ,pi
+      real*8  avgvel(size(tk))
+!
+      pi = acos(-1.0d0)
 !
 !=======================================================================
 !     HCl + HOBr on PSC Type I NAT particles = BrCl + H2O
 !=======================================================================
 !
 !.... Pseudo first order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
-          minconc   = 1.0d0
-          gprob     = 0.10d0
-          avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                 (pi * mw(IHOBR)))**0.5d0
+      minconc   = 1.0d0
+!... orig
+      gprob     = 0.10d0
+!!.... JPL 15-10
+!      gprob     = 0.0d0
 !
-          sknat_hcl_hobr(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+      avgvel(:) = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+                  (pi * mw(IHOBR)))**0.5d0
 !
-          where (hcl < minconc)
-!.old            sknat_hcl_hobr  = sknat_hcl_hobr / minconc
-            sknat_hcl_hobr  = 0.0d0
-          elsewhere
-            sknat_hcl_hobr  = sknat_hcl_hobr / hcl
-          end where
-          if ( present(ptrop) ) then
-            where( pr > ptrop ) sknat_hcl_hobr = 0.0d0
-          end if
-        END FUNCTION sknat_hcl_hobr
+      sknat_hcl_hobr(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+!
+      where (hcl < minconc)
+!.old        sknat_hcl_hobr  = sknat_hcl_hobr / minconc
+        sknat_hcl_hobr  = 0.0d0
+      elsewhere
+        sknat_hcl_hobr  = sknat_hcl_hobr / hcl
+      end where
+      if ( present(ptrop) ) then
+        where( pr > ptrop ) sknat_hcl_hobr = 0.0d0
+      end if
+!
+      END FUNCTION sknat_hcl_hobr
 !
 !.... skice_clono2 (temperature ,pressure ,sad_ice ,ptrop)
 !
 !_1_
 !
-!.... (1) JPL 00-003
+!.... (1) JPL 15-10
 !
         FUNCTION skice_clono2 (tk,pr,sad,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -3016,13 +3683,13 @@
 !=======================================================================
 !
 !.... First order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
+!... JPL 15-10
           gprob            = 0.30d0
+!
           avgvel(:)        = 100.0d0 *  &
-     &                       (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                       (pi * mw(ICLONO2)))**0.5d0
+                            (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+                            (pi * mw(ICLONO2)))**0.5d0
 !
           skice_clono2(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
           where( sad < 0.0d0 ) skice_clono2   = 0.0d0
@@ -3036,7 +3703,7 @@
 !
 !_2_
 !
-!.... (2) JPL 00-003
+!.... (2) JPL 15-10
 !
         FUNCTION skice_brono2 (tk,pr,sad,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -3052,12 +3719,13 @@
 !=======================================================================
 !
 !.... First order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
-          gprob            = 0.26d0   ! sds JPL19
+!... orig          gprob            = 0.30d0
+!... JPL 15-10
+          gprob            = 0.26d0
+!
           avgvel(:)        = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                       (pi * mw(IBRONO2)))**0.5d0
+                            (pi * mw(IBRONO2)))**0.5d0
 !
           skice_brono2(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
           where( sad < 0.0d0 ) skice_brono2   = 0.0d0
@@ -3071,7 +3739,7 @@
 !
 !_3_
 !
-!.... (3) JPL 00-003
+!.... (3) JPL 15-10
 !
         FUNCTION skice_hcl_clono2 (tk,pr,sad,hcl,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -3087,13 +3755,13 @@
 !=======================================================================
 !
 !.... Pseudo first order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
           minconc              = 1.0d0
+!... JPL 15-10
           gprob                = 0.30d0
+!
           avgvel(:)            = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) *  &
-     &                            1000.0d0 / (pi * mw(ICLONO2)))**0.5d0
+                                 1000.0d0 / (pi * mw(ICLONO2)))**0.5d0
 !
           skice_hcl_clono2(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
@@ -3114,7 +3782,7 @@
 !
 !_4_
 !
-!.... (4) JPL 00-003
+!.... (4) JPL 15-10
 !
         FUNCTION skice_hcl_hocl (tk,pr,sad,hcl,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -3130,13 +3798,13 @@
 !=======================================================================
 !
 !.... Pseudo first order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
           minconc            = 1.0d0
+!... JPL 15-10
           gprob              = 0.20d0
+!
           avgvel(:)          = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                         (pi * mw(IHOCL)))**0.5d0
+                              (pi * mw(IHOCL)))**0.5d0
 !
           skice_hcl_hocl(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
@@ -3157,7 +3825,7 @@
 !
 !_5_
 !
-!.... (5) JPL 00-003
+!.... (5) JPL 15-10
 !
         FUNCTION skice_hcl_brono2 (tk,pr,sad,hcl,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -3173,14 +3841,16 @@
 !=======================================================================
 !
 !.... Pseudo first order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
           minconc              = 1.0d0
-          gprob                = 0.26d0   ! sds JPL19
+!
+!.orig          gprob                = 0.30d0
+!... JPL 15-10
+          gprob                = 0.26d0
+!
           avgvel(:)            = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) *  &
-     &                            1000.0d0 /  &
-     &                           (pi * mw(IBRONO2)))**0.5d0
+                                 1000.0d0 /  &
+                                (pi * mw(IBRONO2)))**0.5d0
 !
           skice_hcl_brono2(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
@@ -3201,7 +3871,7 @@
 !
 !_6_
 !
-!.... (6) JPL 00-003
+!.... (6) JPL 15-10
 !
         FUNCTION skice_hcl_hobr (tk,pr,sad,hcl,ptrop)
           real*8, OPTIONAL :: ptrop
@@ -3217,13 +3887,15 @@
 !=======================================================================
 !
 !.... Pseudo first order reaction rate constant
-!.... JPL 00-003
-!.... PSC 1/16/2002
 !
           minconc            = 1.0d0
-          gprob              = 0.30d0   ! sds JPL19
+!
+!.orig          gprob              = 0.20d0
+!... JPL 15-10
+          gprob              = 0.30d0
+!
           avgvel(:)          = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                         (pi * mw(IHOBR)))**0.5d0
+                              (pi * mw(IHOBR)))**0.5d0
 !
           skice_hcl_hobr(:)  = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
@@ -3240,20 +3912,20 @@
 !
         END FUNCTION skice_hcl_hobr
 !
-!.... sksoot_hno3 (temperature ,sad_soot)
+!.... skpyro_hno3 (temperature ,sad_pyro)
 !
 !.... (1)
 !
-        FUNCTION sksoot_hno3 (tk,sad)
+        FUNCTION skpyro_hno3 (tk,sad)
           real*8  tk(:) ,sad(:)
-          real*8, DIMENSION(size(tk)) :: sksoot_hno3
+          real*8, DIMENSION(size(tk)) :: skpyro_hno3
           real*8  gprob ,pi
           real*8  avgvel(size(tk))
 !
           pi = acos(-1.0d0)
 !
 !=======================================================================
-!     HNO3 + soot particles = OH + NO2
+!     HNO3 + pyro particles = OH + NO2
 !=======================================================================
 !
 !.... First order reaction rate constant
@@ -3263,85 +3935,14 @@
           avgvel(:)       = 100.0d0 * (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
      &                      (pi * mw(IHNO3)))**0.5d0
 !
-          sksoot_hno3(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
+          skpyro_hno3(:) = 0.25d0 * gprob * avgvel(:) * sad(:)
 !
-        END FUNCTION sksoot_hno3
+        END FUNCTION skpyro_hno3
 !
 !.... sktrs_ho2 (temperature, sadcol2, adcol, radA, NSADaer, NSADdust, cPBLcol, pressure)
 !
 !_5_
 !
-!.... Harvard/GMI Tropospheric Chemistry
-!
-      FUNCTION sktrs_ho2 (tk, sad, ad, radA, NSADaer, NSADdust, continental_pbl, pr)
-!
-      real*8  tk(:) ,sad(:,:), ad(:), radA(:,:), pr(:)
-      real*8, DIMENSION (size(tk)) :: sktrs_ho2, gamma
-      real*8  pi, sqm
-      real*8  avgvel(size(tk)), dfkg(size(tk))
-      integer jj,k,ntotA,NSADaer,NSADdust
-      integer, DIMENSION (size(tk)) :: continental_pbl
-!
-      ntotA = NSADaer+NSADdust
-!
-!=======================================================================
-!     HO2 + tropospheric aerosol = 0.5 H2O2
-!=======================================================================
-! ntotA = # dust bins + # aerosol bins
-! radA = radius of aerosol (cm)
-! ad = molec/cm3 air
-! tk = temperature (K)
-! sad = surface area of aerosols/volume of air (cm2/cm3)
-! conPBLFlag = 1 if in continental PBL, 0 if not.
-!
-! loss rate (k = 1/s) of species on aerosol surfaces
-!
-! k = sad * [ radA/Dg +4/(vL) ]^(-1)
-!
-! where
-! Dg = gas phase diffusion coefficient (cm2/s)
-! L = sticking coefficient (unitless)  = gamma
-! v = mean molecular speed (cm/s) = [ 8RT / (pi*M) ]^1/2
-!
-! radA/Dg = uptake by gas-phase diffusion to the particle surface
-! 4/(vL) = uptake by free molecular collisions of gas molecules with the surface
-!=======================================================================
-!
-      sktrs_ho2(:) = 0.d0
-      pi           = acos(-1.0d0)
-      sqm          = SQRT(mw(IHO2))
-
-!... calculate gas phase diffusion coefficient (cm2/s)
-      dfkg (:) = 9.45D17 / ad(:) * (tk(:))**0.5d0 * ( 3.472D-2  &
-     &               + 1.D0/mw(IHO2) )**0.5d0
-!
-!... calculate mean molecular speed (cm/s)
-      avgvel(:) = 100.0d0 *  &
-     &                (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
-     &                (pi * mw(IHO2)))**0.5d0
-!
-!... loop over dust and aerosols, summing up loss rate
-      do jj = 1,ntotA
-!
-        gamma(:) = 0.00D+00
-!
-!... obtain gamma when aerosol or dust is present
-        do k=1,size(tk)
-          if(sad(jj,k) > 0.0d0) &
-     &       gamma(k) = HO2(radA(jj,k),tk(k),ad(k),sqm,specarr(IHO2,k),jj,continental_pbl(k))
-        enddo
-!
-!... Bound gamma to avoid division by zero immediately below
-        where(gamma(:) < 1.00D-05) gamma(:) = 1.00D-05
-!
-        where( sad(jj,:) > 0.0d0 )
-          sktrs_ho2(:) = sktrs_ho2(:) +  &
-     &         sad(jj,:) * ( 4.0d0 / ( gamma(:) * avgvel(:) )+  &
-     &         radA(jj,:) / dfkg(:) )**(-1.0d0)
-        endwhere
-      enddo
-!
-      END FUNCTION sktrs_ho2
 !
 !-------------------------------------------------------------------
 !
@@ -3529,6 +4130,77 @@
 !... Return to sktrs_ho2
       END FUNCTION HO2
 !
+!.... Harvard/GMI Tropospheric Chemistry
+!
+      FUNCTION sktrs_ho2 (tk, sad, ad, radA, NSADaer, NSADdust, continental_pbl, pr)
+!
+      real*8  tk(:) ,sad(:,:), ad(:), radA(:,:), pr(:)
+      real*8, DIMENSION (size(tk)) :: sktrs_ho2, gamma
+      real*8  pi, sqm
+      real*8  avgvel(size(tk)), dfkg(size(tk))
+      integer jj,k,ntotA,NSADaer,NSADdust
+      integer, DIMENSION (size(tk)) :: continental_pbl
+!
+      ntotA = NSADaer+NSADdust
+!
+!=======================================================================
+!     HO2 + tropospheric aerosol = 0.5 H2O2
+!=======================================================================
+! ntotA = # dust bins + # aerosol bins
+! radA = radius of aerosol (cm)
+! ad = molec/cm3 air
+! tk = temperature (K)
+! sad = surface area of aerosols/volume of air (cm2/cm3)
+! conPBLFlag = 1 if in continental PBL, 0 if not.
+!
+! loss rate (k = 1/s) of species on aerosol surfaces
+!
+! k = sad * [ radA/Dg +4/(vL) ]^(-1)
+!
+! where
+! Dg = gas phase diffusion coefficient (cm2/s)
+! L = sticking coefficient (unitless)  = gamma
+! v = mean molecular speed (cm/s) = [ 8RT / (pi*M) ]^1/2
+!
+! radA/Dg = uptake by gas-phase diffusion to the particle surface
+! 4/(vL) = uptake by free molecular collisions of gas molecules with the surface
+!=======================================================================
+!
+      sktrs_ho2(:) = 0.d0
+      pi           = acos(-1.0d0)
+      sqm          = SQRT(mw(IHO2))
+
+!... calculate gas phase diffusion coefficient (cm2/s)
+      dfkg (:) = 9.45D17 / ad(:) * (tk(:))**0.5d0 * ( 3.472D-2  &
+     &               + 1.D0/mw(IHO2) )**0.5d0
+!
+!... calculate mean molecular speed (cm/s)
+      avgvel(:) = 100.0d0 *  &
+     &                (8.0d0 * 8.31448d0 * tk(:) * 1000.0d0 /  &
+     &                (pi * mw(IHO2)))**0.5d0
+!
+!... loop over dust and aerosols, summing up loss rate
+      do jj = 1,ntotA
+!
+        gamma(:) = 0.00D+00
+!
+!... obtain gamma when aerosol or dust is present
+        do k=1,size(tk)
+          if(sad(jj,k) > 0.0d0) &
+     &       gamma(k) = HO2(radA(jj,k),tk(k),ad(k),sqm,specarr(IHO2,k),jj,continental_pbl(k))
+        enddo
+!
+!... Bound gamma to avoid division by zero immediately below
+        where(gamma(:) < 1.00D-05) gamma(:) = 1.00D-05
+!
+        where( sad(jj,:) > 0.0d0 )
+          sktrs_ho2(:) = sktrs_ho2(:) +  &
+     &         sad(jj,:) * ( 4.0d0 / ( gamma(:) * avgvel(:) )+  &
+     &         radA(jj,:) / dfkg(:) )**(-1.0d0)
+        endwhere
+      enddo
+!
+      END FUNCTION sktrs_ho2
 !
 !.... sktrs_no2 (temperature, sadcol2, adcol, radA, NSADaer,NSADdust,ptrop, pressure)
 !
@@ -3841,5 +4513,4 @@
       skoh_dms(:) = thenum(:)/theden(:)
 !
       END FUNCTION skoh_dms
-!
       END

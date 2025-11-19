@@ -14,9 +14,9 @@
 !  for the species in the model mechanism.
 !
 !
-!  Input mechanism:        GeosCCM_Combo_Minimal2_Mechanism.txt
+!  Input mechanism:        StratTrop_Minimal.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Wed Mar  5 20:39:38 2025
+!  Setkin files generated: Thu Nov 13 18:20:37 2025
 !
 !=======================================================================
 
