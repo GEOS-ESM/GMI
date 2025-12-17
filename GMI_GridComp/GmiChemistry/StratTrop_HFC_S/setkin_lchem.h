@@ -11,9 +11,9 @@
 !   Include file that provides ascii strings identifying reactions
 !   and species
 !
-!  Input mechanism:        GeosCCM_Combo_2015mechanism.txt
+!  Input mechanism:        StratTrop_HFC_S.txt
 !  Reaction dictionary:    GMI_reactions_JPL15.db
-!  Setkin files generated: Tue Mar 30 16:58:02 2021
+!  Setkin files generated: Thu Nov 13 18:11:16 2025
 !
 !=======================================================================
 
@@ -39,13 +39,13 @@
       data lchemvar(12) /"C3H8"/
       data lchemvar(13) /"CCl4"/
       data lchemvar(14) /"CF2Br2"/
-      data lchemvar(15) /"CFC12"/
-      data lchemvar(16) /"CF2ClBr"/
-      data lchemvar(17) /"CF3Br"/
-      data lchemvar(18) /"CFC113"/
-      data lchemvar(19) /"CFC114"/
-      data lchemvar(20) /"CFC115"/
-      data lchemvar(21) /"CFC11"/
+      data lchemvar(15) /"CF2ClBr"/
+      data lchemvar(16) /"CF3Br"/
+      data lchemvar(17) /"CFC113"/
+      data lchemvar(18) /"CFC114"/
+      data lchemvar(19) /"CFC115"/
+      data lchemvar(20) /"CFC11"/
+      data lchemvar(21) /"CFC12"/
       data lchemvar(22) /"CH2Br2"/
       data lchemvar(23) /"CH2O"/
       data lchemvar(24) /"CH3Br"/
@@ -65,24 +65,24 @@
       data lchemvar(38) /"ETP"/
       data lchemvar(39) /"GLYC"/
       data lchemvar(40) /"GLYX"/
-      data lchemvar(41) /"H2402"/
+      data lchemvar(41) /"H"/
       data lchemvar(42) /"H2"/
-      data lchemvar(43) /"H2O2"/
-      data lchemvar(44) /"H2O"/
-      data lchemvar(45) /"HAC"/
-      data lchemvar(46) /"HBr"/
-      data lchemvar(47) /"HCFC141b"/
-      data lchemvar(48) /"HCFC142b"/
-      data lchemvar(49) /"HCFC22"/
-      data lchemvar(50) /"HCl"/
-      data lchemvar(51) /"HCOOH"/
-      data lchemvar(52) /"HFC125"/
-      data lchemvar(53) /"HFC134a"/
-      data lchemvar(54) /"HFC143a"/
-      data lchemvar(55) /"HFC152a"/
-      data lchemvar(56) /"HFC23"/
-      data lchemvar(57) /"HFC32"/
-      data lchemvar(58) /"H"/
+      data lchemvar(43) /"H2402"/
+      data lchemvar(44) /"H2O2"/
+      data lchemvar(45) /"H2O"/
+      data lchemvar(46) /"HAC"/
+      data lchemvar(47) /"HBr"/
+      data lchemvar(48) /"HCFC141b"/
+      data lchemvar(49) /"HCFC142b"/
+      data lchemvar(50) /"HCFC22"/
+      data lchemvar(51) /"HCl"/
+      data lchemvar(52) /"HCOOH"/
+      data lchemvar(53) /"HFC125"/
+      data lchemvar(54) /"HFC134a"/
+      data lchemvar(55) /"HFC143a"/
+      data lchemvar(56) /"HFC152a"/
+      data lchemvar(57) /"HFC23"/
+      data lchemvar(58) /"HFC32"/
       data lchemvar(59) /"HNO2"/
       data lchemvar(60) /"HNO3"/
       data lchemvar(61) /"HNO4"/
@@ -112,18 +112,18 @@
       data lchemvar(85) /"MRO2"/
       data lchemvar(86) /"MRP"/
       data lchemvar(87) /"MVK"/
-      data lchemvar(88) /"N2O5"/
+      data lchemvar(88) /"N"/
       data lchemvar(89) /"N2O"/
-      data lchemvar(90) /"N"/
-      data lchemvar(91) /"NO2"/
-      data lchemvar(92) /"NO3"/
-      data lchemvar(93) /"NO"/
-      data lchemvar(94) /"O1D"/
-      data lchemvar(95) /"O3"/
-      data lchemvar(96) /"OClO"/
-      data lchemvar(97) /"OCSg"/
-      data lchemvar(98) /"OH"/
-      data lchemvar(99) /"O"/
+      data lchemvar(90) /"N2O5"/
+      data lchemvar(91) /"NO"/
+      data lchemvar(92) /"NO2"/
+      data lchemvar(93) /"NO3"/
+      data lchemvar(94) /"O"/
+      data lchemvar(95) /"O1D"/
+      data lchemvar(96) /"O3"/
+      data lchemvar(97) /"OClO"/
+      data lchemvar(98) /"OCSg"/
+      data lchemvar(99) /"OH"/
       data lchemvar(100) /"PAN"/
       data lchemvar(101) /"PMN"/
       data lchemvar(102) /"PO2"/
@@ -549,7 +549,7 @@
      & 'NO2 =  0.50 HNO2 +  0.50 HNO3', &
      & 'NO3 = HNO3', &
      & 'N2O5 = 2 HNO3', &
-     & 'DMS + OH = O2 + SO2', &
+     & 'DMS + OH = SO2', &
      & 'DMS + NO3 = HNO3 + SO2', &
      & 'O + SO2 = H2SO4', &
      & 'OH + SO2 = H2SO4' /
@@ -651,7 +651,7 @@
      & 'R4N2 + hv =  0.05 A3O2 +  0.32 ACET +  0.32 ALD2 +  0.18 B3O2 +  0.32 ETO2 +  0.27 HO2 +  0.19 MEK +  0.18 MO2 + NO2 +  0.13 RCHO', &
      & 'MAP + hv = MO2 + OH', &
      & 'OCSg + hv = CO + SO2', &
-     & 'H2SO4 + hv = H2O + SO2' /
+     & 'H2SO4 + hv = 2 OH + SO2' /
 
 !                                  --^--
 

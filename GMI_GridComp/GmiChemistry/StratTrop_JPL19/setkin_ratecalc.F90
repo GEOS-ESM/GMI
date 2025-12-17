@@ -23,9 +23,9 @@
 !    qqk    : rates of thermal processes (molecules cm^-3 s^-1)
 !    qqj    : rates of photolytic processes (molecules cm^-3 s^-1)
 !
-!  Input mechanism:        GeosCCM_Combo_2020_HFC_S_VSLCL_JPL19.txt
+!  Input mechanism:        StratTrop_JPL19.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Tue Oct 22 16:51:18 2024
+!  Setkin files generated: Thu Nov 13 18:18:38 2025
 !
 !=======================================================================
       subroutine Calc_rate_Setkin &

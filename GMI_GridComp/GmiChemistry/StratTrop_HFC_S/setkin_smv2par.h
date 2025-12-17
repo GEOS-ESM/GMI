@@ -10,9 +10,9 @@
 !   This include file sets symbolic constants for the photochemical
 !   mechanism.
 !
-!  Chemistry input file:    GeosCCM_Combo_2015mechanism.txt
+!  Chemistry input file:    StratTrop_HFC_S.txt
 !  Reaction dictionary:     GMI_reactions_JPL15.db
-!  Setkin files generated:  Tue Mar 30 16:58:02 2021
+!  Setkin files generated:  Thu Nov 13 18:11:16 2025
 !
 !========1=========2=========3=========4=========5=========6=========7==
 

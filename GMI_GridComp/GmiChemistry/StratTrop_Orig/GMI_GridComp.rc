@@ -512,3 +512,12 @@ stOX_loss_reactions::
 ::
 
 OCS_JRATE: QJ073
+
+# Set false to turn off part of the "Run" routine, strictly for debugging:
+doEmiss    T
+doBoCo     T
+doDepos:   T
+doSAD:     T
+doPhot:    T
+doTherm:   T
+doSolver:  T

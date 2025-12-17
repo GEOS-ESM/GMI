@@ -11,9 +11,9 @@
 !   Include file that provides ascii strings identifying
 !   GMI vs FastJX photo reaction names
 !
-!  Input mechanism file:    GeosCCM_Combo_2015mechanism.txt
+!  Input mechanism file:    StratTrop_HFC_S.txt
 !  Reaction dictionary:     GMI_reactions_JPL15.db
-!  Setkin files generated:  Tue Mar 30 16:58:02 2021
+!  Setkin files generated:  Thu Nov 13 18:11:16 2025
 !
 !=======================================================================
 !
