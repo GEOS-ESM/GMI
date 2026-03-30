@@ -25,8 +25,8 @@
 !!
 !! !USES:
 !.sds  added MAPL physical constants being used
-      use MAPL_ConstantsMod, only: MAPL_GRAV, MAPL_AIRMW, MAPL_H2OMW
-      use MAPL_BaseMod,      only: MAPL_UNDEF
+      use MAPL_Constants, only: MAPL_GRAV, MAPL_AIRMW, MAPL_H2OMW
+      use MAPL_BaseMod,   only: MAPL_UNDEF
 !!
       USE FJX_CMN_MOD
 !!
@@ -251,8 +251,8 @@
 !   OOO    - ozone
 !   LWP    - liquid water path (g/m^2)
 !   IWP    - ice water path (g/m^2)
-!   REFFL  - effective radius of liquid cloud (microns) 
-!   REFFI  - effective radius of ice cloud (microns) 
+!   REFFL  - effective radius of liquid cloud (microns)
+!   REFFI  - effective radius of ice cloud (microns)
 !   AERSP  - aerosol species - path (g/m2) of aerosol
 !   NDXAER - aerosol species index
 !   L1U    - dimension of CTM = levels +1 (L+1 = above-CTM level)
@@ -273,7 +273,7 @@
 !
 !.sds  added MAPL physical constants being used
 # include "setkin_par.h"
-!... use MAPL physical constants 
+!... use MAPL physical constants
      real*8,  parameter:: HeatFac_ = 86400.d0*MAPL_GRAV/1.00464d5
 !.sds end
 !
@@ -401,7 +401,7 @@
         return
 !
       else
-!... set cloud OD to 0.0 
+!... set cloud OD to 0.0
         cldOD_out(:) = 0.0d0
         LDARK = .false.
       endif
@@ -660,7 +660,7 @@
             do L = 1,L1U
               ODRRTM = TAUG_RRTMG(L,KR-KR0)
               DTAUX(L,KR) = OD(K,L) + ODRRTM
-              if(DTAUX(L,KR).eq.0) then 
+              if(DTAUX(L,KR).eq.0) then
                 print *,'DTAUX(L,KR).eq.0',L,KR,DTAUX(L,KR)
                 DTAUX(L,KR) = 1e-30
               endif
@@ -1836,7 +1836,7 @@
       if (K.gt.NgmiA_.or.K.lt.4) call EXITC ('OPTICgmi: aerosol index out-of-range')
 !
 !
-!... hydrophobic aerosol 
+!... hydrophobic aerosol
       if(RELH.le.0.0d0) then
 !... wet scaling factor, =1 for hydrophobic aerosols
         scaleOD = 1.0d0

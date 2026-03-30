@@ -11,7 +11,7 @@
 !.sds  added old GMI aerosol parameters
         USE GMI_CMN_MOD
 !.sds  added MAPL physical constants being used
-        use MAPL_ConstantsMod, only: MAPL_PI, MAPL_PI_R8
+        use MAPL_Constants, only: MAPL_PI, MAPL_PI_R8
         use MAPL
 !.sds  added LDRADIUS[3,4] to GEOS_UtilitiesMod.F90
 !       use GEOS_UtilsMod, only: LDRADIUS3, LDRADIUS4
@@ -120,27 +120,27 @@
 !
 !
 !
-! Cldflag can be from 1 to 8.  The recommended one is 7.   Here are the references for the choice of cldflag =7, 
+! Cldflag can be from 1 to 8.  The recommended one is 7.   Here are the references for the choice of cldflag =7,
 !
 ! M.J. Prather (2015) Photolysis rates in correlated overlapping cloud fields: Cloud-J 7.3c,
-!  Geosci. Model Dev., 8, 2587-2595, doi:10.5194/gmd-8-2587-2015. 
+!  Geosci. Model Dev., 8, 2587-2595, doi:10.5194/gmd-8-2587-2015.
 !
 ! Neu, J.L., M.J. Prather, J.E. Penner (2007) Global atmospheric chemistry:  integrating over
-!  fractional cloud cover, J. Geophys. Res., 112, D11306. 
+!  fractional cloud cover, J. Geophys. Res., 112, D11306.
 !
-! Cldflag = 1 
-!  completely ignore cloud conditions and reset LWP =IWP=0, clear sky case 
+! Cldflag = 1
+!  completely ignore cloud conditions and reset LWP =IWP=0, clear sky case
 !  (aerosols are not excluded if they exist) LWP=liquid water path, IWP=ice water path.
 
 ! Cldflag =2 (average cloud, or overcast cloud --take the input LWP and IWP as the in-cloud
 !  condition, reset them by multiplying them with the cloud fraction, clf, and then reset clf to
-!  be one. It's like spreading the cloud to the whole grid to appear overcast) 
+!  be one. It's like spreading the cloud to the whole grid to appear overcast)
 !
 ! Cldflag=3 similar to cldflag=2 but multiply by clf^{3/2), instead of clf^{1}
 !
 ! Cldflag =1 to 3  consider only one atmosphere per (i,j) grid point. One single atmosphere is
 !  passed to do the radiative transfer calculation (call photo_jx) --  either clear sky (1) or
-!  overcast cloud (2, 3) 
+!  overcast cloud (2, 3)
 
 ! Cldflag =4, 5, 6, 7, 8, however, consider multiple possible atmospheres per (i,j) grid point
 !  by using the information of cloud fractions.  Lets imagine the horizontal grid is large (say 1
@@ -148,24 +148,24 @@
 !  and some are aligned vertically and some aren't.  Since we don't have the exact information
 !  how the clouds are aligned vertically,  we use the vertical distribution of cloud fractions to
 !  come up with possible combinations of so called ICAs (independent column atmospheres), at each
-!  grid point.    
+!  grid point.
 
 ! The way to decide how may ICAs are generated is decided by (a) first organizing them into
 !  groups from all tropospheric layers of a column, and (b) between these sorted groups from (a),
-!  decide how they are overlapped or not by all possible combinations.  
+!  decide how they are overlapped or not by all possible combinations.
 
 ! Grouping (a) can be based on the assumption of the maximum overlap between adjacent levels
 !  of clouds. The break between different groups are the existences of zero clouds. For example,
 !  there might be cloud free layers in the middle of the column between low-level stratus and
-!  high level cirrus. The most known scheme for this is called the maximum-random overlap.  
+!  high level cirrus. The most known scheme for this is called the maximum-random overlap.
 !  Michael came up with another algorithm (correlated cloud overlap) by using the observed
 !  established correlations between vertically adjacent clouds as the basis for grouping (see his
-!  2015 paper above).  
+!  2015 paper above).
 !
 ! Once you obtain N-ICAs from (a) and (b), it can be very expensive if you call the
 !  radiation-transfer subroutine (call photo_jx)  N-times and then average the N results for the
 !  final radiation budget of the grid point (although this is precisely the choice for
-!  cldflag=8).  
+!  cldflag=8).
 
 ! There are cheaper options computationally for dealing with that.  Basically N- ICAs can be
 !  sorted out into four quadratures according to the total column cloud optical depth of each ICA
@@ -173,31 +173,31 @@
 !  (a) by averaging among them by the weight function for each ICA (b) picking the mid-point of
 !  its CDF distribution.  For (a), cldflag =7, for (b) cldflag=6.  Please see Neu et al. (2007)
 !  for details.  After obtaining the representative atmosphere of each quadrature, one only has
-!  to call photo_jx four times and then average them for the radiation budgets.  
+!  to call photo_jx four times and then average them for the radiation budgets.
 !
 ! You can also just pick a subset of ICAs randomly by drawing NRANDO, = 6  ICAs (for example)
 !  from the cdf distributions of ICAs, and this option is cldflag=5. Although I'm not sure what
-!  RAN4 is (a fortran intrinsic function?)  
+!  RAN4 is (a fortran intrinsic function?)
 !
 !
 ! from Michael:
 !
 ! According to what I have in the ATom J-paper, you are running:
 !   Fast-J v6.5, liquid cloud C1 (6 um) and ice cloud hexagonal (50 um), Briegleb
-!   averaging 
+!   averaging
 !
 ! Thus if you pick CLDFLAG=3, it should come very close to your old cloud averaging. You should
-!  start with this one. 
+!  start with this one.
 ! There may be differences in the cloud opacities, they are determined primarily by your Reff,
-!  which says 6 microns above (that is on the low side = higher opacities). 
+!  which says 6 microns above (that is on the low side = higher opacities).
 !
 ! As Juno says, CLDFLAG = 7 is recommended, 6 is OK, but has some larger noise, 8 is too
-!  costly. 
+!  costly.
 !
 ! For the cloud overlap algorithm that generates the ICAs, you should probably use
 !   LNRG = 6 (MAX-COR), & CLDCOR = 0.33 (de-correlation factor)
 !   ATM0 runs from 0(flat) 1(spherical) 2(+refraction) 3(+geometric expansion)
-!  I am not sure the version you have does 3, so I would stick with 1 = ATM0 
+!  I am not sure the version you have does 3, so I would stick with 1 = ATM0
 !
 ! For J-values:
 !  I would stick with the 2 classic ones we used in the ATom J-paper (attached)- J-O1D and J-NO2
@@ -205,7 +205,7 @@
 !  You ran these for me for the paper. And we have a history of comparing them (PHOTOCOMP, ..
 !
 ! So first run with CLDFLAG=3 and ATM0=1, that should be closest to what the earlier Fst-J
-!  codes might give. 
+!  codes might give.
 !
 ! Michael
 !
@@ -237,7 +237,7 @@
 ! IDXAER  = aerosol index for assigning optical characteristics
 ! L1_     = number of layers + 1
 ! AN_     = number of aerosol types
-! VALJXX  = 
+! VALJXX  =
 ! num_qjs = number of phot rates
 ! CLDFLAG = type of cloud handling
 ! NRANDO  = parameter for CLDFLAG = 5
@@ -250,7 +250,7 @@
       NJX_BIG_ENOUGH = MAX( NUM_J, NJX )   ! NUM_J from setkin_par.h; NJX from FJX_CMN_MOD.F90
       ALLOCATE(VALJXX(1:k2-k1+1,NJX_BIG_ENOUGH))
 
-!     PRINT*,'NUM_J, NJX, BIG_ENOUGH, num_qjs: ', NUM_J, NJX, NJX_BIG_ENOUGH, num_qjs 
+!     PRINT*,'NUM_J, NJX, BIG_ENOUGH, num_qjs: ', NUM_J, NJX, NJX_BIG_ENOUGH, num_qjs
 
       MONTH = month_gmi
       GMTAU = time_sec / SECPHR
@@ -277,14 +277,14 @@
       SZA = SZA_ij
 !
 !... Set surface albedo, ignoring wavelength dependence
-      RFL(:,:) = max (0.d0, min (1.d0, surf_alb_ij) )  
+      RFL(:,:) = max (0.d0, min (1.d0, surf_alb_ij) )
 !
 !---set T, D & Z
 !... molecules/cm2
       do L=1,k2-k1+2
         DDD(L) = (PPP(L-1)-PPP(L)) * MASFAC
       enddo
-! 
+!
 !---set O3
 !... gridbox ozone (vmr?)
       if (present(ozone_ij)) then
@@ -306,9 +306,9 @@
         NSBIN = 27
         CO2_IJ = 350.e-6
         colo3(:)  = OOO(:)
-        colco2(:) = CO2_IJ * DDD(:)               !CO2 
+        colco2(:) = CO2_IJ * DDD(:)               !CO2
         colch4(1:k2-k1+1) = CH4_ij(k1:k2) * 1.0d9 !CH4 vmr in ppb
-        colch4(k2+1) = CH4_ij(k2) * 1.0d9 
+        colch4(k2+1) = CH4_ij(k2) * 1.0d9
         colo2(:)  = MXRO2 * DDD(:)
         colh2o(1:k2-k1+1) = H2O_IJ(k1:k2)         !H2O in kg/kg
 !.sds        colh2o(k2+1) = H2O_IJ(k2)
@@ -343,7 +343,7 @@
       if( do_AerDust_Calc .and. AerDust_Effect_opt.lt.3 ) then
 !
 !... dust map to UCI tables and convert to g/m^2
-!.... GOCART Bins    Reff                  UMa idx 
+!.... GOCART Bins    Reff                  UMa idx
 !     dustreff(1) = 0.73E-6 ! Clay         -7
 !     dustreff(2) = 1.4E-6  ! Small silt   -8
 !     dustreff(3) = 2.4E-6  ! Small silt   -8
@@ -380,7 +380,7 @@
 !
 !... remapped 7 bins = [0.150(11) 0.250(12) 0.400(13)  0.800(14) 1.500(15) 2.500(16) 4.000(17)]
 !
-! new_type  dAersl 
+! new_type  dAersl
 !    6      1: BC hydrophobic 29    MSDENS(1) = 1000.0   raa=0.039
 !    8?     2: OC hydrophobic 36    MSDENS(1) = 1800.0   raa=0.070
 ! wAersl
@@ -392,7 +392,7 @@
 !
 !... tropospheric SO4
 !. wAersl(1) = "SO4"+"SO4v"  == #22
-!.old tables: 
+!.old tables:
 !   22 S00(rvm) Trop sulfate at RH=00 (n@400=1.44 log-norm: r=.05um/sigma=2.0)
 !     w(nm)    Q    r-eff  ss-alb  pi(0) pi(1) pi(2) pi(3) pi(4) pi(5) pi(6) pi(7)
 !     300  2.1411  0.159  1.0000  1.000 2.107 2.570 2.325 2.050 1.662 1.353 1.095
@@ -402,7 +402,7 @@
 !   26 S90(rvm) Trop sulfate at RH=90 (n@400=1.35 log-norm: r=.08um/sigma=2.0)
 !   27 S95(rvm) Trop sulfate at RH=95 (n@400=1.35 log-norm: r=.10um/sigma=2.0)
 !   28 S99(rvm) Trop sulfate at RH=99 (n@400=1.34 log-norm: r=.14um/sigma=2.0)
-!... 
+!...
 !. New tables
 !   (scat-aer)
 !    (03)    UT-sulf1| 0.166 1.769| upper-trop sulf1 logN:r=0.05:s=.693  n=1.44
@@ -507,7 +507,7 @@
 !.if bulk params, no loop
         num_aer = num_aer+1
       else
-        if(oldgmi_aero) then 
+        if(oldgmi_aero) then
           ioffd = 2000   ! aertype > 1000 is use old GMI parameters, aertype > 2000 is hydrophobic
           gmi_naer = 14  ! add 14 for offset in orig GMI table to first dust type
         else
@@ -517,7 +517,7 @@
 !... dust (hydrophobic)
         do N=1,NSADdust
           num_aer = num_aer+1
-          if(oldgmi_aero) then 
+          if(oldgmi_aero) then
             rho = gmiDAA(4,gmi_naer+N)*1000.0
           else
             rho = DAA(10+N)*1.0d+3
@@ -526,7 +526,7 @@
             LL = L-k1+1
             IDXAER(LL,num_aer) = ioffd+gmi_naer+N
 !... capture tropospheric aerosol parameters for diagnostic output
-            if(oldgmi_aero) then 
+            if(oldgmi_aero) then
               ERADIUS_ij(l,num_aer) = gmiRAA(4,gmi_naer+N) * 1.0D-4
             else
               ERADIUS_ij(l,num_aer) = RAA(10+N) * 1.0D-4
@@ -573,7 +573,7 @@
 !... if sulfate, distinguish between strat and trop parameters?
 !... trop
 !            if(PPP(LL).ge.tropp_ij) then
-            if(oldgmi_aero) then 
+            if(oldgmi_aero) then
               ioffd = 1000   ! aertype > 1000 is use old GMI parameters
               IDXAER(LL,num_aer) = ioffd+kdry+IRH-1
             else
@@ -581,7 +581,7 @@
             endif
 !... strat SO4
 !            else
-!              if(oldgmi_aero) then 
+!              if(oldgmi_aero) then
 !                IDXAER(LL,num_aer) = ioffd+kdry+IRH-1
 !              else
 !                IDXAER(LL,num_aer) = 1
@@ -625,7 +625,7 @@
         loc_naer = 6    ! UM-BC1  | 0.140 1.500| UMich w/Mie code logN:r=.050:s=.642  n=1.80+0.50i
         gmi_naer = iDRYwaer(2)   !
 !
-        if(oldgmi_aero) then 
+        if(oldgmi_aero) then
           ioffd = 2000   ! aertype > 1000 is use old GMI parameters, aertype > 2000 is hydrophobic
           IDXAER(:,num_aer) = ioffd+gmi_naer
         else
@@ -648,7 +648,7 @@
         loc_naer = 8    ! UM-BB08C| 0.149 1.230| UMich w/Mie code 8%BC 0%RH logN:r=.080:s=.500 n=1.552+0.04i
         gmi_naer = iDRYwaer(3)   !
 !
-        if(oldgmi_aero) then 
+        if(oldgmi_aero) then
           IDXAER(:,num_aer) = ioffd+gmi_naer
         else
           IDXAER(:,num_aer) = loc_naer
@@ -666,7 +666,7 @@
           AERSP(ll,num_aer) = ODcAER_ij(l,2) * gridBoxHeight_ij(l) * 1.0d3
         enddo
 !... end aerosol initialization
-      endif 
+      endif
     endif    ! do_CCM_OptProps == FALSE
 !
 !!! set up clouds
@@ -679,23 +679,23 @@
       if(do_clear_sky) then
         TCLDFLAG = 1 ! clear sky
         LWP(:) = 0.0d0
-        IWP(:) = 0.0d0 
-        REFFL(:) = 0.0d0 
-        REFFI(:) = 0.0d0 
-        CLF(:) = 0.0d0 
+        IWP(:) = 0.0d0
+        REFFL(:) = 0.0d0
+        REFFI(:) = 0.0d0
+        CLF(:) = 0.0d0
         CLDIW(:) = 0
-        CLDCOR = 0.0d0 
+        CLDCOR = 0.0d0
       else
 !        CLDFLAG = 1  !  clear sky
 !        CLDFLAG = 2  !  grid-box avg clouds cloud: fract*(in cloud ODs) (minamal overlap?)
-!        CLDFLAG = 3  !  cloud-fract**3/2*(in cloud ODs) (random overlap?) 
+!        CLDFLAG = 3  !  cloud-fract**3/2*(in cloud ODs) (random overlap?)
 !        CLDFLAG = 4  !  NOT ALLOWED
 !        CLDFLAG = 5  !  Random select NRANDO ICA's (Independent Column Atmos.) from all
 !        CLDFLAG = 6  !  Use all (up to 4) quadrature cloud cover QCAs (mid-pts of bin)
 !        CLDFLAG = 7  !  Use all (up to 4) QCAs (average clouds within each Q-bin)
 !        CLDFLAG = 8  !  Calculate Js for ALL ICAs (up to 20,000 per cell!)
         TCLDFLAG = cldflag
-!... cloud info ,need mean path and effective radii for ice and liquid given 
+!... cloud info ,need mean path and effective radii for ice and liquid given
 !...  gridbox cloud mixing ratios and cloud frac
 !... cloud fraction
         CLDFRW(:) = 0.0d0
@@ -798,7 +798,7 @@
 !
 ! Cloud Correl Factor decreases with gap in G6 groups in ICA_ALL
       CLDCOR = 0.33  ! Prather recommended
-!... from standalone input:  06   05 0.33   LNRG/RANDO/CLDCOR 
+!... from standalone input:  06   05 0.33   LNRG/RANDO/CLDCOR
       LNRG = 6  ! Prather recommended
 !... if using CLDFLAG = 5, NRANDO suggested by Jun Oh - IRAN should be ?
       NRANDO = 6
@@ -813,7 +813,7 @@
              do_CCM_OptProps, num_CCM_WL, num_CCM_aers, num_CCM_mom,     &
              CCM_WL_ij, CCM_SSALB_ij, CCM_OPTX_ij, CCM_SSLEG_ij,         &
              cldOD_out, aerOD_out)
-!     
+!
 !... send CLOUD_JX calcd cloud optical depth of 400nm back for diagnostic output w no FJX top layer
       cldOD_ij(k1:k2) = cldOD_out(1:k2-k1+1)
 !
@@ -894,7 +894,7 @@
 #     include "gmi_AerDust_const.h"
 #     include "setkin_par.h"
 #     include "setkin_fastj.h"
-#     include "setkin_lchem.h"  
+#     include "setkin_lchem.h"
 !
 ! !INPUT PARAMETERS:
       logical            , intent(in) :: rootProc
@@ -989,7 +989,7 @@
 !
       integer :: i, J, K
       integer :: NAA
-      real*8  :: FWET 
+      real*8  :: FWET
 !
       character*10 TITLE0
 !      character (len=20) :: TITLAA (NgmiA_)

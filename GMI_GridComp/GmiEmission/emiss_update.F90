@@ -142,12 +142,12 @@
       logical, intent(in) :: mixPBL             ! whether to explicitly distribute
                                                 ! emissions within the PBL
       real*8 , intent(in) :: press3c(i1:i2,ju1:j2,k1:k2)
-      
+
       INTEGER, INTENT(IN   ) :: emissionSpeciesLayers(num_species)
 
       type (t_GmiArrayBundle), intent(inout) :: concentration(num_species)
       type (t_GmiArrayBundle), intent(inout) :: emissionArray(num_emiss)
-      
+
       integer :: iland(i1:i2, ju1:j2, NTYPE), ireg(i1:i2, ju1:j2)
       integer :: iuse (i1:i2, ju1:j2, NTYPE)
       real*8  :: convert_isop (NVEGTYPE), convert_monot(NVEGTYPE)
@@ -158,7 +158,7 @@
       real*8  :: coeff_isop   (NPOLY)
       integer, intent(inOut) :: idaySoilType
       logical, intent(inOut) :: firstBiogenicBase
-      
+
 !     ----------------------
 !     Variable declarations.
 !     ----------------------
@@ -192,8 +192,8 @@
 
         if (btest(emiss_opt,1)) then
 
-          IF ( .not. doMEGANviaHEMCO ) THEN 
-            emiss_isop (:,:) = 0.0d0 
+          IF ( .not. doMEGANviaHEMCO ) THEN
+            emiss_isop (:,:) = 0.0d0
           END IF
           emiss_monot(:,:) = 0.0d0
           emiss_nox  (:,:) = 0.0d0
@@ -231,7 +231,7 @@
                ipropene_num,  &
                ino_num, tdt, mw, mcor, surf_emiss_out, surf_emiss_out2,  &
                emiss_3d_out, mass, concentration, emiss_isop, emiss_monot, emiss_nox, &
-               do_ShipEmission, emiss_hno3, emiss_o3, ihno3_num, io3_num, &   
+               do_ShipEmission, emiss_hno3, emiss_o3, ihno3_num, io3_num, &
                pr_diag, loc_proc, i1, i2, ju1, j2, k1, k2, num_species)
 
           end if
@@ -287,14 +287,14 @@
 
       subroutine Update_Semiss_Inchem  &
         (pr_surf_emiss, pr_emiss_3d, emiss_isop, emiss_monot, emiss_nox,  &
-         do_ShipEmission, emiss_hno3, emiss_o3, ihno3_num, io3_num, &   
+         do_ShipEmission, emiss_hno3, emiss_o3, ihno3_num, io3_num, &
          mcor, surf_emiss_out, surf_emiss_out2, emiss_3d_out, &
          emissionArray, surf_emiss, surf_emiss2, emiss_3d, &
          gridBoxHeight, emiss_timpyr, num_emiss, emiss_opt, emiss_map, tdt, nymd, &
          ico_num, ino_num, ipropene_num, iisoprene_num, mw, &
          pr_diag, loc_proc, i1, i2, ju1, j2, k1, k2, ilo, ihi, julo, jhi, num_species)
 
-      use MAPL_ConstantsMod
+      use MAPL_Constants
       use GmiTimeControl_mod, only : GmiSplitDateTime
       use GmiArrayBundlePointer_mod, only : t_GmiArrayBundle
 
@@ -466,7 +466,7 @@
         surf_emiss_out2(:,:,4) = surf_emiss_out2(:,:,4) +  &
             surf_emiss2(:,:,4) / conv_emiss(:,:) * mw(ino_num) *  &
             tdt / mcor(:,:)
-     
+
         if (do_ShipEmission) then
 
           surf_emiss_out2(:,:,5) = surf_emiss_out2(:,:,5) +  &

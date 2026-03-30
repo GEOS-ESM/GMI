@@ -82,7 +82,7 @@
          aefIsop, aefMbo, aefMonot, isoLaiPrev, isoLaiCurr, isoLaiNext, pardif,   &
          pardir, T_15_AVG, exp_fac)
 
-      USE MAPL_ConstantsMod
+      USE MAPL_Constants
       USE GmiGrid_mod, ONLY : t_gmiGrid
       USE ReadInputMegan_mod, ONLY : setMEGANisoLAI
       USE GmiEmissionMEGAN_mod, ONLY : calcBiogenicMEGANemission
@@ -100,7 +100,7 @@
 
      type (t_gmiGrid) , intent(in) :: gmiGrid
      logical, intent(in) :: pr_diag, rootProc, doMEGANemission
-     logical, intent(in) :: doMEGANviaHEMCO 
+     logical, intent(in) :: doMEGANviaHEMCO
      integer, intent(in) :: loc_proc, nymd
      integer, intent(in) :: i1, i2, ju1, j2, k1, k2
      integer, intent(in) :: i1_gl, i2_gl, ju1_gl, j2_gl, ilong, num_species
@@ -162,7 +162,7 @@
 
         days_btw_m = 31
 	isoLai(i1:i2, ju1:j2) = 0.00
-	  
+
         PT_15isOK = .TRUE.
 
         call setMEGANisoLAI (isoLai, isoLaiCurr, isoLaiPrev, isoLaiNext, &
@@ -181,8 +181,8 @@
 !... Perform unit conversions
         tdtinv = 1.0d0 / tdt
 
-        if (doMEGANviaHEMCO) then 
-           ! isoprene emissions coming from HEMCO already kgC/m2/s 
+        if (doMEGANviaHEMCO) then
+           ! isoprene emissions coming from HEMCO already kgC/m2/s
            ! convert to kgIsoprene/box/s
            emiss_isop = emiss_isop / ( ATOMSC_PER_MOLECISOP * 12.01 )  *  &
                                        mw(iisoprene_num) * mcor
@@ -257,7 +257,7 @@
      &   xlai, base_isop, base_monot, emiss_isop, emiss_monot, firstBiogenicBase, &
      &   pr_diag, loc_proc, rootProc, i1, i2, ju1, j2, num_species)
 
-      USE MAPL_ConstantsMod
+      USE MAPL_Constants
 
       implicit none
 
@@ -424,7 +424,7 @@
      &   soil_fert, soil_precip, soil_pulse, xlai, emiss_nox, idaySoilType,   &
      &   pr_diag, loc_proc, i1, i2, ju1, j2, ju1_gl, j2_gl, num_species, exp_fac)
 
-      USE MAPL_ConstantsMod
+      USE MAPL_Constants
       use GmiGrid_mod, only : t_gmiGrid
       use GmiSoilEmission_mod
 

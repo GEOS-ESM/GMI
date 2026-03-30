@@ -16,7 +16,7 @@
       MODULE FJX_CMN_MOD
 !
 !.sds  added MAPL physical constants being used
-      use MAPL_ConstantsMod, only: MAPL_PI_R8, MAPL_GRAV, MAPL_AVOGAD, MAPL_AIRMW, MAPL_RADIUS
+      use MAPL_Constants, only: MAPL_PI_R8, MAPL_GRAV, MAPL_AVOGAD, MAPL_AIRMW, MAPL_RADIUS
 !
       implicit none
       public
