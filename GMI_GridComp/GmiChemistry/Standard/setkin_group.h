@@ -15,7 +15,7 @@
 !
 !  Input mechanism:        Standard.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Thu Nov 13 18:07:19 2025
+!  Setkin files generated: Tue Mar 24 19:30:27 2026
 !
 !=======================================================================
 
@@ -34,8 +34,8 @@
 
       data  ((sgrp_elem_map(mge1,ng1), mge1=1,MAXGRP_ELEM), &
      &                                 ng1 =1,NUMGRP) / &
-     &   7,  8,  9, 10, 51, 61,  0,  0,  0,  0, &
-     &  33, 34, 35, 36, 37, 55, 62, 90,  0,  0 /
+     &   7,  8,  9, 10, 52, 63,  0,  0,  0,  0, &
+     &  34, 35, 36, 37, 38, 56, 64, 92,  0,  0 /
 
       real*8,  save :: sgrp_fac(MAXGRP_ELEM, NUMGRP)
 

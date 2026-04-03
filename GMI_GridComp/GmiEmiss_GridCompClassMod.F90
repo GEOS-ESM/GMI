@@ -1564,6 +1564,12 @@ CONTAINS
       _FAIL('GmiEmiss:: Emission scaling invalid for '//TRIM(speciesNamePrefix))
     END IF
 
+    IF ( escale .GT. 1.0001 ) THEN
+      if(mapl_am_i_root()) then
+        PRINT*,'GmiEmiss:: Emission scaling for '//TRIM(speciesNamePrefix)//':', escale
+      endif
+    END IF
+
 !... Special cases:
 ! Parameterized ship emissions are handled elsewhere (calcShipEmission)
     IF ( TRIM(speciesName) == '*shipO3*'.OR. TRIM(speciesName) == '*shipHNO3*' ) CYCLE
@@ -1578,7 +1584,10 @@ CONTAINS
 ! --------------------------------------------------------------
     IF(self%Emission%emissionSpeciesLayers(i) == 1) THEN
 
-      CALL MAPL_GetPointer(impChem, PTR2D, TRIM(speciesName), __RC__)
+      CALL MAPL_GetPointer(impChem, PTR2D, TRIM(speciesName), rc=status)
+      IF(status /= 0) THEN
+        _FAIL('GmiEmiss:: Trouble getting 2D pointer for '//TRIM(speciesName))
+      END IF
 
       IF(i <= self%num_diurnal_emiss) THEN
         weightedField2D(:,:) = PTR2D(:,:)*cellWeighting(:,:)*escale
@@ -1598,7 +1607,10 @@ CONTAINS
 
     ELSE
 
-      CALL MAPL_GetPointer(impChem, PTR3D, TRIM(speciesName), __RC__)
+      CALL MAPL_GetPointer(impChem, PTR3D, TRIM(speciesName), rc=status)
+      IF(status /= 0) THEN
+        _FAIL('GmiEmiss:: Trouble getting 3D pointer for '//TRIM(speciesName))
+      END IF
 
       IF(i <= self%num_diurnal_emiss) THEN
         _FAIL('GmiEmiss::'//TRIM(IAm)//':  Species '//TRIM(speciesName)//' cannot be diurnal and 3D.')

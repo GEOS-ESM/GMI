@@ -100,6 +100,10 @@
   CO_fosf            | kg CO m-2 s-1   | xy  |   |    |   |   |     |      |  x | CO_fossil_fuel_emissions
   CO_biof            | kg CO m-2 s-1   | xy  |   |    |   |   |     |      |  x | CO_biofuel_emissions
   CO_biom            | kg CO m-2 s-1   | xy  |   |    |   |   |     |      |  x | CO_biomass_burning_emissions
+  HCN_fosf           | kg HCN m-2 s-1   | xy |   |    |   |   |     |      |  x | HCN_fossil_fuel_emissions
+  HCN_biom           | kg HCN m-2 s-1   | xy |   |    |   |   |     |      |  x | HCN_biomass_burning_emissions
+  CH3CN_fosf         | kg CH3CN m-2 s-1 | xy |   |    |   |   |     |      |  x | CH3CN_fossil_fuel_emissions
+  CH3CN_biom         | kg CH3CN m-2 s-1 | xy |   |    |   |   |     |      |  x | CH3CN_biomass_burning_emissions
   NO_air             | kg NO m-2 s-1   | xyz | C |    |   |   |     |      |  x | NO_aircraft_emissions
   NO_lgt             | kg NO m-2 s-1   | xyz | C |    |   |   |     |      |  x | NO_lightning_emissions
   NO_fosf            | kg NO m-2 s-1   | xy  |   |    |   |   |     |      |  x | NO_fossil_fuel_emissions_(non-PP)
@@ -115,6 +119,10 @@
   CCL4_FLUX          | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CCL4_emissions
   CHBR3_FLUX         | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CHBR3_emissions
   CH2BR2_FLUX        | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CH2BR2_emissions
+  C2H4CL2_FLUX       | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C2H4CL2_emissions
+  CH2CL2_FLUX        | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CH2CL2_emissions
+  CHCL3_FLUX         | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | CHCL3_emissions
+  C2CL4_FLUX         | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | C2CL4_emissions
   N2O_OCEAN-FLUX     | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | N2OOCEAN_emissions
   N2O_LAND-FLUX      | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | N2OLAND_emissions
   N2O_ANTHRO-FLUX    | kg m-2 s-1      | xy  |   |    |   |   |     |      |  x | N2OANTHRO_emissions
@@ -203,12 +211,16 @@
   EM_C2H4Cl2        | mol mol-1 s-1  | xyz | C |    |   |   |     | Ethylene_dichloride,_1-2_Dichloroethane_emissions
   EM_C2H6           | mol mol-1 s-1  | xyz | C |    |   |   |     | Ethane_emissions
   EM_C3H8           | mol mol-1 s-1  | xyz | C |    |   |   |     | Propane_emissions
+  EM_CCl4           | mol mol-1 s-1  | xyz | C |    |   |   |     | Carbon_tetrachloride_emissions
   EM_CFC11          | mol mol-1 s-1  | xyz | C |    |   |   |     | Freon-11,_Trichlorofluoromethane_emissions
   EM_CFC113         | mol mol-1 s-1  | xyz | C |    |   |   |     | CFC113,_Trichlorotrifluoroethane_emissions
   EM_CFC12          | mol mol-1 s-1  | xyz | C |    |   |   |     | Freon-12,_Dichlorodifluoromethane_emissions
+  EM_CH2Br2         | mol mol-1 s-1  | xyz | C |    |   |   |     | Dibromomethane_emissions
   EM_CH2Cl2         | mol mol-1 s-1  | xyz | C |    |   |   |     | Dichloromethane_emissions
   EM_CH2O           | mol mol-1 s-1  | xyz | C |    |   |   |     | Formalydehyde_emissions
+  EM_CH3CCl3        | mol mol-1 s-1  | xyz | C |    |   |   |     | Methyl_chloroform,_1-1-1-trichloroethane_emissions
   EM_CH4            | mol mol-1 s-1  | xyz | C |    |   |   |     | Methane_emissions
+  EM_CHBr3          | mol mol-1 s-1  | xyz | C |    |   |   |     | Bromoform_emissions
   EM_CHCl3          | mol mol-1 s-1  | xyz | C |    |   |   |     | Chloroform,_Trichloromethane_emissions
   EM_CO             | mol mol-1 s-1  | xyz | C |    |   |   |     | Carbon_monoxide_emissions
   EM_DMS            | mol mol-1 s-1  | xyz | C |    |   |   |     | Dimethylsulfide_(CH3SCH3)_emissions
@@ -310,6 +322,7 @@
   CH3Br         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methyl bromide                                    
   CH3CCl3       | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methyl chloroform, 1-1-1-trichloroethane          
   CH3Cl         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methyl chloride                                   
+  CH3CN         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methyl Cyanide                                    
   CH4           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Methane                                           
   CHBr3         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Bromoform                                         
   Cl2           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Molecular chlorine                                
@@ -329,6 +342,7 @@
   HCFC142b      | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HCFC-142b (C2ClF2H3)                              
   HCFC22        | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | HCFC-22 (CClF2H)                                  
   HCl           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydrochloric Acid                                 
+  HCN           | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Hydrogen Cyanide                                  
   HCOOH         | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Formic acid, HC(=O)OH                             
   HNO2          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Nitrous acid                                      
   HNO3          | mol mol-1  | xyz | C |    |   |   |     |      |    |    | D,T,C   | Nitric acid                                       

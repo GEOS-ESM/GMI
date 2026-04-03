@@ -12,7 +12,7 @@
 !
 !  Input mechanism:        Standard.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Thu Nov 13 18:07:19 2025
+!  Setkin files generated: Tue Mar 24 19:30:27 2026
 !
 !========1=========2=========3=========4=========5=========6=========7==
 
@@ -22,9 +22,9 @@
      & ,NUM_J &
      & ,NUM_K
 
-      parameter (NSP   = 124)
+      parameter (NSP   = 126)
       parameter (NUM_J =  81)
-      parameter (NUM_K = 297)
+      parameter (NUM_K = 303)
 
 !.... Species affiliations and assignments
 
@@ -36,11 +36,11 @@
      & ,NMF &
      & ,NSS
 
-      parameter (NACT   = 119)
-      parameter (NCHEM  = 123)
+      parameter (NACT   = 121)
+      parameter (NCHEM  = 125)
       parameter (NCONST =   4)
       parameter (NFAM   =   2)
-      parameter (NMF    = 120)
+      parameter (NMF    = 122)
       parameter (NSS    =   0)
 
 !.... Ancillary input tables
@@ -156,95 +156,95 @@
       integer ICH2O
       parameter (ICH2O     =  27)
       integer ICH4
-      parameter (ICH4      =  31)
+      parameter (ICH4      =  32)
       integer ICL2
-      parameter (ICL2      =  33)
+      parameter (ICL2      =  34)
       integer ICL2O2
-      parameter (ICL2O2    =  34)
+      parameter (ICL2O2    =  35)
       integer ICLO
-      parameter (ICLO      =  36)
+      parameter (ICLO      =  37)
       integer ICLONO2
-      parameter (ICLONO2   =  37)
+      parameter (ICLONO2   =  38)
       integer ICO
-      parameter (ICO       =  38)
+      parameter (ICO       =  39)
       integer IH2
-      parameter (IH2       =  46)
+      parameter (IH2       =  47)
       integer IH2O2
-      parameter (IH2O2     =  48)
+      parameter (IH2O2     =  49)
       integer IH2O
-      parameter (IH2O      =  49)
+      parameter (IH2O      =  50)
       integer IHCL
-      parameter (IHCL      =  55)
+      parameter (IHCL      =  56)
       integer IHNO2
-      parameter (IHNO2     =  57)
+      parameter (IHNO2     =  59)
       integer IHNO3
-      parameter (IHNO3     =  58)
+      parameter (IHNO3     =  60)
       integer IHNO4
-      parameter (IHNO4     =  59)
+      parameter (IHNO4     =  61)
       integer IHO2
-      parameter (IHO2      =  60)
+      parameter (IHO2      =  62)
       integer IHOBR
-      parameter (IHOBR     =  61)
+      parameter (IHOBR     =  63)
       integer IHOCL
-      parameter (IHOCL     =  62)
+      parameter (IHOCL     =  64)
       integer IC5H8
-      parameter (IC5H8     =  67)
+      parameter (IC5H8     =  69)
       integer IMACR
-      parameter (IMACR     =  69)
+      parameter (IMACR     =  71)
       integer IMCO3
-      parameter (IMCO3     =  73)
+      parameter (IMCO3     =  75)
       integer IMEK
-      parameter (IMEK      =  74)
+      parameter (IMEK      =  76)
       integer IMP
-      parameter (IMP       =  78)
+      parameter (IMP       =  80)
       integer IMVK
-      parameter (IMVK      =  80)
+      parameter (IMVK      =  82)
       integer IAN
-      parameter (IAN       =  81)
+      parameter (IAN       =  83)
       integer IN2O
-      parameter (IN2O      =  82)
+      parameter (IN2O      =  84)
       integer IN2O5
-      parameter (IN2O5     =  83)
+      parameter (IN2O5     =  85)
       integer INO
-      parameter (INO       =  84)
+      parameter (INO       =  86)
       integer INO2
-      parameter (INO2      =  85)
+      parameter (INO2      =  87)
       integer INO3
-      parameter (INO3      =  86)
+      parameter (INO3      =  88)
       integer IO3
-      parameter (IO3       =  89)
+      parameter (IO3       =  91)
       integer IOCLO
-      parameter (IOCLO     =  90)
+      parameter (IOCLO     =  92)
       integer IOH
-      parameter (IOH       =  92)
+      parameter (IOH       =  94)
       integer IPMN
-      parameter (IPMN      =  94)
+      parameter (IPMN      =  96)
       integer IC3H6
-      parameter (IC3H6     =  99)
+      parameter (IC3H6     = 101)
       integer IR4N2
-      parameter (IR4N2     = 102)
+      parameter (IR4N2     = 104)
       integer IRCHO
-      parameter (IRCHO     = 107)
+      parameter (IRCHO     = 109)
       integer ISO2
-      parameter (ISO2      = 118)
+      parameter (ISO2      = 120)
       integer IACET
-      parameter (IACET     = 120)
+      parameter (IACET     = 122)
       integer INITROGEN
-      parameter (INITROGEN = 121)
+      parameter (INITROGEN = 123)
       integer IOXYGEN
-      parameter (IOXYGEN   = 122)
+      parameter (IOXYGEN   = 124)
       integer IHNO3COND
-      parameter (IHNO3COND = 124)
+      parameter (IHNO3COND = 126)
       integer IMGAS
-      parameter (IMGAS     = 123)
+      parameter (IMGAS     = 125)
 
 !.... Additional model-required parameters
 
       integer IN2
-      parameter (IN2      = 121)
+      parameter (IN2      = 123)
 
       integer IO2
-      parameter (IO2      = 122)
+      parameter (IO2      = 124)
 
       integer IDEHYD
       parameter (IDEHYD   =   0)
