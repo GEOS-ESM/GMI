@@ -12,7 +12,7 @@
 !
 !  Chemistry input file:    Standard.txt
 !  Reaction dictionary:     GMI_reactions_JPL19.db
-!  Setkin files generated:  Thu Nov 13 18:07:19 2025
+!  Setkin files generated:  Tue Mar 24 19:30:27 2026
 !
 !========1=========2=========3=========4=========5=========6=========7==
 
@@ -22,10 +22,10 @@
      & ,SK_ITHERM &
      & ,SK_NACT
 
-      parameter (SK_IGAS   = 123)
+      parameter (SK_IGAS   = 125)
       parameter (SK_IPHOT  =  81)
-      parameter (SK_ITHERM = 297)
-      parameter (SK_NACT   = 119)
+      parameter (SK_ITHERM = 303)
+      parameter (SK_NACT   = 121)
 
 !                                  --^--
 

@@ -15,7 +15,7 @@
 !
 !  Input mechanism:        Standard.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Thu Nov 13 18:07:19 2025
+!  Setkin files generated: Tue Mar 24 19:30:27 2026
 !
 !=======================================================================
 !
@@ -67,25 +67,25 @@
 !                CH3Cl
 !      ibcb(30) = 1
 !                CH4
-!      ibcb(31) = 1
+!      ibcb(32) = 1
 !                CO
-!      ibcb(38) = 1
+!      ibcb(39) = 1
 !                H2
-!      ibcb(46) = 1
-!                H2402
 !      ibcb(47) = 1
+!                H2402
+!      ibcb(48) = 1
 !                H2O
-!      ibcb(49) = 1
+!      ibcb(50) = 1
 !                HCFC141b
-!      ibcb(52) = 1
-!                HCFC142b
 !      ibcb(53) = 1
-!                HCFC22
+!                HCFC142b
 !      ibcb(54) = 1
-!                HCl
+!                HCFC22
 !      ibcb(55) = 1
+!                HCl
+!      ibcb(56) = 1
 !                ISOP
-!      ibcb(67) = 1
+!      ibcb(69) = 1
 !                N2O
-!      ibcb(82) = 1
+!      ibcb(84) = 1
 !                                  --^--

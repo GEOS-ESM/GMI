@@ -13,6 +13,9 @@ Collections:
   GMI.CMIP6_BB.emis.monthly.1950-2015:                 { valid_range: "1950-01-16T00:00/2015-12-16T00:00", template: ExtData/CMIP6/sfc/biomass_burning/CMIP6_BB.emis.x1440_y720_t12.%y4.nc4 }
   GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100:          { valid_range: "2015-01-16T00:00/2100-12-16T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/CMIP6_BB.ssp2_45.emis.x720_y360_t12.%y4.nc4 }
 
+  # 11 years of regional CO, added for HCN and CH3CN
+  GMI.CMIP6_CEDS.regional_CO_emis.monthly.2003-2014:   { valid_range: "2003-01-16T00:00/2014-12-16T00:00", template: /discover/nobackup/projects/gmao/ccmdev/jliu13/data/CMIP6_CEDS.COemis.EUS_ECH_INDIA_x720_y360_t12.%y4.nc4 }
+
   # note: 2014 file for SSP245 is actually a pointer to CEDS
   #  GMI.CMIP6_CEDS.emis.monthly.1950-2014:            { valid_range: "1950-01-16T00:00/2014-12-16T00:00", template: ExtData/CMIP6/sfc/fossil_fuels/CMIP6_CEDS.emis.x720_y360_t12.%y4.nc4 }
   #  GMI.CMIP6_SSP245.emis.monthly.2014-2100:          { valid_range: "2014-01-16T00:00/2100-12-16T00:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/CMIP6_ssp2-45.emis.x720_y360_t12.%y4.nc4 }
@@ -54,6 +57,8 @@ Collections:
   GMI.CMIP6_SSP245_SO2_BB.emis.monthly.2015-2100:        { valid_range: "2015-01-16T00:00/2100-12-17T12:00", template: /discover/nobackup/projects/gmao/ccmdev/input/emissions/SSP/sfc/SU/CMIP6ssp245.emis_SO2.biomassburning.x720_y360_t12.%y4.nc4 }
 
   GMI.ODS.emis.monthly.1951-2100:                        { valid_range: "1951-01-15T12:00/2100-12-17T00:00", template: /discover/nobackup/ssteenro/qing/SC.ODS.Emission.x360_y181.%y4.V1.nc }
+  # based on files in ssteenro/qing/new/:
+  GMI.ODS.emis.annual.1995-2023:                         { valid_range: "1995-07-02T12:00/2023-07-02T12:00", template: /discover/nobackup/projects/gmao/ccmdev/mmanyin/GMI/input/qing/SC.ODS.Emission.x360_y181.%y4.nc }
 
 # just for testing CH4 boundary conditions:
 # GMI.CH4_surf_values.monthly.2000-2009:                 { valid_range: "2000-01-16T12:00/2009-12-16T12:00", template: /discover/nobackup/mmanyin/CCM/CH4/qOHreplay2.CH4_at_surface.%y4%m2.nc4 }
@@ -129,6 +134,12 @@ Exports:
     - { starting: "1950-01-01",  variable: CH2O_bb,              collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap        }
     - { starting: "2015-12-01",  variable: CH2O_bb,              collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
 
+  CH3CN_biom:
+    - { starting: "1950-01-01",  variable: CO_bb,                collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap,       linear_transformation: [ 0.0, 0.0060 ] }
+    - { starting: "2015-12-01",  variable: CO_bb,                collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap,       linear_transformation: [ 0.0, 0.0060 ] }
+
+  CH3CN_fosf:                  { variable: CO_ff,                collection: GMI.CMIP6_CEDS.regional_CO_emis.monthly.2003-2014,    regrid: CONSERVE,  sample: GMI.daily_wrap,       linear_transformation: [ 0.0, 0.0025 ] }
+
   CH4_aggr:                    {                                 collection: /dev/null                                                                                              }
 
   CH4_biom:                    {                                 collection: /dev/null                                                                                              }
@@ -142,6 +153,12 @@ Exports:
   CO_fosf:
     - { starting: "1950-01-01",  variable: CO_ff,                collection: GMI.CMIP6_CEDS.emis_fg.monthly.1950-2014,             regrid: CONSERVE,  sample: GMI.daily_wrap        }
     - { starting: "2014-12-01",  variable: CO_ff,                collection: GMI.CMIP6_SSP245.emis_fg.monthly.2014-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap        }
+
+  HCN_biom:
+    - { starting: "1950-01-01",  variable: CO_bb,                collection: GMI.CMIP6_BB.emis.monthly.1950-2015,                  regrid: CONSERVE,  sample: GMI.daily_wrap,       linear_transformation: [ 0.0, 0.0030 ] }
+    - { starting: "2015-12-01",  variable: CO_bb,                collection: GMI.CMIP6_BB_SSP245.emis.monthly.2015-2100,           regrid: CONSERVE,  sample: GMI.daily_wrap,       linear_transformation: [ 0.0, 0.0030 ] }
+
+  HCN_fosf:                    { variable: CO_ff,                collection: GMI.CMIP6_CEDS.regional_CO_emis.monthly.2003-2014,    regrid: CONSERVE,  sample: GMI.daily_wrap,       linear_transformation: [ 0.0, 0.0012 ] }
 
   MEK_biof:                    {                                 collection: /dev/null                                                                                              }
 
@@ -194,6 +211,11 @@ Exports:
   N2O_ANTHRO-FLUX:             { variable: N2OANTHRO_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
   N2O_LAND-FLUX:               { variable:   N2OLAND_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
   N2O_OCEAN-FLUX:              { variable:  N2OOCEAN_emission,   collection: GMI.ODS.emis.monthly.1951-2100,                       regrid: CONSERVE,  sample: GMI.daily             }
+
+  C2H4CL2_FLUX:                { variable:   C2H4CL2_emission,   collection: GMI.ODS.emis.annual.1995-2023,                        regrid: CONSERVE,  sample: GMI.daily             }
+  CH2CL2_FLUX:                 { variable:    CH2CL2_emission,   collection: GMI.ODS.emis.annual.1995-2023,                        regrid: CONSERVE,  sample: GMI.daily             }
+  CHCL3_FLUX:                  { variable:     CHCL3_emission,   collection: GMI.ODS.emis.annual.1995-2023,                        regrid: CONSERVE,  sample: GMI.daily             }
+  C2CL4_FLUX:                  { variable:     C2CL4_emission,   collection: GMI.ODS.emis.annual.1995-2023,                        regrid: CONSERVE,  sample: GMI.daily             }
 
   SO2_AIRCRAFT-FLUX:
     - { starting: "1950-01-01",  variable: SO2_aviation,         collection: GMI.CMIP6_CEDS_AirSO2.emis.monthly.1950-2014,         regrid: CONSERVE,  sample: GMI.daily_wrap        }

@@ -22,7 +22,7 @@
 !
 !  Input mechanism:        Standard.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Thu Nov 13 18:07:19 2025
+!  Setkin files generated: Tue Mar 24 19:30:27 2026
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
@@ -95,7 +95,7 @@
 !
       nitrogen(:) = adcol(:) * MXRN2
       oxygen(:)   = adcol(:) * MXRO2
-      water(:)    = specarr(49 ,:)
+      water(:)    = specarr(50 ,:)
 !... * 0.0d0
       reff_lbs  = 0.221d-4
 !     reff_sts  = 0.221d-4
@@ -116,8 +116,7 @@
 !
 !....           O + O = O2
 !
-      rcarr(1,:) = skterlp(  1.400D-33 ,-4.08D+02 ,0.0D0 &
-     &                     ,temperature ,adcol)
+      rcarr(1,:) = skoo (temperature ,adcol)
 !
 !....           O + O2 = O3
 !
@@ -744,447 +743,473 @@
 !
       rcarr(150,:) = skc3h8oh_2 (temperature)
 !
+!....           CH3CN + OH =  0.30 H +  0.30 HCN
+!
+      rcarr(151,:) = skarr(  7.800D-13 ,1050.0D+00 ,temperature)
+!
+!....           CH3CN + O1D =  0.30 H
+!
+      rcarr(152,:) = skarr(  2.540D-10 ,24.0D+00 ,temperature)
+!
+!....           CH3CN + Cl = HCl
+!
+      rcarr(153,:) = skarr(  1.600D-11 ,2140.0D+00 ,temperature)
+!
 !....           EOH + OH = ALD2 + HO2
 !
-      rcarr(151,:) = skarr(  3.350D-12 ,0.0D+00 ,temperature)
+      rcarr(154,:) = skarr(  3.350D-12 ,0.0D+00 ,temperature)
 !
 !....           ETO2 + ETO2 =  1.60 ALD2 +  0.40 EOH +  1.20 HO2
 !
-      rcarr(152,:) = skarr(  6.800D-14 ,0.0D+00 ,temperature)
+      rcarr(155,:) = skarr(  6.800D-14 ,0.0D+00 ,temperature)
 !
 !....           ETO2 + NO = ALD2 + HO2 + NO2
 !
-      rcarr(153,:) = sketo2_no_b (temperature ,adcol)
+      rcarr(156,:) = sketo2_no_b (temperature ,adcol)
 !
 !....           ETP + OH =  0.64 ALD2 +  0.36 ETO2 +  0.64 OH
 !
-      rcarr(154,:) = skarr(  5.180D-12 ,-200.0D+00 ,temperature)
+      rcarr(157,:) = skarr(  5.180D-12 ,-200.0D+00 ,temperature)
 !
 !....           GLYC + OH =  0.73 CH2O +  0.50 CO +  0.13 GLYX +  0.13 HCOOH +  0.77 HO2 +  0.23 OH
 !
-      rcarr(155,:) = skglyca_oh (temperature)
+      rcarr(158,:) = skglyca_oh (temperature)
 !
 !....           GLYC + OH = CO + HCOOH + OH
 !
-      rcarr(156,:) = skglycb_oh (temperature)
+      rcarr(159,:) = skglycb_oh (temperature)
 !
 !....           GLYX + NO3 = 2 CO + HNO3 + HO2
 !
-      rcarr(157,:) = skno3glyx (temperature ,oxygen)
+      rcarr(160,:) = skno3glyx (temperature ,oxygen)
 !
 !....           GLYX + OH = 2 CO + HO2
 !
-      rcarr(158,:) = skarr(  3.100D-12 ,-340.0D+00 ,temperature)
+      rcarr(161,:) = skarr(  3.100D-12 ,-340.0D+00 ,temperature)
 !
 !....           HAC + OH = HO2 + MGLY
 !
-      rcarr(159,:) = skhaca_oh (temperature)
+      rcarr(162,:) = skhaca_oh (temperature)
 !
 !....           HAC + OH =  0.50 ACTA +  0.50 CO +  0.50 HCOOH +  0.50 MO2 + OH
 !
-      rcarr(160,:) = skhacb_oh (temperature)
+      rcarr(163,:) = skhacb_oh (temperature)
+!
+!....           HCN + O1D = CO + NO
+!
+      rcarr(164,:) = skarr(  1.080D-10 ,-105.0D+00 ,temperature)
+!
+!....           HCN + OH = H2O
+!
+      rcarr(165,:) = sktroe(  6.100D-33 ,1.50D0 & 
+     &                     , 9.800D-15 ,-4.60D0 ,0.0D0 &
+     &                     ,temperature ,adcol)
 !
 !....           ETO2 + HO2 = ETP
 !
-      rcarr(161,:) = skarr(  7.500D-13 ,-700.0D+00 ,temperature)
+      rcarr(166,:) = skarr(  7.500D-13 ,-700.0D+00 ,temperature)
 !
 !....           HO2 + MCO3 =  0.13 ACTA +  0.37 MAP +  0.50 MO2 +  0.13 O3 +  0.50 OH
 !
-      rcarr(162,:) = skarr(  3.140D-12 ,-580.0D+00 ,temperature)
+      rcarr(167,:) = skarr(  3.140D-12 ,-580.0D+00 ,temperature)
 !
 !....           IALD + OH =  0.15 HO2 +  0.44 IAO2 +  0.41 MAO3
 !
-      rcarr(163,:) = skarr(  1.170D-11 ,-450.0D+00 ,temperature)
+      rcarr(168,:) = skarr(  1.170D-11 ,-450.0D+00 ,temperature)
 !
 !....           HO2 + IAO2 =  0.50 MACR +  0.50 MVK + 2 OH
 !
-      rcarr(164,:) = skarr(  2.380D-13 ,-1300.0D+00 ,temperature)
+      rcarr(169,:) = skarr(  2.380D-13 ,-1300.0D+00 ,temperature)
 !
 !....           IAO2 + NO =  0.50 MACR +  0.50 MVK + NO2 + OH
 !
-      rcarr(165,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
+      rcarr(170,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
 !
 !....           HO2 + INO2 = INPN
 !
-      rcarr(166,:) = skarr(  2.470D-13 ,-1300.0D+00 ,temperature)
+      rcarr(171,:) = skarr(  2.470D-13 ,-1300.0D+00 ,temperature)
 !
 !....           INO2 + MCO3 =  0.15 CH2O +  0.85 HNO3 +  0.80 HO2 +  0.10 MACR + MO2 +  0.05 MVK +  0.15 NO2
 !
-      rcarr(167,:) = skarr(  7.710D-12 ,0.0D+00 ,temperature)
+      rcarr(172,:) = skarr(  7.710D-12 ,0.0D+00 ,temperature)
 !
 !....           INO2 + MCO3 = ACTA + NO2 + RCHO
 !
-      rcarr(168,:) = skarr(  1.920D-12 ,0.0D+00 ,temperature)
+      rcarr(173,:) = skarr(  1.920D-12 ,0.0D+00 ,temperature)
 !
 !....           INO2 + MO2 =  0.83 CH2O +  0.43 HNO3 +  0.90 HO2 +  0.05 MACR +  0.25 MOH +  0.03 MVK +  0.57 NO2 +  0.25 RCHO +  0.25 ROH
 !
-      rcarr(169,:) = skarr(  1.460D-12 ,0.0D+00 ,temperature)
+      rcarr(174,:) = skarr(  1.460D-12 ,0.0D+00 ,temperature)
 !
 !....           INO2 + NO =  0.15 CH2O +  0.85 HNO3 +  0.80 HO2 +  0.10 MACR +  0.05 MVK +  1.15 NO2
 !
-      rcarr(170,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
+      rcarr(175,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
 !
 !....           INPN + OH = INO2
 !
-      rcarr(171,:) = skarr(  5.680D-12 ,-200.0D+00 ,temperature)
+      rcarr(176,:) = skarr(  5.680D-12 ,-200.0D+00 ,temperature)
 !
 !....           ISOP + NO3 = INO2
 !
-      rcarr(172,:) = skarr(  3.500D-12 ,450.0D+00 ,temperature)
+      rcarr(177,:) = skarr(  2.950D-12 ,450.0D+00 ,temperature)
 !
 !....           ISOP + O3 =  0.83 CH2O +  0.41 CO +  0.01 H2O2 +  0.58 HCOOH +  0.16 HO2 +  0.42 MACR +  0.41 MO2 +  0.18 MVK +  0.28 OH
 !
-      rcarr(173,:) = skarr(  1.100D-14 ,2000.0D+00 ,temperature)
+      rcarr(178,:) = skarr(  1.100D-14 ,2000.0D+00 ,temperature)
+!
+!....           ISOP + OH = RIO1
+!
+      rcarr(179,:) = skisop_oh_rio1 (temperature)
 !
 !....           ISOP + OH = RIO2
 !
-      rcarr(174,:) = skarr(  3.000D-11 ,-360.0D+00 ,temperature)
+      rcarr(180,:) = skisop_oh_rio2 (temperature)
 !
 !....           HO2 + KO2 =  0.15 ALD2 +  0.85 HCOOH +  0.15 MCO3 +  0.85 MO2 +  0.15 OH
 !
-      rcarr(175,:) = skko2_ho2 (temperature)
+      rcarr(181,:) = skko2_ho2 (temperature)
 !
 !....           KO2 + MCO3 =  0.10 ACTA +  0.90 ALD2 +  0.90 MCO3 +  0.10 MEK +  0.90 MO2
 !
-      rcarr(176,:) = skarr(  1.870D-13 ,-500.0D+00 ,temperature)
+      rcarr(182,:) = skarr(  1.870D-13 ,-500.0D+00 ,temperature)
 !
 !....           KO2 + MO2 =  0.50 ALD2 +  0.75 CH2O +  0.50 HO2 +  0.50 MCO3 +  0.25 MEK +  0.25 MO2 +  0.25 MOH +  0.25 ROH
 !
-      rcarr(177,:) = skarr(  8.370D-14 ,0.0D+00 ,temperature)
+      rcarr(183,:) = skarr(  8.370D-14 ,0.0D+00 ,temperature)
 !
 !....           KO2 + NO =  0.92 ALD2 +  0.92 MCO3 +  0.93 NO2 +  0.07 R4N2
 !
-      rcarr(178,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
+      rcarr(184,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
 !
 !....           MACR + NO3 =  0.68 CO +  0.32 HNO3 +  0.32 MAO3 +  0.68 MGLY +  0.68 NO2
 !
-      rcarr(179,:) = skarr(  1.800D-13 ,1190.0D+00 ,temperature)
+      rcarr(185,:) = skarr(  1.800D-13 ,1190.0D+00 ,temperature)
 !
 !....           MACR + OH = MAO3
 !
-      rcarr(180,:) = skarr(  2.700D-12 ,-470.0D+00 ,temperature)
+      rcarr(186,:) = skarr(  2.700D-12 ,-470.0D+00 ,temperature)
 !
 !....           MACR + O3 =  0.12 CH2O +  0.12 CO +  0.88 HCOOH +  0.12 MCO3 +  0.88 MGLY +  0.12 OH
 !
-      rcarr(181,:) = skarr(  1.500D-15 ,2110.0D+00 ,temperature)
+      rcarr(187,:) = skarr(  1.500D-15 ,2110.0D+00 ,temperature)
 !
 !....           HO2 + MAO3 =  0.50 CH2O +  0.32 CO +  0.50 MAOP +  0.17 MCO3 +  0.32 MO2 +  0.13 O3 +  0.50 OH
 !
-      rcarr(182,:) = skarr(  3.140D-12 ,-580.0D+00 ,temperature)
+      rcarr(188,:) = skarr(  3.140D-12 ,-580.0D+00 ,temperature)
 !
 !....           MAO3 + NO = CH2O +  0.65 CO +  0.35 MCO3 +  0.65 MO2 + NO2
 !
-      rcarr(183,:) = skarr(  8.700D-12 ,-290.0D+00 ,temperature)
+      rcarr(189,:) = skarr(  8.700D-12 ,-290.0D+00 ,temperature)
 !
 !....           MAO3 + NO2 = PMN
 !
-      rcarr(184,:) = skmao3_no2 (temperature ,adcol)
+      rcarr(190,:) = skmao3_no2 (temperature ,adcol)
 !
 !....           MAOP + OH =  0.25 CH2O +  0.49 CO +  0.49 HAC +  0.17 MAO3 +  0.10 MAOP +  0.09 MCO3 +  0.16 MO2 +  0.58 OH
 !
-      rcarr(185,:) = skarr(  1.660D-11 ,0.0D+00 ,temperature)
+      rcarr(191,:) = skarr(  1.660D-11 ,0.0D+00 ,temperature)
 !
 !....           A3O2 + MCO3 =  0.10 ACTA +  0.90 HO2 +  0.90 MO2 + RCHO
 !
-      rcarr(186,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
+      rcarr(192,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
 !
 !....           ETO2 + MCO3 =  0.10 ACTA + ALD2 +  0.90 HO2 +  0.90 MO2
 !
-      rcarr(187,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
+      rcarr(193,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
 !
 !....           MCO3 + MCO3 = 2 MO2
 !
-      rcarr(188,:) = skarr(  2.900D-12 ,-500.0D+00 ,temperature)
+      rcarr(194,:) = skarr(  2.900D-12 ,-500.0D+00 ,temperature)
 !
 !....           MCO3 + MO2 =  0.10 ACTA + CH2O +  0.90 HO2 +  0.90 MO2
 !
-      rcarr(189,:) = skarr(  2.000D-13 ,-500.0D+00 ,temperature)
+      rcarr(195,:) = skarr(  2.000D-13 ,-500.0D+00 ,temperature)
 !
 !....           MCO3 + NO2 = PAN
 !
-      rcarr(190,:) = sktroe(  7.300D-29 ,4.10D0 & 
+      rcarr(196,:) = sktroe(  7.300D-29 ,4.10D0 & 
      &                     , 9.500D-12 ,1.60D0 ,0.0D0 &
      &                     ,temperature ,adcol)
 !
 !....           MCO3 + NO = MO2 + NO2
 !
-      rcarr(191,:) = skarr(  8.100D-12 ,-270.0D+00 ,temperature)
+      rcarr(197,:) = skarr(  8.100D-12 ,-270.0D+00 ,temperature)
 !
 !....           MCO3 + PO2 =  0.10 ACTA +  0.90 ALD2 +  0.90 CH2O +  0.06 HAC +  0.90 HO2 +  0.90 MO2 +  0.04 RCHO
 !
-      rcarr(192,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
+      rcarr(198,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
 !
 !....           MEK + NO3 = HNO3 + KO2
 !
-      rcarr(193,:) = skarr(  8.000D-16 ,0.0D+00 ,temperature)
+      rcarr(199,:) = skarr(  8.000D-16 ,0.0D+00 ,temperature)
 !
 !....           MEK + OH = H2O + KO2
 !
-      rcarr(194,:) = skohmek (temperature)
+      rcarr(200,:) = skohmek (temperature)
 !
 !....           MGLY + NO3 = CO + HNO3 + MCO3
 !
-      rcarr(195,:) = skarr(  3.360D-12 ,1860.0D+00 ,temperature)
+      rcarr(201,:) = skarr(  3.360D-12 ,1860.0D+00 ,temperature)
 !
 !....           MGLY + OH = CO + MCO3
 !
-      rcarr(196,:) = skarr(  1.900D-12 ,-575.0D+00 ,temperature)
+      rcarr(202,:) = skarr(  1.900D-12 ,-575.0D+00 ,temperature)
 !
 !....           MVK + O3 =  0.04 ALD2 +  0.80 CH2O +  0.05 CO +  0.06 HO2 +  0.82 MGLY +  0.20 O3 +  0.08 OH
 !
-      rcarr(197,:) = skarr(  8.500D-16 ,1520.0D+00 ,temperature)
+      rcarr(203,:) = skarr(  8.500D-16 ,1520.0D+00 ,temperature)
 !
 !....           MVK + OH = VRO2
 !
-      rcarr(198,:) = skarr(  2.700D-12 ,-580.0D+00 ,temperature)
+      rcarr(204,:) = skarr(  2.700D-12 ,-580.0D+00 ,temperature)
 !
 !....           MAP + OH =  0.22 CH2O +  0.78 MCO3 +  0.22 OH
 !
-      rcarr(199,:) = skarr(  3.000D-14 ,0.0D+00 ,temperature)
+      rcarr(205,:) = skarr(  3.000D-14 ,0.0D+00 ,temperature)
 !
 !....           OH + RCHO = H2O + RCO3
 !
-      rcarr(200,:) = skarr(  6.000D-12 ,-410.0D+00 ,temperature)
+      rcarr(206,:) = skarr(  6.000D-12 ,-410.0D+00 ,temperature)
 !
 !....           OH + RCOOH = ETO2
 !
-      rcarr(201,:) = skarr(  1.200D-12 ,0.0D+00 ,temperature)
+      rcarr(207,:) = skarr(  1.200D-12 ,0.0D+00 ,temperature)
 !
 !....           PAN = MCO3 + NO2
 !
-      rcarr(202,:) = skpanan (temperature,adcol)
+      rcarr(208,:) = skpanan (temperature,adcol)
 !
 !....           PMN = MAO3 + NO2
 !
-      rcarr(203,:) = skarr(  1.600D+16 ,13500.0D+00 ,temperature)
+      rcarr(209,:) = skarr(  1.600D+16 ,13500.0D+00 ,temperature)
 !
 !....           OH + PMN =  0.25 CO +  0.25 HAC +  0.75 MAOP + NO3
 !
-      rcarr(204,:) = skarr(  2.900D-11 ,0.0D+00 ,temperature)
+      rcarr(210,:) = skarr(  2.900D-11 ,0.0D+00 ,temperature)
 !
 !....           HO2 + PO2 = PP
 !
-      rcarr(205,:) = ska3o2_ho2 (temperature)
+      rcarr(211,:) = ska3o2_ho2 (temperature)
 !
 !....           MO2 + PO2 =  0.50 ALD2 +  1.25 CH2O +  0.16 HAC + HO2 +  0.25 MOH +  0.09 RCHO +  0.25 ROH
 !
-      rcarr(206,:) = skarr(  5.920D-13 ,0.0D+00 ,temperature)
+      rcarr(212,:) = skarr(  5.920D-13 ,0.0D+00 ,temperature)
 !
 !....           NO + PO2 = ALD2 + CH2O + HO2 + NO2
 !
-      rcarr(207,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
+      rcarr(213,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
 !
 !....           PPN = NO2 + RCO3
 !
-      rcarr(208,:) = skppndecomp (temperature,adcol)
+      rcarr(214,:) = skppndecomp (temperature,adcol)
 !
 !....           OH + PP =  0.79 HAC +  0.79 OH +  0.21 PO2
 !
-      rcarr(209,:) = skarr(  8.780D-12 ,-200.0D+00 ,temperature)
+      rcarr(215,:) = skarr(  8.780D-12 ,-200.0D+00 ,temperature)
 !
 !....           HO2 + PRN1 = PRPN
 !
-      rcarr(210,:) = ska3o2_ho2 (temperature)
+      rcarr(216,:) = ska3o2_ho2 (temperature)
 !
 !....           MCO3 + PRN1 =  0.10 ACTA +  0.90 ALD2 +  0.90 CH2O +  0.90 MO2 + NO2 +  0.10 RCHO
 !
-      rcarr(211,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
+      rcarr(217,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
 !
 !....           MO2 + PRN1 =  0.50 ALD2 +  1.25 CH2O +  0.50 HO2 +  0.25 MOH + NO2 +  0.25 RCHO +  0.25 ROH
 !
-      rcarr(212,:) = skarr(  8.370D-14 ,0.0D+00 ,temperature)
+      rcarr(218,:) = skarr(  8.370D-14 ,0.0D+00 ,temperature)
 !
 !....           NO + PRN1 = ALD2 + CH2O + 2 NO2
 !
-      rcarr(213,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
+      rcarr(219,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
 !
 !....           NO3 + PRPE = PRN1
 !
-      rcarr(214,:) = skarr(  4.590D-13 ,1156.0D+00 ,temperature)
+      rcarr(220,:) = skarr(  4.590D-13 ,1156.0D+00 ,temperature)
 !
 !....           O3 + PRPE =  0.12 ACTA +  0.50 ALD2 +  0.50 CH2O +  0.10 CH4 +  0.56 CO +  0.22 HCOOH +  0.28 HO2 +  0.28 MO2 +  0.36 OH
 !
-      rcarr(215,:) = skarr(  6.500D-15 ,1900.0D+00 ,temperature)
+      rcarr(221,:) = skarr(  6.500D-15 ,1900.0D+00 ,temperature)
 !
 !....           OH + PRPE = PO2
 !
-      rcarr(216,:) = sktroe(  4.700D-27 ,4.00D0 & 
+      rcarr(222,:) = sktroe(  4.700D-27 ,4.00D0 & 
      &                     , 2.600D-11 ,1.30D0 ,0.0D0 &
      &                     ,temperature ,adcol)
 !
 !....           OH + PRPN =  0.79 MGLY +  0.79 NO2 +  0.21 PRN1
 !
-      rcarr(217,:) = skarr(  8.780D-12 ,-200.0D+00 ,temperature)
+      rcarr(223,:) = skarr(  8.780D-12 ,-200.0D+00 ,temperature)
 !
 !....           HO2 + R4N1 = R4N2
 !
-      rcarr(218,:) = skarr(  7.400D-13 ,-700.0D+00 ,temperature)
+      rcarr(224,:) = skarr(  7.400D-13 ,-700.0D+00 ,temperature)
 !
 !....           MCO3 + R4N1 =  0.10 ACTA +  0.68 ALD2 +  0.35 CH2O +  0.90 MO2 + NO2 +  0.27 R4O2 +  0.61 RCHO
 !
-      rcarr(219,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
+      rcarr(225,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
 !
 !....           MO2 + R4N1 =  0.38 ALD2 +  0.95 CH2O +  0.50 HO2 +  0.25 MOH + NO2 +  0.15 R4O2 +  0.58 RCHO +  0.38 ROH
 !
-      rcarr(220,:) = skarr(  8.370D-14 ,0.0D+00 ,temperature)
+      rcarr(226,:) = skarr(  8.370D-14 ,0.0D+00 ,temperature)
 !
 !....           NO + R4N1 =  0.97 ALD2 +  0.64 CH2O + 2 NO2 +  0.64 RCHO
 !
-      rcarr(221,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
+      rcarr(227,:) = skarr(  2.700D-12 ,-350.0D+00 ,temperature)
 !
 !....           OH + R4N2 = H2O + R4N1
 !
-      rcarr(222,:) = skarr(  1.600D-12 ,0.0D+00 ,temperature)
+      rcarr(228,:) = skarr(  1.600D-12 ,0.0D+00 ,temperature)
 !
 !....           HO2 + R4O2 = R4P
 !
-      rcarr(223,:) = skarr(  7.400D-13 ,-700.0D+00 ,temperature)
+      rcarr(229,:) = skarr(  7.400D-13 ,-700.0D+00 ,temperature)
 !
 !....           MCO3 + R4O2 =  0.05 A3O2 +  0.29 ACET +  0.10 ACTA +  0.29 ALD2 +  0.16 B3O2 +  0.29 ETO2 +  0.24 HO2 +  0.27 MEK +  0.90 MO2 +  0.25 RCHO
 !
-      rcarr(224,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
+      rcarr(230,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
 !
 !....           MO2 + R4O2 =  0.03 A3O2 +  0.16 ACET +  0.16 ALD2 +  0.09 B3O2 +  0.75 CH2O +  0.16 ETO2 +  0.64 HO2 +  0.35 MEK +  0.09 MO2 +  0.25 MOH +  0.13 RCHO +  0.38 ROH
 !
-      rcarr(225,:) = skarr(  8.370D-14 ,0.0D+00 ,temperature)
+      rcarr(231,:) = skarr(  8.370D-14 ,0.0D+00 ,temperature)
 !
 !....           NO + R4O2 =  0.05 A3O2 +  0.34 ACET +  0.34 ALD2 +  0.19 B3O2 +  0.34 ETO2 +  0.27 HO2 +  0.19 MEK +  0.19 MO2 + NO2 +  0.15 RCHO
 !
-      rcarr(226,:) = skr4o2_no_b (temperature ,adcol)
+      rcarr(232,:) = skr4o2_no_b (temperature ,adcol)
 !
 !....           NO + R4O2 = R4N2
 !
-      rcarr(227,:) = skr4o2_no_a (temperature ,adcol)
+      rcarr(233,:) = skr4o2_no_a (temperature ,adcol)
 !
 !....           OH + R4P =  0.79 OH +  0.21 R4O2 +  1.18 RCHO
 !
-      rcarr(228,:) = skarr(  8.780D-12 ,-200.0D+00 ,temperature)
+      rcarr(234,:) = skarr(  8.780D-12 ,-200.0D+00 ,temperature)
 !
 !....           OH + RA3P =  0.36 A3O2 +  0.64 OH +  0.64 RCHO
 !
-      rcarr(229,:) = skarr(  5.180D-12 ,-200.0D+00 ,temperature)
+      rcarr(235,:) = skarr(  5.180D-12 ,-200.0D+00 ,temperature)
 !
 !....           OH + RB3P =  0.79 ACET +  0.21 B3O2 +  0.79 OH
 !
-      rcarr(230,:) = skarr(  8.780D-12 ,-200.0D+00 ,temperature)
+      rcarr(236,:) = skarr(  8.780D-12 ,-200.0D+00 ,temperature)
 !
 !....           NO3 + RCHO = HNO3 + RCO3
 !
-      rcarr(231,:) = skarr(  6.500D-15 ,0.0D+00 ,temperature)
+      rcarr(237,:) = skarr(  6.500D-15 ,0.0D+00 ,temperature)
 !
 !....           HO2 + RCO3 =  0.03 A3O2 +  0.12 B3O2 +  0.22 ETO2 +  0.15 O3 +  0.44 OH +  0.15 RCOOH +  0.41 RP
 !
-      rcarr(232,:) = skarr(  4.300D-13 ,-1040.0D+00 ,temperature)
+      rcarr(238,:) = skarr(  4.300D-13 ,-1040.0D+00 ,temperature)
 !
 !....           MCO3 + RCO3 =  0.07 A3O2 +  0.27 B3O2 +  0.49 ETO2 + MO2
 !
-      rcarr(233,:) = skarr(  2.500D-12 ,-500.0D+00 ,temperature)
+      rcarr(239,:) = skarr(  2.500D-12 ,-500.0D+00 ,temperature)
 !
 !....           MO2 + RCO3 =  0.07 A3O2 +  0.27 B3O2 + CH2O +  0.49 ETO2 + HO2
 !
-      rcarr(234,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
+      rcarr(240,:) = skarr(  1.870D-12 ,-500.0D+00 ,temperature)
 !
 !....           NO2 + RCO3 = PPN
 !
-      rcarr(235,:) = sktroe(  9.000D-28 ,8.90D0 & 
+      rcarr(241,:) = sktroe(  9.000D-28 ,8.90D0 & 
      &                     , 7.700D-12 ,0.20D0 ,0.0D0 &
      &                     ,temperature ,adcol)
 !
 !....           NO + RCO3 =  0.07 A3O2 +  0.27 B3O2 +  0.49 ETO2 + NO2
 !
-      rcarr(236,:) = skarr(  6.700D-12 ,-340.0D+00 ,temperature)
+      rcarr(242,:) = skarr(  6.700D-12 ,-340.0D+00 ,temperature)
 !
 !....           HO2 + RIO1 =  0.06 CH2O +  0.06 HO2 +  0.06 MVK +  0.06 OH +  0.94 RIPA
 !
-      rcarr(237,:) = skarr(  2.120D-13 ,-1300.0D+00 ,temperature)
+      rcarr(243,:) = skarr(  2.120D-13 ,-1300.0D+00 ,temperature)
 !
 !....           HO2 + RIO2 =  0.06 CH2O +  0.06 HO2 +  0.06 MACR +  0.06 OH +  0.94 RIPB
 !
-      rcarr(238,:) = skarr(  2.120D-13 ,-1300.0D+00 ,temperature)
+      rcarr(244,:) = skarr(  2.120D-13 ,-1300.0D+00 ,temperature)
 !
 !....           MO2 + RIO1 = 2 CH2O + 2 HO2 + MVK
 !
-      rcarr(239,:) = skarr(  2.000D-12 ,0.0D+00 ,temperature)
+      rcarr(245,:) = skarr(  2.000D-12 ,0.0D+00 ,temperature)
 !
 !....           MO2 + RIO2 = 2 CH2O + 2 HO2 + MACR
 !
-      rcarr(240,:) = skarr(  2.000D-12 ,0.0D+00 ,temperature)
+      rcarr(246,:) = skarr(  2.000D-12 ,0.0D+00 ,temperature)
 !
 !....           RIO1 + RIO1 = 2 CH2O + 2 HO2 + 2 MVK
 !
-      rcarr(241,:) = skarr(  6.920D-14 ,0.0D+00 ,temperature)
+      rcarr(247,:) = skarr(  6.920D-14 ,0.0D+00 ,temperature)
 !
 !....           RIO2 + RIO2 = 2 CH2O + 2 HO2 + 2 MACR
 !
-      rcarr(242,:) = skarr(  5.740D-12 ,0.0D+00 ,temperature)
+      rcarr(248,:) = skarr(  5.740D-12 ,0.0D+00 ,temperature)
 !
 !....           RIO1 + RIO2 = 2 CH2O + 2 HO2 + MACR + MVK
 !
-      rcarr(243,:) = skarr(  1.540D-12 ,0.0D+00 ,temperature)
+      rcarr(249,:) = skarr(  1.540D-12 ,0.0D+00 ,temperature)
 !
 !....           NO + RIO1 = CH2O + HO2 + MVK + NO2
 !
-      rcarr(244,:) = skrio1_no (temperature ,adcol)
+      rcarr(250,:) = skrio1_no (temperature ,adcol)
 !
 !....           NO + RIO2 = CH2O + HO2 + MACR + NO2
 !
-      rcarr(245,:) = skrio2_no (temperature ,adcol)
+      rcarr(251,:) = skrio2_no (temperature ,adcol)
 !
 !....           NO + RIO1 = HNO3
 !
-      rcarr(246,:) = skrio1_no_hno3 (temperature ,adcol)
+      rcarr(252,:) = skrio1_no_hno3 (temperature ,adcol)
 !
 !....           NO + RIO2 = HNO3
 !
-      rcarr(247,:) = skro2noadd_2 (temperature ,adcol)
+      rcarr(253,:) = skro2noadd_2 (temperature ,adcol)
 !
 !....           RIO1 = CH2O + MVK + OH
 !
-      rcarr(248,:) = skrio1 (temperature)
+      rcarr(254,:) = skrio1 (temperature)
 !
 !....           RIO2 = CH2O + MACR + OH
 !
-      rcarr(249,:) = skrio2 (temperature)
+      rcarr(255,:) = skrio2 (temperature)
 !
 !....           RIO1 =  0.30 CH2O +  0.60 CO +  0.40 HO2 +  0.40 IALD +  0.30 MCO3 +  0.30 MGLY +  1.50 OH
 !
-      rcarr(250,:) = skrio1_2 (temperature)
+      rcarr(256,:) = skrio1_2 (temperature)
 !
 !....           RIO2 =  0.30 CH2O +  0.90 CO +  0.30 HCOOH +  0.70 HO2 +  0.40 IALD +  0.30 MGLY +  1.50 OH
 !
-      rcarr(251,:) = skrio2_2 (temperature)
+      rcarr(257,:) = skrio2_2 (temperature)
 !
 !....           OH + RIPA =  0.25 CO +  0.25 HO2 +  0.12 MRP +  0.12 MVK +  0.75 RIO1
 !
-      rcarr(252,:) = skarr(  6.100D-12 ,-200.0D+00 ,temperature)
+      rcarr(258,:) = skarr(  6.100D-12 ,-200.0D+00 ,temperature)
 !
 !....           OH + RIPB =  0.33 CO +  0.33 HO2 +  0.16 IAO2 +  0.17 MACR +  0.17 MRP +  0.51 RIO2
 !
-      rcarr(253,:) = skarr(  4.100D-12 ,-200.0D+00 ,temperature)
+      rcarr(259,:) = skarr(  4.100D-12 ,-200.0D+00 ,temperature)
 !
 !....           OH + ROH = HO2 + RCHO
 !
-      rcarr(254,:) = skarr(  3.350D-12 ,0.0D+00 ,temperature)
+      rcarr(260,:) = skarr(  3.350D-12 ,0.0D+00 ,temperature)
 !
 !....           OH + RP =  0.50 ALD2 +  0.50 OH +  0.50 RCO3
 !
-      rcarr(255,:) = skarr(  6.130D-13 ,-200.0D+00 ,temperature)
+      rcarr(261,:) = skarr(  6.130D-13 ,-200.0D+00 ,temperature)
 !
 !....           HO2 + VRO2 =  0.05 CH2O +  0.36 GLYC +  0.31 HO2 +  0.25 MAOP +  0.36 MCO3 +  0.05 MGLY +  0.67 OH +  0.34 VRP
 !
-      rcarr(256,:) = skarr(  2.120D-13 ,-1300.0D+00 ,temperature)
+      rcarr(262,:) = skarr(  2.120D-13 ,-1300.0D+00 ,temperature)
 !
 !....           NO + VRO2 = HNO3
 !
-      rcarr(257,:) = skro2noadd_3 (temperature ,adcol)
+      rcarr(263,:) = skro2noadd_3 (temperature ,adcol)
 !
 !....           NO + VRO2 =  0.24 CH2O +  0.76 GLYC +  0.24 HO2 +  0.76 MCO3 +  0.24 MGLY + NO2
 !
-      rcarr(258,:) = skvro2_no (temperature ,adcol)
+      rcarr(264,:) = skvro2_no (temperature ,adcol)
 !
 !....           OH + VRP =  1.19 CO +  0.53 HO2 +  0.53 MCO3 +  0.19 MGLY +  0.19 OH
 !
-      rcarr(259,:) = skarr(  2.000D-12 ,-70.0D+00 ,temperature)
+      rcarr(265,:) = skarr(  2.000D-12 ,-70.0D+00 ,temperature)
 !
 !....           N2O5 = 2 HNO3
 !
@@ -1193,183 +1218,183 @@
                     , specarr(iclono2,:), specarr(ihcl,:), specarr(ih2o,:) &
                     , FRH, reff_lbs, wt_h2so4, g_clono2, g_clono2_h2o, g_clono2_hcl, g_hocl_hcl)
 !
-      rcarr(260,:) = sklbs_n2o5 (temperature ,pressure ,sad_lbs ,wt_h2so4 ,ptrop)
+      rcarr(266,:) = sklbs_n2o5 (temperature ,pressure ,sad_lbs ,wt_h2so4 ,ptrop)
 !
 !....           ClONO2 = HNO3 + HOCl
 !
-      rcarr(261,:) = sklbs_clono2_h2o (temperature  & 
+      rcarr(267,:) = sklbs_clono2_h2o (temperature  & 
      &           ,pressure ,sad_lbs ,g_clono2_h2o ,mw(iCLONO2) ,ptrop)
 !
 !....           BrONO2 = HNO3 + HOBr
 !
-      rcarr(262,:) = sklbs_brono2 (temperature ,pressure ,sad_lbs ,wt_h2so4 ,ptrop)
+      rcarr(268,:) = sklbs_brono2 (temperature ,pressure ,sad_lbs ,wt_h2so4 ,ptrop)
 !
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
-      rcarr(263,:) = sklbs_clono2_hcl (temperature  & 
-     &           ,pressure ,sad_lbs ,g_clono2_hcl ,mw(iCLONO2) ,specarr( 55,:) ,ptrop)
+      rcarr(269,:) = sklbs_clono2_hcl (temperature  & 
+     &           ,pressure ,sad_lbs ,g_clono2_hcl ,mw(iCLONO2) ,specarr( 56,:) ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
-      rcarr(264,:) = sklbs_hocl_hcl (temperature  & 
-     &           ,pressure ,sad_lbs ,g_hocl_hcl ,mw(iHOCL) ,specarr( 55,:) ,ptrop)
+      rcarr(270,:) = sklbs_hocl_hcl (temperature  & 
+     &           ,pressure ,sad_lbs ,g_hocl_hcl ,mw(iHOCL) ,specarr( 56,:) ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
-      rcarr(265,:) = sklbs_hobr_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_lbs ,specarr(  61,:) ,specarr( 55,:) ,water  & 
+      rcarr(271,:) = sklbs_hobr_hcl (temperature  & 
+     &           ,adcol ,pressure ,sad_lbs ,specarr(  63,:) ,specarr( 56,:) ,water  & 
      &           ,ptrop)
 !
 !....           N2O5 = 2 HNO3
 !
-      rcarr(266,:) = sksts_n2o5 (temperature ,pressure ,sad_sts ,ptrop)
+      rcarr(272,:) = sksts_n2o5 (temperature ,pressure ,sad_sts ,ptrop)
 !
 !....           ClONO2 = HNO3 + HOCl
 !
-      rcarr(267,:) = sksts_clono2 (temperature  & 
-     &           ,adcol ,pressure ,sad_sts ,specarr(  55,:) ,water ,ptrop)
+      rcarr(273,:) = sksts_clono2 (temperature  & 
+     &           ,adcol ,pressure ,sad_sts ,specarr(  56,:) ,water ,ptrop)
 !
 !....           BrONO2 = HNO3 + HOBr
 !
-      rcarr(268,:) = sksts_brono2 (temperature ,pressure ,sad_sts ,ptrop)
+      rcarr(274,:) = sksts_brono2 (temperature ,pressure ,sad_sts ,ptrop)
 !
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
-      rcarr(269,:) = sksts_clono2_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_sts ,specarr(    37,:) ,specarr(  55,:) ,water  & 
+      rcarr(275,:) = sksts_clono2_hcl (temperature  & 
+     &           ,adcol ,pressure ,sad_sts ,specarr(    38,:) ,specarr(  56,:) ,water  & 
      &           ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
-      rcarr(270,:) = sksts_hocl_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_sts ,specarr(  62,:) ,specarr( 55,:) ,water  & 
+      rcarr(276,:) = sksts_hocl_hcl (temperature  & 
+     &           ,adcol ,pressure ,sad_sts ,specarr(  64,:) ,specarr( 56,:) ,water  & 
      &           ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
-      rcarr(271,:) = sksts_hobr_hcl (temperature  & 
-     &           ,adcol ,pressure ,sad_sts ,specarr(  61,:) ,specarr( 55,:) ,water  & 
+      rcarr(277,:) = sksts_hobr_hcl (temperature  & 
+     &           ,adcol ,pressure ,sad_sts ,specarr(  63,:) ,specarr( 56,:) ,water  & 
      &           ,ptrop)
 !
 !....           ClONO2 = HNO3 + HOCl
 !
-      rcarr(272,:) = sknat_clono2 (temperature ,pressure ,sad_nat ,ptrop)
+      rcarr(278,:) = sknat_clono2 (temperature ,pressure ,sad_nat ,ptrop)
 !
 !....           BrONO2 = HNO3 + HOBr
 !
-      rcarr(273,:) = sknat_brono2 (temperature ,pressure ,sad_nat ,ptrop)
+      rcarr(279,:) = sknat_brono2 (temperature ,pressure ,sad_nat ,ptrop)
 !
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
-      rcarr(274,:) = sknat_hcl_clono2 (temperature  & 
-     &           ,pressure ,sad_nat ,specarr(  55,:) ,ptrop)
+      rcarr(280,:) = sknat_hcl_clono2 (temperature  & 
+     &           ,pressure ,sad_nat ,specarr(  56,:) ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
-      rcarr(275,:) = sknat_hcl_hocl (temperature  & 
-     &           ,pressure ,sad_nat ,specarr(  55,:) ,ptrop)
+      rcarr(281,:) = sknat_hcl_hocl (temperature  & 
+     &           ,pressure ,sad_nat ,specarr(  56,:) ,ptrop)
 !
 !....           BrONO2 + HCl = BrCl + HNO3
 !
-      rcarr(276,:) = sknat_hcl_brono2 (temperature  & 
-     &           ,pressure ,sad_nat ,specarr(  55,:) ,ptrop)
+      rcarr(282,:) = sknat_hcl_brono2 (temperature  & 
+     &           ,pressure ,sad_nat ,specarr(  56,:) ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
-      rcarr(277,:) = sknat_hcl_hobr (temperature  & 
-     &           ,pressure ,sad_nat ,specarr(  55,:) ,ptrop)
+      rcarr(283,:) = sknat_hcl_hobr (temperature  & 
+     &           ,pressure ,sad_nat ,specarr(  56,:) ,ptrop)
 !
 !....           ClONO2 = HNO3 + HOCl
 !
-      rcarr(278,:) = skice_clono2 (temperature ,pressure ,sad_ice ,ptrop)
+      rcarr(284,:) = skice_clono2 (temperature ,pressure ,sad_ice ,ptrop)
 !
 !....           BrONO2 = HNO3 + HOBr
 !
-      rcarr(279,:) = skice_brono2 (temperature ,pressure ,sad_ice ,ptrop)
+      rcarr(285,:) = skice_brono2 (temperature ,pressure ,sad_ice ,ptrop)
 !
 !....           ClONO2 + HCl = Cl2 + HNO3
 !
-      rcarr(280,:) = skice_hcl_clono2 (temperature  & 
-     &           ,pressure ,sad_ice ,specarr(  55,:) ,ptrop)
+      rcarr(286,:) = skice_hcl_clono2 (temperature  & 
+     &           ,pressure ,sad_ice ,specarr(  56,:) ,ptrop)
 !
 !....           HCl + HOCl = Cl2 + H2O
 !
-      rcarr(281,:) = skice_hcl_hocl (temperature  & 
-     &           ,pressure ,sad_ice ,specarr(  55,:) ,ptrop)
+      rcarr(287,:) = skice_hcl_hocl (temperature  & 
+     &           ,pressure ,sad_ice ,specarr(  56,:) ,ptrop)
 !
 !....           BrONO2 + HCl = BrCl + HNO3
 !
-      rcarr(282,:) = skice_hcl_brono2 (temperature  & 
-     &           ,pressure ,sad_ice ,specarr(  55,:) ,ptrop)
+      rcarr(288,:) = skice_hcl_brono2 (temperature  & 
+     &           ,pressure ,sad_ice ,specarr(  56,:) ,ptrop)
 !
 !....           HCl + HOBr = BrCl + H2O
 !
-      rcarr(283,:) = skice_hcl_hobr (temperature  & 
-     &           ,pressure ,sad_ice ,specarr(  55,:) ,ptrop)
+      rcarr(289,:) = skice_hcl_hobr (temperature  & 
+     &           ,pressure ,sad_ice ,specarr(  56,:) ,ptrop)
 !
 !....           HNO3 = NO2 + OH
 !
-      rcarr(284,:) = skpyro_hno3 (temperature ,sad_pyro)
+      rcarr(290,:) = skpyro_hno3 (temperature ,sad_pyro)
 !
 !....           NO3 + NO3 = 2 NO2 + O2
 !
-      rcarr(285,:) = skarr(  8.500D-13 ,2450.0D+00 ,temperature)
+      rcarr(291,:) = skarr(  8.500D-13 ,2450.0D+00 ,temperature)
 !
 !....           HO2 =  0.50 H2O
 !
-      rcarr(286,:) = sktrs_ho2 (temperature, & 
+      rcarr(292,:) = sktrs_ho2 (temperature, & 
      &            sadcol2, adcol, radA, NSADaer, NSADdust, cPBLcol, pressure)
 !
 !....           NO2 =  0.50 HNO2 +  0.50 HNO3
 !
-      rcarr(287,:) = sktrs_no2 (temperature, & 
+      rcarr(293,:) = sktrs_no2 (temperature, & 
      &            sadcol2, adcol, radA, NSADaer,NSADdust,ptrop, pressure)
 !
 !....           NO3 = HNO3
 !
-      rcarr(288,:) = sktrs_no3 (temperature, & 
+      rcarr(294,:) = sktrs_no3 (temperature, & 
      &            sadcol2, adcol, radA,NSADaer,NSADdust,ptrop, pressure)
 !
 !....           N2O5 = 2 HNO3
 !
-      rcarr(289,:) = sktrs_n2o5 (temperature, & 
+      rcarr(295,:) = sktrs_n2o5 (temperature, & 
      &           sadcol2,adcol,radA,FRH,NSADaer,NSADdust, ptrop, pressure)
 !
 !....           DMS + OH = SO2
 !
-      rcarr(290,:) = skoh_dms (temperature, oxygen, adcol)
+      rcarr(296,:) = skoh_dms (temperature, oxygen, adcol)
 !
 !....           DMS + NO3 = HNO3 + SO2
 !
-      rcarr(291,:) = skarr(  1.900D-13 ,-530.0D+00 ,temperature)
+      rcarr(297,:) = skarr(  1.900D-13 ,-530.0D+00 ,temperature)
 !
 !....           O + SO2 = H2SO4
 !
-      rcarr(292,:) = sktroe(  1.800D-33 ,-2.00D0 & 
+      rcarr(298,:) = sktroe(  1.800D-33 ,-2.00D0 & 
      &                     , 4.200D-14 ,-1.80D0 ,0.0D0 &
      &                     ,temperature ,adcol)
 !
 !....           OH + SO2 = H2SO4
 !
-      rcarr(293,:) = sktroe(  2.900D-31 ,4.10D0 & 
+      rcarr(299,:) = sktroe(  2.900D-31 ,4.10D0 & 
      &                     , 1.700D-12 ,-0.20D0 ,0.0D0 &
      &                     ,temperature ,adcol)
 !
 !....           H2O2 + SO2 = H2SO4
 !
-      rcarr(294,:) = skso2h2o2 (temperature, pressure, lwc, fcld)
+      rcarr(300,:) = skso2h2o2 (temperature, pressure, lwc, fcld)
 !
 !....           O3 + SO2 = H2SO4
 !
-      rcarr(295,:) = skarr(  3.000D-12 ,7000.0D+00 ,temperature)
+      rcarr(301,:) = skarr(  3.000D-12 ,7000.0D+00 ,temperature)
 !
 !....           O + OCSg = CO + SO2
 !
-      rcarr(296,:) = skarr(  2.100D-11 ,2200.0D+00 ,temperature)
+      rcarr(302,:) = skarr(  2.100D-11 ,2200.0D+00 ,temperature)
 !
 !....           OCSg + OH = SO2
 !
-      rcarr(297,:) = skarr(  7.200D-14 ,1070.0D+00 ,temperature)
+      rcarr(303,:) = skarr(  7.200D-14 ,1070.0D+00 ,temperature)
 !
 !....          End thermal rate constants
 !
@@ -1492,6 +1517,22 @@
        skro2_no_a(:) = k0(:) * fyrno3(:)
 !
       END FUNCTION skro2_no_a
+!
+!.... skoo (temperature ,adcol)
+! _1_
+!
+!.... Legacy - personal communication, Eric Fleming (3/4/26)
+!
+        FUNCTION skoo (tk,ad)
+!
+!....      O + O = O2
+!
+          real*8  tk(:) ,ad(:)
+          real*8, DIMENSION(size(tk)) :: skoo
+!
+          skoo(:) = 1.4D-33 * exp(-408.0d0 / tk(:)) * ad(:)
+!
+        END FUNCTION skoo
 !
 !.... skho2dis (temperature ,adcol)
 !
@@ -2119,6 +2160,68 @@
        hac_frac(:)  = MAX( hac_frac, 0.0d0 )
        skhacb_oh(:) = skhacb_oh(:) * ( 1.0d0 - hac_frac(:))
       END FUNCTION skhacb_oh
+!
+!.... skisop_oh_rio1 (temperature)
+! _1_
+!
+!.... Harvard/GMI from GEOSCHEM 14.7.0
+!
+      FUNCTION skisop_oh_rio1 (tk)
+!
+! Used to compute the rate for this reaction:
+!    ISOP + OH = RIO1
+!
+      real*8, intent(in) :: tk(:)
+      REAL*8             :: a0, b0, c0, d0, e0, f0, g0
+      REAL*8, DIMENSION(size(tk)) :: k0, k1, k2, skisop_oh_rio1
+!
+!  FUNCTION GC_ISO1(1.7E-11, 390.0, 9.33E-2, 5.05E15, &
+!                   -12200.0, 1.79E14, -8830.0)
+!
+      a0 =      1.7d-11
+      b0 =    390.0d+0
+      c0 =     9.33d-2
+      d0 =     5.05d+15
+      e0 = -12200.0d+0
+      f0 =     1.79d+14
+      g0 =  -8830.0d+0
+!
+      k0(:) = d0*EXP(e0/tk(:))*EXP(1.0d8/tk(:)**3)
+      k1(:) = f0*EXP(g0/tk(:))
+      k2(:) = c0*k0(:)/(k0(:)+k1(:))
+      skisop_oh_rio1(:) = a0 * EXP(b0/tk(:)) * (1.0d0-k2(:))
+      END FUNCTION skisop_oh_rio1
+!
+!.... skisop_oh_rio2 (temperature)
+! _2_
+!
+!.... Harvard/GMI from GEOSCHEM 14.7.0
+!
+      FUNCTION skisop_oh_rio2 (tk)
+!
+! Used to compute the rate for this reaction:
+!    ISOP + OH = RIO1
+!
+      real*8, intent(in) :: tk(:)
+      REAL*8             :: a0, b0, c0, d0, e0, f0, g0
+      REAL*8, DIMENSION(size(tk)) :: k0, k1, k2, skisop_oh_rio2
+!
+!  FUNCTION GC_ISO1(1.0E-11, 390.0, 2.26E-1, 2.22E9, &
+!                   -7160.0, 1.75E14, -9054.0)
+!
+      a0 =     1.0d-11
+      b0 =   390.0d+0
+      c0 =    2.26d-1
+      d0 =    2.22d+9
+      e0 = -7160.0d+0
+      f0 =    1.75d+14
+      g0 = -9054.0d+0
+!
+      k0(:) = d0*EXP(e0/tk(:))*EXP(1.0d8/tk(:)**3)
+      k1(:) = f0*EXP(g0/tk(:))
+      k2(:) = c0*k0(:)/(k0(:)+k1(:))
+      skisop_oh_rio2(:) = a0 * EXP(b0/tk(:)) * (1.0d0-k2(:))
+      END FUNCTION skisop_oh_rio2
 !
 !.... skko2_ho2 (temperature)
 ! _29_
