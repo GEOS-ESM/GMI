@@ -24,12 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - In Standard: Added HCN and CH3CN with emissions from biomass burning (diurnal) and fossil fuels  (J. Liu)
 - In Standard: Added flux emissions for 4 VSL Cl species
-- Added FLOOR_VALUE resource setting, which now applies to both transported and non-transported species
+- Added FLOOR_VALUE resource setting
 - Added resource settings to warn or halt model if Br, HBr or BrONO2 exceed a given limit
 - Added several EM_ emissions diagnostics
 
 ### Changed
 
+- Changed the default FLOOR value to be 1e-20 instead of 1e-30 for better solver convergence.
+- FLOOR value now applies to non-transported species as well as transported ones.
 - In Standard: Revised reactions to ensure that RIPA and RIO1 are produced.
 - In Standard: Revised the "O+O" reaction to match the 2D model.
 - Extended "_GMITEND" diagnostics to include non-transported species
