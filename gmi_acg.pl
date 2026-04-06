@@ -596,8 +596,10 @@ sub register_exports {
     $shortName = "$internal_spec_name[$m]"."$stream[$n]";
    }
 
-   $keep = 0;
-   if ( $friends[$m] eq "D,T,C" ) { $keep = 1; }
+#  Previously we restricted tendencies to just the transported species:
+#  $keep = 0;
+#  if ( $friends[$m] eq "D,T,C" ) { $keep = 1; }
+   $keep = 1;
 
    $line = "  "."$shortName"."$suffix"." | "."$unit"." | "."$dim"." | "."$vloc"." |    |   |   |     | "."$longName\n";
    if ( $keep == 1 ) {

@@ -78,6 +78,10 @@
 !EOP
 !-------------------------------------------------------------------------
 
+#define   NO_ACTION 0
+#define WARN_ACTION 1
+#define HALT_ACTION 2
+
   TYPE GMIchem_State
      PRIVATE
      TYPE(Runtime_Registry), POINTER :: ggReg    => null()    ! Names of GMI Species - transported
@@ -85,6 +89,13 @@
      TYPE(GMI_GridComp),     POINTER :: gcGMI    => null()
      TYPE(Species_Bundle),   POINTER :: bgg      => null()    ! Bundle of GMI Species - transported
      TYPE(Species_Bundle),   POINTER :: bxx      => null()    ! Bundle of GMI Species - not transported
+     REAL                            ::      Br_limit  =  -99.0
+     REAL                            ::     HBr_limit  =  -99.0
+     REAL                            ::  BrONO2_limit  =  -99.0
+     INTEGER                         ::      Br_action  =  0   ! 0=none, 1=warn, 2=halt
+     INTEGER                         ::     HBr_action  =  0   ! 0=none, 1=warn, 2=halt
+     INTEGER                         ::  BrONO2_action  =  0   ! 0=none, 1=warn, 2=halt
+     REAL                            ::    FLOOR_VALUE      ! for all species [volume mixing ratio]
   END TYPE GMIchem_State
 
   TYPE GMIchem_WRAP
@@ -1108,6 +1119,8 @@ CONTAINS
    integer                         :: STATUS
    character(len=ESMF_MAXSTR)      :: COMP_NAME
 
+   TYPE(ESMF_Config)               :: gmiConfig
+
    type(Runtime_Registry), pointer ::   ggReg
    type(Runtime_Registry), pointer ::   xxReg
    type(GMI_GridComp), pointer     :: gcGMI       ! Grid Component
@@ -1133,7 +1146,11 @@ CONTAINS
    REAL, POINTER, DIMENSION(:,:)   :: LONS
    type (MAPL_SunOrbit)            :: ORBIT ! VV adding Mike's SZA edits
 
-   CHARACTER(LEN=ESMF_MAXSTR)	   :: short_name
+   type(GMIchem_state), pointer    :: chem_state
+
+   CHARACTER(LEN=16)               :: action
+
+   CHARACTER(LEN=ESMF_MAXSTR)      :: short_name
    CHARACTER(LEN=ESMF_MAXSTR)      :: providerName
    CHARACTER(LEN=ESMF_MAXSTR), POINTER, DIMENSION(:) :: fieldNames
 
@@ -1167,7 +1184,7 @@ CONTAINS
 
 !  Get parameters from gc and clock
 !  --------------------------------
-   call extract_ ( gc, clock, ggReg, xxReg, gcGMI, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS )
+   call extract_ ( gc, clock, ggReg, xxReg, gcGMI, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS, chem_state )
    VERIFY_(STATUS)
    IF(MAPL_AM_I_ROOT()) THEN
     PRINT *," "
@@ -1318,6 +1335,68 @@ CONTAINS
 !  Init groups
 !  -----------
    CALL Init_GMI_Chem_Groups()
+
+!  ------------------------------
+!  Read values from GMI's rc file
+!  ------------------------------
+   gmiConfig = ESMF_ConfigCreate(__RC__)
+   call ESMF_ConfigLoadFile(gmiConfig, 'GMI_GridComp.rc', __RC__)
+
+!  Floor value for all species
+!  ---------------------------
+   CALL ESMF_ConfigGetAttribute(gmiConfig, chem_state%FLOOR_VALUE,     &
+                                               LABEL="FLOOR_VALUE:",     DEFAULT=1.0e-20, __RC__ )
+   IF(MAPL_AM_I_ROOT()) PRINT*,'GMI FLOOR VALUE for all species: ', chem_state%FLOOR_VALUE
+
+
+!  Trap values and flags
+!  ---------------------
+   CALL ESMF_ConfigGetAttribute(gmiConfig, chem_state%Br_limit,     &
+                                               LABEL="Br_limit:",     DEFAULT=-99.0, __RC__ )
+   IF(MAPL_AM_I_ROOT()) PRINT*,'Br limit = ', chem_state%Br_limit
+
+   CALL ESMF_ConfigGetAttribute(gmiConfig, chem_state%HBr_limit,    &
+                                               LABEL="HBr_limit:",    DEFAULT=-99.0, __RC__ )
+   IF(MAPL_AM_I_ROOT()) PRINT*,'HBr limit = ', chem_state%HBr_limit
+
+   CALL ESMF_ConfigGetAttribute(gmiConfig, chem_state%BrONO2_limit, &
+                                               LABEL="BrONO2_limit:", DEFAULT=-99.0, __RC__ )
+   IF(MAPL_AM_I_ROOT()) PRINT*,'BrONO2 limit = ', chem_state%BrONO2_limit
+
+   CALL ESMF_ConfigGetAttribute(gmiConfig, action, LABEL="Br_action:",     DEFAULT="default", __RC__ )
+   IF(MAPL_AM_I_ROOT()) PRINT*,'Br action = '//TRIM(action)
+   chem_state%Br_action = NO_ACTION
+   IF ( TRIM(action) .EQ. "warn" ) chem_state%Br_action     = WARN_ACTION
+   IF ( TRIM(action) .EQ. "halt" ) chem_state%Br_action     = HALT_ACTION
+
+   CALL ESMF_ConfigGetAttribute(gmiConfig, action, LABEL="HBr_action:",    DEFAULT="default", __RC__ )
+   IF(MAPL_AM_I_ROOT()) PRINT*,'HBr action = '//TRIM(action)
+   chem_state%HBr_action = NO_ACTION
+   IF ( TRIM(action) .EQ. "warn" ) chem_state%HBr_action    = WARN_ACTION
+   IF ( TRIM(action) .EQ. "halt" ) chem_state%HBr_action    = HALT_ACTION
+
+   CALL ESMF_ConfigGetAttribute(gmiConfig, action, LABEL="BrONO2_action:", DEFAULT="default", __RC__ )
+   IF(MAPL_AM_I_ROOT()) PRINT*,'BrONO2 action = '//TRIM(action)
+   chem_state%BrONO2_action = NO_ACTION
+   IF ( TRIM(action) .EQ. "warn" ) chem_state%BrONO2_action = WARN_ACTION
+   IF ( TRIM(action) .EQ. "halt" ) chem_state%BrONO2_action = HALT_ACTION
+
+   IF(MAPL_AM_I_ROOT()) THEN
+     IF ( chem_state%Br_action .EQ.   NO_ACTION ) PRINT*,'Ignoring Br_limit'
+     IF ( chem_state%Br_action .EQ. WARN_ACTION ) PRINT*,'Printing msg when Br .GT. ',chem_state%Br_limit
+     IF ( chem_state%Br_action .EQ. HALT_ACTION ) PRINT*,'Stopping program when Br .GT. ',chem_state%Br_limit
+
+     IF ( chem_state%HBr_action .EQ.   NO_ACTION ) PRINT*,'Ignoring HBr_limit'
+     IF ( chem_state%HBr_action .EQ. WARN_ACTION ) PRINT*,'Printing msg when HBr .GT. ',chem_state%HBr_limit
+     IF ( chem_state%HBr_action .EQ. HALT_ACTION ) PRINT*,'Stopping program when HBr .GT. ',chem_state%HBr_limit
+
+     IF ( chem_state%BrONO2_action .EQ.   NO_ACTION ) PRINT*,'Ignoring BrONO2_limit'
+     IF ( chem_state%BrONO2_action .EQ. WARN_ACTION ) PRINT*,'Printing msg when BrONO2 .GT. ',chem_state%BrONO2_limit
+     IF ( chem_state%BrONO2_action .EQ. HALT_ACTION ) PRINT*,'Stopping program when BrONO2 .GT. ',chem_state%BrONO2_limit
+   END IF
+
+   call ESMF_ConfigDestroy(gmiConfig, __RC__)
+
 
 !  Stop timers
 !  -----------
@@ -1737,7 +1816,7 @@ CONTAINS
    integer                         :: nymd, nhms  ! time
    real                            :: gmiDt       ! chemistry timestep (secs)
    real                            :: runDt       ! heartbeat (secs)
-   integer                         :: i, i2, iOX, iT2M, iOCS, j2, k, km, m, n, iH2SO4
+   integer                         :: i, i2, iOX, iT2M, iOCS, j, j2, k, km, m, n, iH2SO4, L
    LOGICAL                         :: RunGMINow
 
    type(ESMF_Config)               :: CF
@@ -1749,6 +1828,8 @@ CONTAINS
    
    real, pointer, dimension(:,:)   :: LATS
    real, pointer, dimension(:,:)   :: LONS
+
+   real                            :: radToDeg = 180.0/MAPL_PI
 
    REAL :: dtInverse
    REAL, POINTER, DIMENSION(:,:,:) :: WATER
@@ -1765,6 +1846,10 @@ CONTAINS
    REAL, ALLOCATABLE               :: wrk(:,:)
    REAL, ALLOCATABLE               :: wgt(:,:)
 
+   type(GMIchem_state), pointer    :: chem_state
+
+   CHARACTER(LEN=ESMF_MAXSTR)      :: short_name
+
 ! Overpass Bundle
 ! ---------------
    REAL, POINTER, DIMENSION(:,:,:) :: DATA_FOR_OVP_3D => NULL()
@@ -1775,11 +1860,15 @@ CONTAINS
 ! Tendency Bundle
 ! ---------------
    TYPE(ESMF_Field)                  :: FIELD
-   REAL, POINTER, DIMENSION(:,:,:,:) :: sInitial
+   REAL, POINTER, DIMENSION(:,:,:,:) :: sInitial_gg          ! transported
+   REAL, POINTER, DIMENSION(:,:,:,:) :: sInitial_xx          ! non-transported
    REAL, POINTER, DIMENSION(:,:,:)   :: sIncrement
-   LOGICAL                           :: doingTendencies
-   INTEGER                           :: nAlloc
-   LOGICAL, ALLOCATABLE              :: doMyTendency(:)
+   LOGICAL                           :: doingTendencies_gg   ! transported
+   LOGICAL                           :: doingTendencies_xx   ! non-transported
+   INTEGER                           :: nAlloc_gg            ! transported
+   INTEGER                           :: nAlloc_xx            ! non-transported
+   LOGICAL, ALLOCATABLE              :: doMyTendency_gg(:)   ! transported
+   LOGICAL, ALLOCATABLE              :: doMyTendency_xx(:)   ! non-transported
    CHARACTER(LEN=ESMF_MAXSTR)        :: fieldName, incFieldName
 
 ! Replay mode detection
@@ -1788,8 +1877,18 @@ CONTAINS
    TYPE(ESMF_Alarm)                  :: PredictorIsActive
    LOGICAL                           :: doingPredictorNow
 
+! For the Br traps
+! ----------------
+   type(MAPL_VarSpec), pointer       :: InternalSpec(:)
+   CHARACTER(LEN=ESMF_MAXSTR)        :: spec_name
+   REAL                              :: r
+   REAL                              :: limit_val
+   INTEGER                           :: action_val
+   LOGICAL                           :: stop_the_model
+
 !  Get my name and set-up traceback handle
 !  ---------------------------------------
+   Iam = "Run_"
    CALL ESMF_GridCompGet(GC, NAME=COMP_NAME, CONFIG=CF, GRID=grid, __RC__)
    Iam = TRIM(COMP_NAME)//"::Run_"
 
@@ -1804,7 +1903,7 @@ CONTAINS
 !  Get parameters from generic state
 !  ---------------------------------
    CALL MAPL_Get(MAPLobj, IM=i2, JM=j2, LM=km, LONS=LONS, LATS=LATS,  &
-                 RUNALARM=ALARM, __RC__)
+                 INTERNALSPEC=InternalSpec, RUNALARM=ALARM, __RC__)
 
 !  Query the alarm
 !  ---------------
@@ -1812,7 +1911,7 @@ CONTAINS
 
 !  Get ESMF parameters from gc and clock
 !  -------------------------------------
-   CALL extract_(GC, clock, ggReg, xxReg, gcGMI, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS)
+   CALL extract_(GC, clock, ggReg, xxReg, gcGMI, bgg, bxx, nymd, nhms, gmiDt, runDt, STATUS, chem_state)
    VERIFY_(STATUS)
 
    dtInverse = 1.00/runDt
@@ -1823,20 +1922,33 @@ CONTAINS
 
 !  Guard against overflow/underflow due to near-zero numbers (mixing ratios)
 !  -------------------------------------------------------------------------
-#define FLOOR_VALUE 1.0e-30
    DO n = 1, ggReg%nq
 ! debug print:
-!    IF(  ANY(bgg%qa(n)%data3d < FLOOR_VALUE) ) THEN
-!      m = COUNT( bgg%qa(n)%data3d < FLOOR_VALUE )
+!    IF(  ANY(bgg%qa(n)%data3d < chem_state%FLOOR_VALUE) ) THEN
+!      m = COUNT( bgg%qa(n)%data3d < chem_state%FLOOR_VALUE )
 !      PRINT*,'NEGDIAG:GMI SPECIES TOO SMALL (species,count):', n, m
 !    ENDIF
 ! original approach - steal from the column to fill negatives
 !                     this leads to NOx issues in stratosphere
 !      CALL Chem_UtilNegFiller(bgg%qa(n)%data3d, DELP, i2, j2, QMIN=TINY(1.0))
 ! for now, just impose a floor
-     WHERE(bgg%qa(n)%data3d < FLOOR_VALUE) bgg%qa(n)%data3d=FLOOR_VALUE
+
+     IF ( chem_state%FLOOR_VALUE .GT. 0.0 ) THEN
+       WHERE(bgg%qa(n)%data3d < chem_state%FLOOR_VALUE) bgg%qa(n)%data3d=chem_state%FLOOR_VALUE
+     ENDIF
+     IF ( chem_state%FLOOR_VALUE .LT. 0.0 ) THEN
+       WHERE(bgg%qa(n)%data3d < (-1.0)*chem_state%FLOOR_VALUE) bgg%qa(n)%data3d=0.0d0
+     ENDIF
    END DO
-#undef FLOOR_VALUE
+
+   DO n = 1, xxReg%nq
+     IF ( chem_state%FLOOR_VALUE .GT. 0.0 ) THEN
+       WHERE(bxx%qa(n)%data3d < chem_state%FLOOR_VALUE) bxx%qa(n)%data3d=chem_state%FLOOR_VALUE
+     ENDIF
+     IF ( chem_state%FLOOR_VALUE .LT. 0.0 ) THEN
+       WHERE(bxx%qa(n)%data3d < (-1.0)*chem_state%FLOOR_VALUE) bxx%qa(n)%data3d=0.0d0
+     ENDIF
+   END DO
 
 !  Occasionally, MAPL_UNDEFs appear in the imported tropopause pressures,
 !  TROPP. To avoid encountering them, save the most recent valid tropopause 
@@ -1881,12 +1993,13 @@ CONTAINS
 
 ! Are species tendencies requested?
 ! ---------------------------------
+    ! TRANSPORTED
     m = 1
     n = ggReg%nq
-    ALLOCATE(doMyTendency(m:n), __STAT__)
-    doMyTendency(:) = .FALSE.
+    ALLOCATE(doMyTendency_gg(m:n), __STAT__)
+    doMyTendency_gg(:) = .FALSE.
 
-    nAlloc = 0
+    nAlloc_gg = 0
     DO i = m,n
 
      fieldName = TRIM(ggReg%vname(i))
@@ -1901,41 +2014,91 @@ CONTAINS
 
      IF(ASSOCIATED(sIncrement)) THEN
       NULLIFY(sIncrement)
-      nAlloc = nAlloc+1
-      doMyTendency(i) = .TRUE.
+      nAlloc_gg = nAlloc_gg+1
+      doMyTendency_gg(i) = .TRUE.
      END IF
 
     END DO
     
-    IF(nAlloc > 0) THEN
-      doingTendencies = .TRUE.
+    IF(nAlloc_gg > 0) THEN
+      doingTendencies_gg = .TRUE.
     ELSE
-      doingTendencies = .FALSE.
+      doingTendencies_gg = .FALSE.
+    ENDIF
+
+    ! NON-TRANSPORTED
+    m = 1
+    n = xxReg%nq
+    ALLOCATE(doMyTendency_xx(m:n), __STAT__)
+    doMyTendency_xx(:) = .FALSE.
+
+    nAlloc_xx = 0
+    DO i = m,n
+
+     fieldName = TRIM(xxReg%vname(i))
+     incFieldName = TRIM(fieldName)//"_GMITEND"
+
+!    CALL MAPL_GetPointer(expChem, sIncrement, TRIM(incFieldName), __RC__)
+     CALL MAPL_GetPointer(expChem, sIncrement, TRIM(incFieldName), RC=STATUS)
+     IF ( STATUS /= 0 ) THEN
+       PRINT*,'Problem getting pointer for EXPORT name:' // TRIM(incFieldName)
+       VERIFY_(STATUS)
+     END IF
+
+     IF(ASSOCIATED(sIncrement)) THEN
+      NULLIFY(sIncrement)
+      nAlloc_xx = nAlloc_xx+1
+      doMyTendency_xx(i) = .TRUE.
+     END IF
+
+    END DO
+    
+    IF(nAlloc_xx > 0) THEN
+      doingTendencies_xx = .TRUE.
+    ELSE
+      doingTendencies_xx = .FALSE.
     ENDIF
 
 !  Save current species configurations so chemical tendencies can be calculated.
-!  NOTE: Restricted to transported species.
+!  NOTE: IC_gg for transported species, IC_xx for non-transported species
 !  NOTE on PHASES:
 !    phase  1: compute tendency and store in the export field
 !    phase  2: compute tendency and add to   the export field
 !    phase 99: compute tendency and store in the export field
 !  ----------------------------------------------------------------------------
-   StoreIC: IF(doingTendencies) THEN
+   StoreIC_gg: IF(doingTendencies_gg) THEN
 
-    ALLOCATE(sInitial(1:i2,1:j2,km,nAlloc), __STAT__)
+    ALLOCATE(sInitial_gg(1:i2,1:j2,km,nAlloc_gg), __STAT__)
 
     k = 1
     m = 1
     n = ggReg%nq
   
     DO i = m,n
-     IF(doMyTendency(i)) THEN
-      sInitial(:,:,:,k) = bgg%qa(i)%data3d
+     IF(doMyTendency_gg(i)) THEN
+      sInitial_gg(:,:,:,k) = bgg%qa(i)%data3d
       k = k+1
      END IF
     END DO
    
-   END IF StoreIC
+   END IF StoreIC_gg
+
+   StoreIC_xx: IF(doingTendencies_xx) THEN
+
+    ALLOCATE(sInitial_xx(1:i2,1:j2,km,nAlloc_xx), __STAT__)
+
+    k = 1
+    m = 1
+    n = xxReg%nq
+  
+    DO i = m,n
+     IF(doMyTendency_xx(i)) THEN
+      sInitial_xx(:,:,:,k) = bxx%qa(i)%data3d
+      k = k+1
+     END IF
+    END DO
+   
+   END IF StoreIC_xx
 
 ! ... and for specific humidity
 ! -----------------------------
@@ -2025,8 +2188,8 @@ CONTAINS
        call ESMF_ConfigGetAttribute(CF, H2SO4_Source, LABEL="SULFURIC_ACID_SOURCE:", DEFAULT='GMIvalue', __RC__)
         if(MAPL_AM_I_ROOT()) print '(''SULFURIC_ACID_SOURCE: '', a75)', trim(H2SO4_Source)
         if (H2SO4_Source(1:10).ne."full_field") then
-          if(MAPL_AM_I_ROOT()) print '(''Setting H2SO4=1e-30 before GMICHEM: '', a75)', trim(H2SO4_Source)
-          bgg%qa(iH2SO4)%data3d(:,:,:) = 1e-30
+          if(MAPL_AM_I_ROOT()) print '(''Setting H2SO4 to FLOOR VALUE before GMICHEM: '', a75)', trim(H2SO4_Source)
+          bgg%qa(iH2SO4)%data3d(:,:,:) = chem_state%FLOOR_VALUE
        endif
      ENDIF
    ENDIF H2SO4LOSS
@@ -2112,6 +2275,100 @@ CONTAINS
      ! Also compute OVP fields - see below
 
    END IF Phase99
+
+!  Trap high values (spikes) coming from chemistry
+!    Suggested trap values: Br: 1e-10, BrONO2: 1e-10, HBr: 5e-11
+!  --------------------------------------------------------------
+   IF ((chem_state%Br_action     .NE. NO_ACTION) .OR. &
+       (chem_state%HBr_action    .NE. NO_ACTION) .OR. &
+       (chem_state%BrONO2_action .NE. NO_ACTION)) THEN
+
+     stop_the_model = .FALSE.
+
+     do L = 1, ggReg%nq
+        
+        call MAPL_VarSpecGet ( InternalSpec(L), SHORT_NAME=short_name, __RC__ )
+
+        IF ( chem_state%Br_action .NE. NO_ACTION ) THEN
+          spec_name  = 'Br'
+          limit_val  = chem_state%Br_limit
+          action_val = chem_state%Br_action
+
+          IF ( TRIM(short_name) == TRIM(spec_name) ) THEN
+            r = MAXVAL(bgg%qa(L)%data3d)
+            IF(r > limit_val) THEN
+                PRINT *,TRIM(Iam)//": Found "//TRIM(spec_name)//" above limit: ",r
+                DO i = 1,i2
+                  DO j = 1,j2
+                    DO k = 1,km
+                      IF ( bgg%qa(L)%data3d(i,j,k) > limit_val ) THEN
+                        PRINT*,TRIM(spec_name)//' val,lat,lon,lev ', &
+                             bgg%qa(L)%data3d(i,j,k), LATS(i,j)*radToDeg, LONS(i,j)*radToDeg, (PLE(i,j,k)+PLE(i,j,k-1))/2.0
+                      END IF
+                    END DO
+                  END DO
+                END DO
+                IF (action_val .EQ. HALT_ACTION) stop_the_model = .TRUE.
+            END IF
+          END IF
+        ENDIF
+
+        IF ( chem_state%HBr_action .NE. NO_ACTION ) THEN
+          spec_name  = 'HBr'
+          limit_val  = chem_state%HBr_limit
+          action_val = chem_state%HBr_action
+
+          IF ( TRIM(short_name) == TRIM(spec_name) ) THEN
+            r = MAXVAL(bgg%qa(L)%data3d)
+            IF(r > limit_val) THEN
+                PRINT *,TRIM(Iam)//": Found "//TRIM(spec_name)//" above limit: ",r
+                DO i = 1,i2
+                  DO j = 1,j2
+                    DO k = 1,km
+                      IF ( bgg%qa(L)%data3d(i,j,k) > limit_val ) THEN
+                        PRINT*,TRIM(spec_name)//' val,lat,lon,lev ', &
+                             bgg%qa(L)%data3d(i,j,k), LATS(i,j)*radToDeg, LONS(i,j)*radToDeg, (PLE(i,j,k)+PLE(i,j,k-1))/2.0
+                      END IF
+                    END DO
+                  END DO
+                END DO
+                IF (action_val .EQ. HALT_ACTION) stop_the_model = .TRUE.
+            END IF
+          END IF
+        ENDIF
+
+        IF ( chem_state%BrONO2_action .NE. NO_ACTION ) THEN
+          spec_name  = 'BrONO2'
+          limit_val  = chem_state%BrONO2_limit
+          action_val = chem_state%BrONO2_action
+
+          IF ( TRIM(short_name) == TRIM(spec_name) ) THEN
+            r = MAXVAL(bgg%qa(L)%data3d)
+            IF(r > limit_val) THEN
+                PRINT *,TRIM(Iam)//": Found "//TRIM(spec_name)//" above limit: ",r
+                DO i = 1,i2
+                  DO j = 1,j2
+                    DO k = 1,km
+                      IF ( bgg%qa(L)%data3d(i,j,k) > limit_val ) THEN
+                        PRINT*,TRIM(spec_name)//' val,lat,lon,lev ', &
+                             bgg%qa(L)%data3d(i,j,k), LATS(i,j)*radToDeg, LONS(i,j)*radToDeg, (PLE(i,j,k)+PLE(i,j,k-1))/2.0
+                      END IF
+                    END DO
+                  END DO
+                END DO
+                IF (action_val .EQ. HALT_ACTION) stop_the_model = .TRUE.
+            END IF
+          END IF
+        ENDIF
+
+     end do
+
+     IF ( stop_the_model ) THEN
+       _FAIL('STOPPING THE MODEL in GMI')
+     END IF
+
+   END IF
+
 
 !  Update age-of-air.
 !  This transported species is at bgg%qa(1)%data3d.
@@ -2432,13 +2689,14 @@ CONTAINS
 
 
 
-!  Obtain chemical tendencies and fill export states.  NOTE: Restricted to transported species.
+!  Obtain chemical tendencies and fill export states.
 !  NOTE on PHASES:
 !    phase  1: compute tendency and store in the export field
 !    phase  2: compute tendency and add to   the export field
 !    phase 99: compute tendency and store in the export field
 !  --------------------------------------------------------------------------------------------
-   StoreTendencies: IF(doingTendencies) THEN
+!  Transported Species:
+   StoreTendencies_gg: IF(doingTendencies_gg) THEN
 
     k = 1
     m = 1
@@ -2446,7 +2704,7 @@ CONTAINS
 
     DO i = m,n
 
-     IF(doMyTendency(i)) THEN
+     IF(doMyTendency_gg(i)) THEN
 
       fieldName = TRIM(ggReg%vname(i))
       incFieldName = TRIM(fieldName)//"_GMITEND"
@@ -2455,10 +2713,10 @@ CONTAINS
 
       IF(ASSOCIATED(sIncrement)) THEN
         IF ( phase == 1 .OR. phase == 99 ) THEN
-          sIncrement =              (bgg%qa(i)%data3d - sInitial(:,:,:,k))*dtInverse
+          sIncrement =              (bgg%qa(i)%data3d - sInitial_gg(:,:,:,k))*dtInverse
         END IF
         IF ( phase == 2 ) THEN
-          sIncrement = sIncrement + (bgg%qa(i)%data3d - sInitial(:,:,:,k))*dtInverse
+          sIncrement = sIncrement + (bgg%qa(i)%data3d - sInitial_gg(:,:,:,k))*dtInverse
         END IF
       END IF
 
@@ -2473,19 +2731,68 @@ CONTAINS
 !    DO n = 1, ggReg%nq
 !     IF(  ANY(bgg%qa(n)%data3d < 0.0) ) THEN
 !       m = COUNT( bgg%qa(n)%data3d < 0.0 )
-!       PRINT*,'NEGDIAG:GMI SPECIES finish NEGATIVE (phase,species,count):', phase, n, m
+!       PRINT*,'NEGDIAG:GMI TRANSPORTED SPECIES finish NEGATIVE (phase,species,count):', phase, n, m
 !     ENDIF
 !    END DO
 !  -------------------------------------------------------------
 
 !  Clean up
 !  --------
-    DEALLOCATE(sInitial, STAT=STATUS)
+    DEALLOCATE(sInitial_gg, STAT=STATUS)
     VERIFY_(STATUS)
    
-   END IF StoreTendencies
+   END IF StoreTendencies_gg
 
-   DEALLOCATE(doMyTendency, STAT=STATUS)
+!  Non-Transported Species:
+   StoreTendencies_xx: IF(doingTendencies_xx) THEN
+
+    k = 1
+    m = 1
+    n = xxReg%nq
+
+    DO i = m,n
+
+     IF(doMyTendency_xx(i)) THEN
+
+      fieldName = TRIM(xxReg%vname(i))
+      incFieldName = TRIM(fieldName)//"_GMITEND"
+
+      CALL MAPL_GetPointer(expChem, sIncrement, TRIM(incFieldName), __RC__)
+
+      IF(ASSOCIATED(sIncrement)) THEN
+        IF ( phase == 1 .OR. phase == 99 ) THEN
+          sIncrement =              (bxx%qa(i)%data3d - sInitial_xx(:,:,:,k))*dtInverse
+        END IF
+        IF ( phase == 2 ) THEN
+          sIncrement = sIncrement + (bxx%qa(i)%data3d - sInitial_xx(:,:,:,k))*dtInverse
+        END IF
+      END IF
+
+      NULLIFY(sIncrement)
+      k = k+1
+
+     END IF
+
+    END DO
+
+!  -------------------------------------------------------------
+!    DO n = 1, xxReg%nq
+!     IF(  ANY(bxx%qa(n)%data3d < 0.0) ) THEN
+!       m = COUNT( bxx%qa(n)%data3d < 0.0 )
+!       PRINT*,'NEGDIAG:GMI NON-TRANSPORTED SPECIES finish NEGATIVE (phase,species,count):', phase, n, m
+!     ENDIF
+!    END DO
+!  -------------------------------------------------------------
+
+!  Clean up
+!  --------
+    DEALLOCATE(sInitial_xx, STAT=STATUS)
+    VERIFY_(STATUS)
+   
+   END IF StoreTendencies_xx
+
+   DEALLOCATE(doMyTendency_gg, STAT=STATUS)
+   DEALLOCATE(doMyTendency_xx, STAT=STATUS)
    VERIFY_(STATUS)
 
 ! ... and for specific humidity [kg kg^{-1} s^{-1}]

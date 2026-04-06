@@ -13,6 +13,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 
+## [1.6.0] - 2026-04-07
+
+### Fixed
+
+- In Standard Mech: Fixed indexing in stOX_loss_reactions
+- In Standard Mech: Fixed OCS_JRATE index
+
+### Added
+
+- In Standard: Added HCN and CH3CN with emissions from biomass burning (diurnal) and fossil fuels  (J. Liu)
+- In Standard: Added flux emissions for 4 VSL Cl species
+- Added FLOOR_VALUE resource setting
+- Added resource settings to warn or halt model if Br, HBr or BrONO2 exceed a given limit
+- Added several EM_ emissions diagnostics
+
+### Changed
+
+- Changed the default FLOOR value to be 1e-20 instead of 1e-30 for better solver convergence.
+- FLOOR value now applies to non-transported species as well as transported ones.
+- In Standard: Revised reactions to ensure that RIPA and RIO1 are produced.
+- In Standard: Revised the "O+O" reaction to match the 2D model.
+- Extended "_GMITEND" diagnostics to include non-transported species
+
+
 ## [1.5.1] - 2025-12-17
 
 ### Added
