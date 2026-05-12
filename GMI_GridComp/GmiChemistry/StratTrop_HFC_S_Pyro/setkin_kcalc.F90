@@ -4310,7 +4310,7 @@
 !
         END FUNCTION skice_hcl_hobr
 !
-!.... skpyro_clono2 (temperature ,adcol ,pressure ,sad_pyro ,specarr(HCl,:) ,water)
+!.... skpyro_clono2 (temperature ,adcol ,pressure ,sad_pyro ,specarr(HCl,:) ,water ,ptrop)
 !
 !_6_
 !
@@ -4325,7 +4325,7 @@
      &     ,fterm(size(tk))  &
      &     ,gamma(size(tk)) ,gam0(size(tk)) ,gcalc(size(tk))  &
      &     ,gprob_hcl(size(tk)) ,gprob_tot(size(tk)) ,gsurf(size(tk))  &
-     &     ,hstar(size(tk))  &
+     &     ,hstar(size(tk)), x_hcl(size(tk)), r_hcl(size(tk)), ro_hex(size(tk))  &
      &     ,ph2o(size(tk)) ,phcl(size(tk)) ,prate(size(tk))  &
      &     ,tk_150(size(tk))
 !
@@ -4373,9 +4373,17 @@
           where( tk(:) < 150.0d0 )
             tk_150 = 150.0d0
           endwhere
+!  hstar is revised for solubility assuming Hexanoic acid following Solomon et al. (2023)
+!  -- S.Das -- Dec 23, 2025
+!          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
 !
-          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
-!
+!         hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+
+          x_hcl(:) = exp(28.99d0 - 3300.46d0/tk_150(:) - 18.14d0*log(tk_150(:)/100.0d0)) !molefraction of HCl in hexanoic acid
+          r_hcl(:) = x_hcl(:)/(1.0d0 - x_hcl(:))                                          !mole ratio
+          ro_hex(:) = (-5.01d-7*tk_150(:)**2 - 5.23d-4*tk_150(:) + 1.12d0)*1000.0d0      !density of hexanoic acid
+          hstar(:) = (r_hcl(:)*ro_hex(:)*(10.0d0**5.9d0))/116.0d0                         !effective Henry's Law constant
+
           gsurf(:) = ah2o(:) * ksur * hstar(:) * phcl(:)
 !
           prate(:) = ro * hstar(:) * phcl(:) / ah2o(:)
@@ -4412,7 +4420,7 @@
 !
         END FUNCTION skpyro_clono2
 !
-!.... skpyro_clono2_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(ClONO2,:) ,specarr( HCl,:) ,water)
+!.... skpyro_clono2_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(ClONO2,:) ,specarr( HCl,:) ,water ,ptrop)
 !
 !_2_
 !
@@ -4425,7 +4433,7 @@
      &     ,fterm(size(tk))  &
      &     ,gam0(size(tk)) ,gcalc(size(tk))  &
      &     ,gprob_hcl(size(tk)) ,gprob_tot(size(tk)) ,gsurf(size(tk))  &
-     &     ,hstar(size(tk))  &
+     &     ,hstar(size(tk)), x_hcl(size(tk)), r_hcl(size(tk)), ro_hex(size(tk))  & 
      &     ,ph2o(size(tk)) ,phcl(size(tk)) ,prate(size(tk))  &
      &     ,tk_150(size(tk))
 !
@@ -4475,11 +4483,16 @@
           endwhere
 !
 !  hstar is revised for solubility assuming Hexanoic acid following Solomon et al. (2023)
-!  -- QL -- Nov 1 2024
+!  -- QL -- Nov 1 2024 --S.Das-- Dec 23, 2025--
 !          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
 !
-          hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!          hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
 !
+          x_hcl(:) = exp(28.99d0 - 3300.46d0/tk_150(:) - 18.14d0*log(tk_150(:)/100.0d0)) !molefraction of HCl in hexanoic acid
+          r_hcl(:) = x_hcl(:)/(1.0d0 - x_hcl(:))                                          !mole ratio
+          ro_hex(:) = (-5.01d-7*tk_150(:)**2 - 5.23d-4*tk_150(:) + 1.12d0)*1000.0d0      !density of hexanoic acid
+          hstar(:) = (r_hcl(:)*ro_hex(:)*(10.0d0**5.9d0))/116.0d0                         !effective Henry's Law constant
+
           gsurf(:) = ah2o(:) * ksur * hstar(:) * phcl(:)
 !
           prate(:) = ro * hstar(:) * phcl(:) / ah2o(:)
@@ -4522,7 +4535,7 @@
 !
         END FUNCTION skpyro_clono2_hcl
 !
-!.... skpyro_hocl_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOCl,:) ,specarr(HCl,:) ,water)
+!.... skpyro_hocl_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOCl,:) ,specarr(HCl,:) ,water ,ptrop)
 !
 !_3_
 !
@@ -4539,7 +4552,7 @@
      &     ,gcalc(size(tk))  &
      &     ,gprob_tot(size(tk))  &
      &     ,hhuth(size(tk)) ,hm(size(tk))  &
-     &     ,hsqrtd(size(tk)) ,hstar(size(tk)) ,hstar_hocl(size(tk))  &
+     &     ,hsqrtd(size(tk)) ,hstar(size(tk)) ,x_hcl(size(tk)), r_hcl(size(tk)), ro_hex(size(tk)), hstar_hocl(size(tk))  &
      &     ,k(size(tk)) ,kii(size(tk))  &
      &     ,mterm(size(tk))  &
      &     ,ph2o(size(tk)) ,phcl(size(tk))  &
@@ -4614,11 +4627,17 @@
           endwhere
 !
 !  hstar is revised for solubility assuming Hexanoic acid following Solomon et al. (2023)
-!  -- QL -- Nov 1 2024
+!  -- QL -- Nov 1 2024 --S.Das--Dec 23, 2025
 !          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
 !
-          hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!          hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
 !
+          x_hcl(:) = exp(28.99d0 - 3300.46d0/tk_150(:) - 18.14d0*log(tk_150(:)/100.0d0)) !molefraction of HCl in hexanoic acid
+          r_hcl(:) = x_hcl(:)/(1.0d0 - x_hcl(:))                                          !mole ratio
+          ro_hex(:) = (-5.01d-7*tk_150(:)**2 - 5.23d-4*tk_150(:) + 1.12d0)*1000.0d0      !density of hexanoic acid
+          hstar(:) = (r_hcl(:)*ro_hex(:)*(10.0d0**5.9d0))/116.0d0                         !effective Henry's Law constant
+
+           
           k(:) = kii(:) * hstar(:) * phcl(:)
 !
           adivl(:) = adrop / sqrt(d1 / k(:))
@@ -4682,7 +4701,7 @@
 !
         END FUNCTION skpyro_hocl_hcl
 !
-!.... skpyro_hobr_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOBr,:) ,specarr(HCl,:) ,water)
+!.... skpyro_hobr_hcl (temperature ,adcol ,pressure ,sad_pyro ,specarr(HOBr,:) ,specarr(HCl,:) ,water ,ptrop)
 !
 !_4_
 !
@@ -4697,7 +4716,7 @@
      &     ,fterm(size(tk)) &
      &     ,gcalc(size(tk)) &
      &     ,gprob_tot(size(tk)) &
-     &     ,hstar(size(tk)) &
+     &     ,hstar(size(tk)), x_hcl(size(tk)), r_hcl(size(tk)), ro_hex(size(tk)) &
      &     ,k(size(tk)) &
      &     ,ph2o(size(tk)) ,phcl(size(tk)) &
      &     ,tk_150(size(tk))
@@ -4752,11 +4771,16 @@
           endwhere
 !
 !  hstar is revised for solubility assuming Hexanoic acid following Solomon et al. (2023)
-!  -- QL -- Nov 1 2024
+!  -- QL -- Nov 1 2024 --S.Das--Dec 23, 2025
 !          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
 !
-          hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!          hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
 !
+          x_hcl(:) = exp(28.99d0 - 3300.46d0/tk_150(:) - 18.14d0*log(tk_150(:)/100.0d0)) !molefraction of HCl in hexanoic acid
+          r_hcl(:) = x_hcl(:)/(1.0d0 - x_hcl(:))                                          !mole ratio
+          ro_hex(:) = (-5.01d-7*tk_150(:)**2 - 5.23d-4*tk_150(:) + 1.12d0)*1000.0d0      !density of hexanoic acid
+          hstar(:) = (r_hcl(:)*ro_hex(:)*(10.0d0**5.9d0))/116.0d0                         !effective Henry's Law constant
+          
           kii      = 1.0D+05
 !
           k(:)     = kii * hstar(:) * phcl(:)
@@ -4803,7 +4827,7 @@
 !
         END FUNCTION skpyro_hobr_hcl
 !
-!.... skpyro_n2o5 (temperature ,pressure ,sad_pyro)
+!.... skpyro_n2o5 (temperature ,pressure ,sad_pyro ,ptrop)
 !
 !_5_
 !
