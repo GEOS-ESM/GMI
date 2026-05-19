@@ -22,7 +22,7 @@
 !
 !  Input mechanism:        StratTrop_HFC_S_Pyro.txt
 !  Reaction dictionary:    GMI_reactions_JPL19.db
-!  Setkin files generated: Thu Nov 13 18:13:29 2025
+!  Setkin files generated: Wed May 13 20:10:39 2026
 !
 !=======================================================================
       subroutine kcalc( npres0,sadcol,sadcol2,pressure,ptrop,cPBLcol, &
@@ -869,7 +869,7 @@
 !
 !....           ISOP + NO3 = INO2
 !
-      rcarr(183,:) = skarr(  3.500D-12 ,450.0D+00 ,temperature)
+      rcarr(183,:) = skarr(  2.950D-12 ,450.0D+00 ,temperature)
 !
 !....           ISOP + O3 =  0.90 CH2O +  0.05 CO +  0.06 HO2 +  0.39 MACR +  0.16 MVK +  0.10 O3 +  0.27 OH +  0.07 PRPE
 !
@@ -877,6 +877,9 @@
 !
 !....           ISOP + OH = RIO2
 !
+!   Use this once the transition to JPL19 db is complete:
+!     rcarr(185,:) = skisop_oh_rio2 (temperature)
+!   For now, use the old formulation:
       rcarr(185,:) = skarr(  3.000D-11 ,-360.0D+00 ,temperature)
 !
 !....           HO2 + KO2 = MGLY + MO2
@@ -2270,6 +2273,37 @@
      &                     (1.0d0 + 2.70D-02 * exp(660.0d0 / tk(:))))
 !
         END FUNCTION skho2mco3_2
+!
+!.... skisop_oh_rio2 (temperature)
+! _2_
+!
+!.... Harvard/GMI from GEOSCHEM 14.7.0
+!
+      FUNCTION skisop_oh_rio2 (tk)
+!
+! Used to compute the rate for this reaction:
+!    ISOP + OH = RIO1
+!
+      real*8, intent(in) :: tk(:)
+      REAL*8             :: a0, b0, c0, d0, e0, f0, g0
+      REAL*8, DIMENSION(size(tk)) :: k0, k1, k2, skisop_oh_rio2
+!
+!  FUNCTION GC_ISO1(1.0E-11, 390.0, 2.26E-1, 2.22E9, &
+!                   -7160.0, 1.75E14, -9054.0)
+!
+      a0 =     1.0d-11
+      b0 =   390.0d+0
+      c0 =    2.26d-1
+      d0 =    2.22d+9
+      e0 = -7160.0d+0
+      f0 =    1.75d+14
+      g0 = -9054.0d+0
+!
+      k0(:) = d0*EXP(e0/tk(:))*EXP(1.0d8/tk(:)**3)
+      k1(:) = f0*EXP(g0/tk(:))
+      k2(:) = c0*k0(:)/(k0(:)+k1(:))
+      skisop_oh_rio2(:) = a0 * EXP(b0/tk(:)) * (1.0d0-k2(:))
+      END FUNCTION skisop_oh_rio2
 !
 !.... skko2_ho2 (temperature)
 ! _29_
@@ -4325,7 +4359,7 @@
      &     ,fterm(size(tk))  &
      &     ,gamma(size(tk)) ,gam0(size(tk)) ,gcalc(size(tk))  &
      &     ,gprob_hcl(size(tk)) ,gprob_tot(size(tk)) ,gsurf(size(tk))  &
-     &     ,hstar(size(tk))  &
+     &     ,hstar(size(tk)), x_hcl(size(tk)), r_hcl(size(tk)), ro_hex(size(tk))  &
      &     ,ph2o(size(tk)) ,phcl(size(tk)) ,prate(size(tk))  &
      &     ,tk_150(size(tk))
 !
@@ -4374,7 +4408,16 @@
             tk_150 = 150.0d0
           endwhere
 !
-          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!  hstar is revised for solubility assuming Hexanoic acid following Solomon et al. (2023)
+!  -- S.Das -- Dec 23, 2025
+!         hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!
+!         hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!
+          x_hcl(:) = exp(28.99d0 - 3300.46d0/tk_150(:) - 18.14d0*log(tk_150(:)/100.0d0)) !molefraction of HCl in hexanoic acid
+          r_hcl(:) = x_hcl(:)/(1.0d0 - x_hcl(:))                                         !mole ratio
+          ro_hex(:) = (-5.01d-7*tk_150(:)**2 - 5.23d-4*tk_150(:) + 1.12d0)*1000.0d0      !density of hexanoic acid
+          hstar(:) = (r_hcl(:)*ro_hex(:)*(10.0d0**5.9d0))/116.0d0                        !effective Henry's Law constant
 !
           gsurf(:) = ah2o(:) * ksur * hstar(:) * phcl(:)
 !
@@ -4425,7 +4468,7 @@
      &     ,fterm(size(tk))  &
      &     ,gam0(size(tk)) ,gcalc(size(tk))  &
      &     ,gprob_hcl(size(tk)) ,gprob_tot(size(tk)) ,gsurf(size(tk))  &
-     &     ,hstar(size(tk))  &
+     &     ,hstar(size(tk)), x_hcl(size(tk)), r_hcl(size(tk)), ro_hex(size(tk))  & 
      &     ,ph2o(size(tk)) ,phcl(size(tk)) ,prate(size(tk))  &
      &     ,tk_150(size(tk))
 !
@@ -4475,10 +4518,15 @@
           endwhere
 !
 !  hstar is revised for solubility assuming Hexanoic acid following Solomon et al. (2023)
-!  -- QL -- Nov 1 2024
-!          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!  -- QL -- Nov 1 2024 --S.Das-- Dec 23, 2025--
+!         hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
 !
-          hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!         hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!
+          x_hcl(:) = exp(28.99d0 - 3300.46d0/tk_150(:) - 18.14d0*log(tk_150(:)/100.0d0)) !molefraction of HCl in hexanoic acid
+          r_hcl(:) = x_hcl(:)/(1.0d0 - x_hcl(:))                                         !mole ratio
+          ro_hex(:) = (-5.01d-7*tk_150(:)**2 - 5.23d-4*tk_150(:) + 1.12d0)*1000.0d0      !density of hexanoic acid
+          hstar(:) = (r_hcl(:)*ro_hex(:)*(10.0d0**5.9d0))/116.0d0                        !effective Henry's Law constant
 !
           gsurf(:) = ah2o(:) * ksur * hstar(:) * phcl(:)
 !
@@ -4539,7 +4587,7 @@
      &     ,gcalc(size(tk))  &
      &     ,gprob_tot(size(tk))  &
      &     ,hhuth(size(tk)) ,hm(size(tk))  &
-     &     ,hsqrtd(size(tk)) ,hstar(size(tk)) ,hstar_hocl(size(tk))  &
+     &     ,hsqrtd(size(tk)) ,hstar(size(tk)) ,x_hcl(size(tk)), r_hcl(size(tk)), ro_hex(size(tk)), hstar_hocl(size(tk))  &
      &     ,k(size(tk)) ,kii(size(tk))  &
      &     ,mterm(size(tk))  &
      &     ,ph2o(size(tk)) ,phcl(size(tk))  &
@@ -4614,10 +4662,15 @@
           endwhere
 !
 !  hstar is revised for solubility assuming Hexanoic acid following Solomon et al. (2023)
-!  -- QL -- Nov 1 2024
-!          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!  -- QL -- Nov 1 2024 --S.Das--Dec 23, 2025
+!         hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
 !
-          hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!         hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!
+          x_hcl(:) = exp(28.99d0 - 3300.46d0/tk_150(:) - 18.14d0*log(tk_150(:)/100.0d0)) !molefraction of HCl in hexanoic acid
+          r_hcl(:) = x_hcl(:)/(1.0d0 - x_hcl(:))                                         !mole ratio
+          ro_hex(:) = (-5.01d-7*tk_150(:)**2 - 5.23d-4*tk_150(:) + 1.12d0)*1000.0d0      !density of hexanoic acid
+          hstar(:) = (r_hcl(:)*ro_hex(:)*(10.0d0**5.9d0))/116.0d0                        !effective Henry's Law constant
 !
           k(:) = kii(:) * hstar(:) * phcl(:)
 !
@@ -4697,7 +4750,7 @@
      &     ,fterm(size(tk)) &
      &     ,gcalc(size(tk)) &
      &     ,gprob_tot(size(tk)) &
-     &     ,hstar(size(tk)) &
+     &     ,hstar(size(tk)), x_hcl(size(tk)), r_hcl(size(tk)), ro_hex(size(tk)) &
      &     ,k(size(tk)) &
      &     ,ph2o(size(tk)) ,phcl(size(tk)) &
      &     ,tk_150(size(tk))
@@ -4752,10 +4805,15 @@
           endwhere
 !
 !  hstar is revised for solubility assuming Hexanoic acid following Solomon et al. (2023)
-!  -- QL -- Nov 1 2024
-!          hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
+!  -- QL -- Nov 1 2024 --S.Das--Dec 23, 2025
+!         hstar(:) = exp((6250.0d0 / tk_150(:)) - 10.414d0) * (ah2o(:)**3.49d0)
 !
-          hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!         hstar(:) = exp(28.99d0 -3300.46d0 / tk_150(:)-18.14d0 * LOG10(tk_150(:)) / 100.0d0)
+!
+          x_hcl(:) = exp(28.99d0 - 3300.46d0/tk_150(:) - 18.14d0*log(tk_150(:)/100.0d0)) !molefraction of HCl in hexanoic acid
+          r_hcl(:) = x_hcl(:)/(1.0d0 - x_hcl(:))                                         !mole ratio
+          ro_hex(:) = (-5.01d-7*tk_150(:)**2 - 5.23d-4*tk_150(:) + 1.12d0)*1000.0d0      !density of hexanoic acid
+          hstar(:) = (r_hcl(:)*ro_hex(:)*(10.0d0**5.9d0))/116.0d0                        !effective Henry's Law constant
 !
           kii      = 1.0D+05
 !
