@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 ### Added
 ### Changed
+
+- In StratTrop_HFC_S_Pyro: Modified HSTAR for 4 PYRO reactions (S. Das)
+  The Pyro kcalc F90 was generated with KMG v1.2.0, and then the K-rate for ISOP+OH=RIO2 was hand-edited.
+  NOTE: Revisit the Pyro mech when time allows, to bring fully in line with JPL19 database.
+
 ### Removed
 ### Deprecated
 
