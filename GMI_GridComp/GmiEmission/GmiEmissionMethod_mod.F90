@@ -238,7 +238,7 @@
       call ESMF_ConfigGetAttribute(config, self%emiss_opt, &
                      label   = "emiss_opt:", &
                      default = 0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
       
 ! --------------------------------------------
 ! emiss_in_opt
@@ -251,7 +251,7 @@
       call ESMF_ConfigGetAttribute(config, self%emiss_in_opt, &
                      label   = "emiss_in_opt:", &
                      default = 0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
 ! ------------------------------------
 ! emiss_conv_flag
@@ -263,7 +263,7 @@
       call ESMF_ConfigGetAttribute(config, self%emiss_conv_flag, &
                      label   = "emiss_conv_flag:", &
                      default = 0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
 ! ------------------------------------------------------------------
 ! semiss_inchem_flag
@@ -279,14 +279,14 @@
       call ESMF_ConfigGetAttribute(config, self%semiss_inchem_flag, &
                      label   = "semiss_inchem_flag:", &
                      default = -1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
       
 ! sets of emissons per year (1 => yearly, 12 => monthly)
     
       call ESMF_ConfigGetAttribute(config, self%emiss_timpyr, &
                      label   = "emiss_timpyr:", &
                      default = 1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
       
       self%emiss_map(:) =  0  
      
@@ -296,16 +296,16 @@
       call ESMF_ConfigGetAttribute(config, self%emiss_conv_fac, &
                      label   = "emiss_conv_fac:", &
                      default = 1.0d0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
     
       call ESMF_ConfigGetAttribute(config, self%emiss_init_val, &
                      label   = "emiss_init_val:", &
                      default = 1.0d0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       CALL ESMF_ConfigGetAttribute(config, value=self%clim_emiss_by_area, &
                 label="clim_emiss_by_area:", DEFAULT=.TRUE., RC=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
 ! Save the number of emitting layers for each emissionSpeciesName
 ! ---------------------------------------------------------------
@@ -326,17 +326,17 @@
       call ESMF_ConfigGetAttribute(config, self%scFactorNOff_infile_name, &
                      label   = "scFactorNOff_infile_name:", &
                      default = ' ', rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
 ! Biomass burning
       call ESMF_ConfigGetAttribute(config, value=self%doScaleNObbEmiss, &
                 label="doScaleNObbEmiss:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(config, self%scFactorNObb_infile_name, &
                      label   = "scFactorNObb_infile_name:", &
                      default = ' ', rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
 ! ---------------------------------------------------
 ! Harvard emissions:  acetone, isoprene, propene, NO.
@@ -429,7 +429,7 @@
       call ESMF_ConfigGetAttribute(config, self%lightning_opt, &
                      label   = "lightning_opt:", &
                      default = 0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
      
       ! ---------------------------------------------------------------
       ! Check option ranges.  Note that as new options are added, these

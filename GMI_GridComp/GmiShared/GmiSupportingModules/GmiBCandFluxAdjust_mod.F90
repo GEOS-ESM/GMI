@@ -113,19 +113,19 @@ module GmiBCandFluxAdjust_mod
               if(ichbr2cl .gt. 0) then
                 PRINT*,TRIM(Iam)//' Running a new section of code, please review it'
                 PRINT*, " "
-                VERIFY_(101)
+                _VERIFY(101)
                 add_ch2br2  = add_ch2br2-0.6d-12
                 mult_ch2br2 = -999.0 * 1.0d0   ! need value for this
                 if(ichbrcl2 .gt. 0) then
                   PRINT*,TRIM(Iam)//' Running a new section of code, please review it'
                   PRINT*, " "
-                  VERIFY_(102)
+                  _VERIFY(102)
                   add_ch2br2  = add_ch2br2-0.3d-12
                   mult_ch2br2 = -999.0 * 1.0d0   ! need value for this
                   if(ich2brcl .gt. 0) then
                     PRINT*,TRIM(Iam)//' Running a new section of code, please review it'
                     PRINT*, " "
-                    VERIFY_(103)
+                    _VERIFY(103)
                     add_ch2br2  = add_ch2br2-0.1d-12
                     mult_ch2br2 = -999.0 * 1.0d0   ! need value for this
                   endif

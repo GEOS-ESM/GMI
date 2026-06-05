@@ -112,7 +112,7 @@
       call ESMF_ConfigGetAttribute(config, self%num_ks_sdep, &
      &                label   = "num_ks_sdep:",&
      &                default = 1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(config, value=self%do_drydep,    &
      &               label="do_drydep:",    default=.false., __RC__ )
@@ -131,7 +131,7 @@
       self%wetdep_eff(:) = 0.0d0
       
       call rcEsmfReadTable(config, self%wetdep_eff, "wetdep_eff::", rc=STATUS)
-      !VERIFY_(STATUS)
+      !_VERIFY(STATUS)
 
       !##############################
       ! End reading the resource file

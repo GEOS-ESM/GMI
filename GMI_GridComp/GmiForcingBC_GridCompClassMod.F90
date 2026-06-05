@@ -257,15 +257,15 @@ CONTAINS
       ENDIF
 
       gmiConfigFile = ESMF_ConfigCreate(rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigLoadFile(gmiConfigFile, TRIM(rcfilen), rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, importRestartFile, &
                       label   = "importRestartFile:", &
                       default = ' ', rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       !------------------------------
       ! Diagnostics related variables
@@ -273,15 +273,15 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%pr_diag, &
                  label="pr_diag:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%verbose, &
                  label="verbose:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_synoz, &
                  label="do_synoz:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
 !     ---------------------------
 !     Forcing boundary condition:
@@ -298,78 +298,78 @@ CONTAINS
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_opt, &
                       label   = "forc_bc_opt:", &
                       default = 1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%fbc_j1, &
                       label   = "fbc_j1:", &
                       default = ju1_gl, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%fbc_j2, &
                       label   = "fbc_j2:", &
                       default = j2_gl, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_years, &
                       label   = "forc_bc_years:", &
                       default = 1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_start_num, &
                       label   = "forc_bc_start_num:", &
                       default = 1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_kmin, &
                       label   = "forc_bc_kmin:", &
                       default = 1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%ext_bc_kmin, &
                       label   = "ext_bc_kmin:", &
                       default = 1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_kmax, &
                       label   = "forc_bc_kmax:", &
                       default = 1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%ext_bc_kmax, &
                       label   = "ext_bc_kmax:", &
                       default = 1, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       self%forc_bc_map(:)      = 0
       self%ext_bc_map(:)       = 0
 
       call rcEsmfReadTable(gmiConfigFile, forcedBcSpeciesNames, &
                            "forcedBcSpeciesNames::", rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call rcEsmfReadTable(gmiConfigFile, extdataBcSpeciesNames, &
                            "extdataBcSpeciesNames::", rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_init_val, &
                       label   = "forc_bc_init_val:", &
                       default = 0.0d0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_incrpyr, &
                       label   = "forc_bc_incrpyr:", &
                       default = 0.3d0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_lz_val, &
                       label   = "forc_bc_lz_val:", &
                       default = 0.0d0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, self%forc_bc_infile_name, &
                       label   = "forc_bc_infile_name:", &
                       default = 'forc_bc_co2.asc', rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
  
       ! Set the initial value of the list
       allocate(tempListNames1(NSP))
@@ -505,7 +505,7 @@ CONTAINS
       IF( NMR-2 /= NSP-1 ) THEN
        PRINT *,TRIM(IAm),': Number of species from GMI_Mech_Registry.rc does not match number in setkin_par.h'
        STATUS = 1
-       VERIFY_(STATUS)
+       _VERIFY(STATUS)
       END IF
 
 ! Allocate space, etc., but the initialization of the
@@ -767,14 +767,14 @@ CONTAINS
 !  We need lots of pointers!
 !  -------------------------
    CALL FindPointers(STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 !  Reserve some local work space
 !  -----------------------------
    ALLOCATE(latRad(i1:i2,j1:j2),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    ALLOCATE(var3d(i1:i2,j1:j2,1:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 ! Latitudes (radians)
 ! -------------------
@@ -796,7 +796,7 @@ CONTAINS
 ! --------------------------------------------------------
 
    CALL Acquire_Clims(STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 ! Hand the species concentrations to GMI's bundle
 ! -----------------------------------------------
@@ -804,11 +804,11 @@ CONTAINS
       CALL SwapSpeciesBundles(ToGMI, self%SpeciesConcentration%concentration,    &
                bgg%qa, bxx%qa, Q, self%mapSpecies, lchemvar, self%do_synoz, NSP, &
                STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
    END IF
 
    DEALLOCATE(var3D, STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 ! Impose fixed concentrations
 ! ---------------------------
@@ -843,7 +843,7 @@ CONTAINS
              importName = TRIM(speciesName)//'_BC'
              CALL MAPL_GetPointer(impChem, PTR2D, TRIM(importName), RC=STATUS)
              IF ( STATUS .NE. ESMF_SUCCESS ) PRINT*,'Failed to import '//TRIM(speciesName)//'_BC'
-             VERIFY_(STATUS)
+             _VERIFY(STATUS)
 
              offset = 0.0d0
              if ( TRIM(speciesName) == 'CH3Br'  )  offset = self%add_ch3br
@@ -864,19 +864,19 @@ CONTAINS
       CALL SwapSpeciesBundles(FromGMI, self%SpeciesConcentration%concentration,   &
                bgg%qa, bxx%qa, Q, self%mapSpecies, lchemvar, self%do_synoz, NSP,  &
                STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
    END IF
 
 ! Export states
 ! -------------
 
    CALL FillExports(STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 ! Scratch local work space
 ! ------------------------
    DEALLOCATE(latRad, STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 ! IMPORTANT: Reset this switch to .TRUE. after first pass.
 ! --------------------------------------------------------
@@ -928,7 +928,7 @@ CONTAINS
     speciesName = TRIM(lchemvar(i))
     importName = TRIM(speciesName)//'_FIXED'
     CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
-    VERIFY_(STATUS)
+    _VERIFY(STATUS)
     self%SpeciesConcentration%fixed_const(i1:i2,j1:j2,1:km,ic) = PTR3D(i1:i2,j1:j2,km:1:-1)
     NULLIFY(PTR3D)
 
@@ -1002,7 +1002,7 @@ CONTAINS
 !  Pointers to imports
 !  -------------------
    CALL MAPL_GetPointer(impChem, Q, 'Q', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 !  Validation
 !  ----------
@@ -1063,10 +1063,10 @@ CONTAINS
    INTEGER :: STATUS
    rc=0
    DEALLOCATE(self%latRad, STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    IF (self%forc_bc_opt <= 2 .AND. self%forc_bc_num > 0) THEN
      DEALLOCATE(self%jlatmd, STAT=STATUS)
-     VERIFY_(STATUS)
+     _VERIFY(STATUS)
    END IF
    RETURN
 

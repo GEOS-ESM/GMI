@@ -174,7 +174,7 @@
       if (pr_diag) Write(6,*) IAm, 'called by ', loc_proc
 
 !      allocate(tempListNames(numSpecies), STAT=STATUS)
-!      VERIFY_(STATUS)
+!      _VERIFY(STATUS)
 
       !################################
       ! Begin reading the resource file
@@ -310,13 +310,13 @@
 !     ---------
 
       allocate(self%mw(numSpecies), STAT=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
       self%mw(1:numSpecies) = mw_data(1:numSpecies)
 
       call rcEsmfReadTable(config, self%mw, "mw::", __RC__)
 
       allocate(self%const_labels(numSpecies), STAT=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
       
       self%const_labels(1:numSpecies) = lchemvar(1:numSpecies)
      
@@ -390,7 +390,7 @@
 
          if (NUM_SBC > 0) then
             allocate(self%surf_bc_map(1:NUM_SBC), STAT=STATUS)
-            VERIFY_(STATUS)
+            _VERIFY(STATUS)
             self%surf_bc_map(:)         = 0
             self%surf_bc_map(1:NUM_SBC) = sbc_map(1:NUM_SBC)
 
@@ -442,22 +442,22 @@
          call ESMF_ConfigGetAttribute(config, self%io3_num, &
      &                label   = "io3_num:", &
      &                default = 0, rc=STATUS )
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          call ESMF_ConfigGetAttribute(config, self%iacetone_num, &
      &                label   = "iacetone_num:", &
      &                default = 0, rc=STATUS )
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          call ESMF_ConfigGetAttribute(config, self%ipropene_num, &
      &                label   = "ipropene_num:", &
      &                default = 0, rc=STATUS )
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          call ESMF_ConfigGetAttribute(config, self%iisoprene_num, &
      &                label   = "iisoprene_num:", &
      &                default = 0, rc=STATUS )
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
       end if
 
       self%do_synoz   = .false.

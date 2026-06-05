@@ -319,7 +319,7 @@ CONTAINS
       call ESMF_ConfigGetAttribute(gmiConfig, importRestartFile, &
      &                label   = "importRestartFile:",            &
      &                default = ' ', rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       !------------------------------
       ! Advection related variables
@@ -327,11 +327,11 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%do_grav_set, &
      &           label="do_grav_set:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%ocs_jrate_name, &
      &           label="OCS_JRATE:", default='UNDEFINED_OCS_JRATE', rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       !------------------------------
       ! Emission related variables
@@ -339,11 +339,11 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%do_synoz, &
      &           label="do_synoz:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%do_semiss_inchem, &
      &           label="do_semiss_inchem:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       !------------------------------
       ! Diagnostics related variables
@@ -351,61 +351,61 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%pr_diag, &
      &           label="pr_diag:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%verbose, &
      &           label="verbose:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%pr_surf_emiss, &
      &           label="pr_surf_emiss:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%pr_emiss_3d, &
      &           label="pr_emiss_3d:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%pr_qqjk, &
      &           label="pr_qqjk:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%do_qqjk_reset, &
      &           label="do_qqjk_reset:", default=.true., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, self%pr_nc_period, &
      &                label   = "pr_nc_period:", &
      &                default = -1.0d0, rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%do_ftiming, &
      &               label="do_ftiming:", default=.false., rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%rd_restart, &
      &               label="rd_restart:", default=.false., rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%pr_qj_o3_o1d, &
      &               label="pr_qj_o3_o1d:", default=.false., rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%pr_qj_opt_depth, &
      &               label="pr_qj_opt_depth:", default=.false., rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%pr_smv2, &
      &               label="pr_smv2:", default=.false., rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%pr_const, &
      &               label="pr_const:", default=.false., rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, self%metdata_name_org, &
      &                label   = "metdata_name_org:", &
      &                default = 'GMAO', rc=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_ConfigGetAttribute(gmiConfig, self%metdata_name_model, &
      &                label   = "metdata_name_model:", &
@@ -418,7 +418,7 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfig, value=self%do_qqjk_inchem, &
      &           label="do_qqjk_inchem:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
 ! Does the GMICHEM import restart file exist?  If not,
 ! the species must "freewheel" through the first time step.
@@ -484,9 +484,9 @@ CONTAINS
 ! Grid box surface area, m^{2}
 ! ----------------------------
    CALL MAPL_GetPointer(impChem, cellArea, 'AREA', rc=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    ALLOCATE(self%cellArea(i1:i2,j1:j2), STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    self%cellArea(i1:i2,j1:j2)=cellArea(i1:i2,j1:j2)
 
 ! Discretization
@@ -514,7 +514,7 @@ CONTAINS
    IF( NMR-2 /= NSP-1 ) THEN
     PRINT *,TRIM(IAm),': Number of species from GMI_Mech_Registry.rc does not match number in setkin_par.h'
     STATUS = 1
-    VERIFY_(STATUS)
+    _VERIFY(STATUS)
    END IF
 
 ! Photolysis reaction list.  Read from kinetics
@@ -554,12 +554,12 @@ CONTAINS
 ! Initialize the qqjBundle
 ! ------------------------
    CALL ESMF_StateGet(expChem, 'gmiQQJ' , qqjBundle,   RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
    ! Allocate space to the bundle
    DO ib = 1, NUM_J
       ALLOCATE( var(i1:i2, j1:j2, 1:km), STAT=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
       var(:,:,:)  = 0.0d0
 
       WRITE (binName ,'(i4.4)') ib
@@ -571,18 +571,18 @@ CONTAINS
    ! Sanity check
 
    CALL ESMF_FieldBundleGet(qqjBundle, fieldCount=numVars , rc=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    _ASSERT(NUM_J == numVars,'needs informative message')
 
 ! Initialize the qqkBundle
 ! ------------------------
    CALL ESMF_StateGet(expChem, 'gmiQQK' , qqkBundle,   RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
    ! Allocate space to the bundle
    DO ib = 1, NUM_K
       ALLOCATE( var(i1:i2, j1:j2, 1:km), STAT=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
       var(:,:,:)  = 0.0d0
 
       WRITE (binName ,'(i4.4)') ib
@@ -594,7 +594,7 @@ CONTAINS
    ! Sanity check
 
    CALL ESMF_FieldBundleGet(qqkBundle, fieldCount=numVars , rc=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    _ASSERT(NUM_K == numVars,'needs informative message')
 
   END IF ! pr_qqjk is .TRUE.
@@ -826,10 +826,10 @@ CONTAINS
 !  We need lots of pointers!
 !  -------------------------
    CALL FindPointers(STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
    CALL MAPL_GetPointer(expChem,  HNO3GASsad,  'HNO3GASsad', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 !  Reserve some local work space
 !  -----------------------------
@@ -837,24 +837,24 @@ CONTAINS
    ALLOCATE(              pctm2(i1:i2,j1:j2),STAT=STATUS)
 
    ALLOCATE(                pl(i1:i2,j1:j2,1:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    ALLOCATE(             var3d(i1:i2,j1:j2,1:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    ALLOCATE(              mass(i1:i2,j1:j2,1:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    ALLOCATE(           press3c(i1:i2,j1:j2,1:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    ALLOCATE(           press3e(i1:i2,j1:j2,0:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    ALLOCATE(  gridBoxThickness(i1:i2,j1:j2,1:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    ALLOCATE(               kel(i1:i2,j1:j2,1:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    ALLOCATE(          humidity(i1:i2,j1:j2,1:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
    ALLOCATE(        HNO3GAS(i1:i2,j1:j2,1:km),STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
    !---------------------------------
    ! Obtain data from the ESMF Bundle
@@ -883,7 +883,7 @@ CONTAINS
 ! --------------------------------------------------------
 
    CALL Acquire_Clims(STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 
 ! -----------------------------------------
@@ -915,7 +915,7 @@ CONTAINS
 ! -------------------------------------
 
    CALL SatisfyImports(STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 ! Hand the species concentrations to GMI's bundle
 ! -----------------------------------------------
@@ -923,7 +923,7 @@ CONTAINS
       CALL SwapSpeciesBundles(ToGMI, self%SpeciesConcentration%concentration, &
                bgg%qa, bxx%qa, Q, self%mapSpecies, lchemvar, self%do_synoz, NSP, &
                STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
    END IF
 
 ! Impose fixed concentrations
@@ -954,31 +954,31 @@ CONTAINS
       CALL SwapSpeciesBundles(FromGMI, self%SpeciesConcentration%concentration, &
                bgg%qa, bxx%qa, Q, self%mapSpecies, lchemvar, self%do_synoz, NSP,  &
                STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
    END IF
 
 ! Export states
 ! -------------
    CALL FillExports(STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 ! Scratch local work space
 ! ------------------------
    DEALLOCATE(tropopausePress, pctm2, STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    DEALLOCATE(pl, mass, press3c, press3e, gridBoxThickness, kel, humidity, &
               var3d, HNO3GAS, STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
    call CleanArrayPointer(gmiQJ, STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    call CleanArrayPointer(gmiQK, STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    IF (self%pr_qqjk) THEN
       call CleanArrayPointer(gmiQQJ, STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
       call CleanArrayPointer(gmiQQK, STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
    END IF
 
 ! IMPORTANT: Reset this switch to .TRUE. after first pass.
@@ -1033,7 +1033,7 @@ CONTAINS
     speciesName = TRIM(lchemvar(i))
     importName = TRIM(speciesName)//'_FIXED'
     CALL MAPL_GetPointer(impChem, PTR3D, TRIM(importName), RC=STATUS)
-    VERIFY_(STATUS)
+    _VERIFY(STATUS)
     self%SpeciesConcentration%fixed_const(i1:i2,j1:j2,1:km,ic) = PTR3D(i1:i2,j1:j2,km:1:-1)
     NULLIFY(PTR3D)
 
@@ -1215,13 +1215,13 @@ CONTAINS
       !==============
 
       call ESMF_StateGet (state, "gmiQJ", qjBundle, RC=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_FieldBundleGet(qjBundle, fieldCount=numVars , RC=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       ALLOCATE(gmiQJ(numVars),STAT=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       do ib = 1, numVars
          CALL obtainTracerFromBundle(qjBundle, ptr3D, ib)
@@ -1234,13 +1234,13 @@ CONTAINS
       !==============
 
       call ESMF_StateGet (state, "gmiQK", qkBundle, RC=STATUS )
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       call ESMF_FieldBundleGet(qkBundle, fieldCount=numVars , RC=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       ALLOCATE(gmiQK(numVars),STAT=STATUS)
-      VERIFY_(STATUS)
+      _VERIFY(STATUS)
 
       do ib = 1, numVars
          CALL obtainTracerFromBundle(qkBundle, ptr3D, ib)
@@ -1254,13 +1254,13 @@ CONTAINS
          !===============
 
          call ESMF_StateGet (state, "gmiQQJ", qqjBundle, RC=STATUS )
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          call ESMF_FieldBundleGet(qqjBundle, fieldCount=numVars , RC=STATUS)
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          ALLOCATE(gmiQQJ(numVars),STAT=STATUS)
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          do ib = 1, numVars
             CALL obtainTracerFromBundle(qqjBundle, ptr3D, ib)
@@ -1273,13 +1273,13 @@ CONTAINS
          !===============
 
          call ESMF_StateGet (state, "gmiQQK", qqkBundle, RC=STATUS )
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          call ESMF_FieldBundleGet(qqkBundle, fieldCount=numVars , RC=STATUS)
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          ALLOCATE(gmiQQK(numVars),STAT=STATUS)
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          do ib = 1, numVars
             CALL obtainTracerFromBundle(qqkBundle, ptr3D, ib)
@@ -1294,10 +1294,10 @@ CONTAINS
 
       if (self%do_semiss_inchem) then
          call ESMF_StateGet (state, "surfEmissForChem", surfEmissBundle, RC=STATUS )
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          call ESMF_FieldBundleGet(surfEmissBundle, fieldCount=numVars , rc=STATUS)
-         VERIFY_(STATUS)
+         _VERIFY(STATUS)
 
          Allocate(surfEmissForChem(i1:i2, j1:j2, 1:NSP))
 
@@ -1346,27 +1346,27 @@ CONTAINS
 !  Pointers to imports and exports
 !  -------------------------------
    CALL MAPL_GetPointer(impChem,      zpbl,       'ZPBL', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
    CALL MAPL_GetPointer(impChem,   airdens,    'AIRDENS', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    CALL MAPL_GetPointer(impChem,       ple,	   'PLE', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    CALL MAPL_GetPointer(impChem,         Q,          'Q', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    CALL MAPL_GetPointer(impChem,	 T,	     'T', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    CALL MAPL_GetPointer(impChem,       zle,	   'ZLE', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
    CALL MAPL_GetPointer(expChem,    O3ppmv,     'O3PPMV', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    CALL MAPL_GetPointer(expChem,        O3,         'O3', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    CALL MAPL_GetPointer(expChem, stOX_loss,  'stOX_loss', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    CALL MAPL_GetPointer(expChem, OCS_jrate,  'OCS_JRATE', RC=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
 
 #include "Reactions_GetPointer___.h"
 
@@ -1513,7 +1513,7 @@ CONTAINS
    INTEGER :: STATUS
    rc=0
    DEALLOCATE(self%cellArea, STAT=STATUS)
-   VERIFY_(STATUS)
+   _VERIFY(STATUS)
    RETURN
 
  END SUBROUTINE GmiChemistry_GridCompFinalize
