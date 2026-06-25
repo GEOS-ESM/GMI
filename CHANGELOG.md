@@ -9,13 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 ### Added
 ### Changed
+### Removed
+### Deprecated
+
+
+## [1.6.1] - 2026-07-02
+
+### Added
+
+- Added diagnostics: SO2_MMR, SO2CMASS and CPU_MAP  (introduced with Benchmark H)
+
+### Changed
 
 - In StratTrop_HFC_S_Pyro: Modified HSTAR for 4 PYRO reactions (S. Das)
   The Pyro kcalc F90 was generated with KMG v1.2.0, and then the K-rate for ISOP+OH=RIO2 was hand-edited.
   NOTE: Revisit the Pyro mech when time allows, to bring fully in line with JPL19 database.
 
-### Removed
-### Deprecated
+- In Standard mech: Updated Henry Law coeffs for SO2, H2SO4 and DMS -- aligned with KMG v1.2.1
 
 
 ## [1.6.0] - 2026-04-07
