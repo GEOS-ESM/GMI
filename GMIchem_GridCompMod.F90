@@ -532,6 +532,31 @@ CONTAINS
 
 ! ========================== EXPORT STATE =========================
 
+! DEBUG
+    CALL MAPL_AddExportSpec(GC,                                   &
+        SHORT_NAME         = 'CPU_MAP',                           &
+        LONG_NAME          = 'edge of each cpu coverage',         &
+        UNITS              = '1',                                 &
+        DIMS               = MAPL_DimsHorzOnly,                   &
+        VLOCATION          = MAPL_VLocationNone,                  &
+                                                           __RC__ )
+
+    CALL MAPL_AddExportSpec(GC,                                   &
+        SHORT_NAME         = 'SO2_MMR',                           &
+        LONG_NAME          = 'SO2 in mass mixing ratio',          &
+        UNITS              = 'kg kg-1',                           &
+        DIMS               = MAPL_DimsHorzVert,                   &
+        VLOCATION          = MAPL_VLocationCenter,                &
+                                                           __RC__ )
+
+    CALL MAPL_AddExportSpec(GC,                                   &
+        SHORT_NAME         = 'SO2CMASS',                          &
+        LONG_NAME          = 'SO2 column mass',                   &
+        UNITS              = 'kg m-2',                            &
+        DIMS               = MAPL_DimsHorzOnly,                   &
+        VLOCATION          = MAPL_VLocationNone,                  &
+                                                           __RC__ )
+
     IF(TRIM(aeroProviderName) == "GMICHEM" .or. TRIM(aeroProviderName) == "CARMA") THEN
 
 !   This state is needed by radiation, and contains aerosols and aerosol optics
@@ -1838,11 +1863,16 @@ CONTAINS
    REAL, POINTER, DIMENSION(:,:,:) :: OX_TEND
    REAL, POINTER, DIMENSION(:,:,:) :: PLE
    REAL, POINTER, DIMENSION(:,:,:) :: OCS_import
+   REAL, POINTER, DIMENSION(:,:,:) :: SO2_MMR
+   REAL, POINTER, DIMENSION(:,:,:) :: Q
+   REAL, POINTER, DIMENSION(:,:,:) :: DELP
    REAL, POINTER, DIMENSION(:,:)   :: TROPP
    REAL, POINTER, DIMENSION(:,:)   :: AGCMTROPP
    REAL, POINTER, DIMENSION(:,:)   :: GMITROPP
    REAL, POINTER, DIMENSION(:,:)   :: TO3
    REAL, POINTER, DIMENSION(:,:)   :: TTO3
+   REAL, POINTER, DIMENSION(:,:)   :: SO2CMASS  ! column mass
+   REAL, POINTER, DIMENSION(:,:)   :: CPU_MAP
    REAL, ALLOCATABLE               :: wrk(:,:)
    REAL, ALLOCATABLE               :: wgt(:,:)
 
@@ -1885,6 +1915,15 @@ CONTAINS
    REAL                              :: limit_val
    INTEGER                           :: action_val
    LOGICAL                           :: stop_the_model
+
+! For units conversion  (see TR for full implementation)
+! --------------------
+!  REAL*8,  ALLOCATABLE :: MMR_to_VMR(:,:,:)  ! both wrt MOIST
+   REAL*8,  ALLOCATABLE :: VMR_to_MMR(:,:,:)  ! both wrt MOIST
+!  REAL*8,  ALLOCATABLE :: MMR_to_VVV(:,:,:)  ! mass mixing ratio wrt moist -> volume mixing ratio wrt dry
+!  REAL*8,  ALLOCATABLE :: VVV_to_MMR(:,:,:)  ! volume mixing ratio wrt dry -> mass mixing ratio wrt moist
+   REAL*8,  PARAMETER   :: one = 1.0d0
+   REAL                 :: spec_mwt
 
 !  Get my name and set-up traceback handle
 !  ---------------------------------------
@@ -1990,6 +2029,18 @@ CONTAINS
 
    CALL MAPL_GetPointer(expChem, AGCMTROPP, 'AGCMTROPP', __RC__)
    IF(ASSOCIATED(AGCMTROPP)) AGCMTROPP = TROPP
+
+! Highlight the edges of each processor's subdomain
+! -------------------------------------------------
+   NULLIFY(CPU_MAP)
+   CALL MAPL_GetPointer(expChem, CPU_MAP, 'CPU_MAP', __RC__)
+   IF(ASSOCIATED(CPU_MAP)) THEN
+     CPU_MAP( :, :) = 0.0
+     CPU_MAP( 1, :) = 1.0
+     CPU_MAP(i2, :) = 1.0
+     CPU_MAP( :, 1) = 1.0
+     CPU_MAP( :,j2) = 1.0
+   ENDIF
 
 ! Are species tendencies requested?
 ! ---------------------------------
@@ -2368,6 +2419,48 @@ CONTAINS
      END IF
 
    END IF
+
+!  Special output for SO2
+
+   CALL MAPL_GetPointer(expChem,   SO2_MMR,  'SO2_MMR',  __RC__)
+   CALL MAPL_GetPointer(expChem,   SO2CMASS, 'SO2CMASS', __RC__)
+
+   IF( ASSOCIATED(SO2_MMR) .OR. ASSOCIATED(SO2CMASS)) THEN
+
+     spec_name  = 'SO2'
+     spec_mwt   =  64.0
+
+!!   For conversion between mass mixing ratio and volume mixing ratio
+     call MAPL_GetPointer( impChem,   Q,      'Q',     __RC__ )
+     call MAPL_GetPointer( impChem,   DELP,   'DELP',  __RC__ )
+
+!    ALLOCATE( MMR_to_VMR( 1:i2, 1:j2, 1:km), __STAT__)
+     ALLOCATE( VMR_to_MMR( 1:i2, 1:j2, 1:km), __STAT__)
+!    MMR_to_VMR = (one/spec_mwt) / ( (one/MAPL_AIRMW)*(one-Q) + (one/MAPL_H2OMW)*Q )
+     VMR_to_MMR = (    spec_mwt) * ( (one/MAPL_AIRMW)*(one-Q) + (one/MAPL_H2OMW)*Q )
+
+     do L = 1, ggReg%nq
+       call MAPL_VarSpecGet ( InternalSpec(L), SHORT_NAME=short_name, __RC__ )
+       IF ( TRIM(short_name) == TRIM(spec_name) ) THEN
+         IF(ASSOCIATED(SO2_MMR) ) &
+                       SO2_MMR  =      bgg%qa(L)%data3d * VMR_to_MMR
+         IF(ASSOCIATED(SO2CMASS)) &
+                       SO2CMASS = SUM((bgg%qa(L)%data3d * VMR_to_MMR)*DELP/MAPL_GRAV, 3)
+       END IF
+     end do
+
+!    DEALLOCATE( MMR_to_VMR )
+     DEALLOCATE( VMR_to_MMR )
+
+   END IF
+
+
+
+     do L = 1, ggReg%nq
+       call MAPL_VarSpecGet ( InternalSpec(L), SHORT_NAME=short_name, __RC__ )
+       IF ( TRIM(short_name) == TRIM(spec_name) ) THEN
+       END IF
+     end do
 
 
 !  Update age-of-air.
