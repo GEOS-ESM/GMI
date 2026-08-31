@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 
+## [1.6.2] - 2026-08-31
+
+### Fixed
+
+- Fixed mechanism name in rc file for StratTrop_HFC_S_Pyro and Standard
+
+### Added
+
+- Added Standard_Pyro mechanism
+
+
 ## [1.6.1] - 2026-07-02
 
 ### Added
