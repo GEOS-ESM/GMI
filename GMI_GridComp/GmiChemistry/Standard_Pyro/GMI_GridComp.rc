@@ -1,7 +1,7 @@
 #==================================
 # Resource file for GMI parameters.
 #==================================
-# Mechanism: Standard
+# Mechanism: Standard_Pyro
 #==================================
 
         #############################
@@ -273,6 +273,8 @@ do_smv_reord: F
 loss_opt: 0
 do_AerDust_Calc: T
 AerDust_Effect_opt: 0
+do_StratPyroHetChem: F   # HISTORY must include CA.brSAREA and CA.brREFF from CA.br
+
 
         ###########################################################
         # GHG and ODS surface source gases
@@ -555,8 +557,8 @@ stOX_loss_reactions::
   QQK203  0.8   'MVK + O3 =  0.04 ALD2 +  0.80 CH2O +  0.05 CO +  0.06 HO2 +  0.82 MGLY +  0.20 O3 +  0.08 OH'
   QQK221  1.0   'O3 + PRPE =  0.12 ACTA +  0.50 ALD2 +  0.50 CH2O +  0.10 CH4 +  0.56 CO +  0.22 HCOOH +  0.28 HO2 +  0.28 MO2 +  0.36 OH'
   QQK241  1.0   'NO2 + RCO3 = PPN'
-  QQK293  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3'
-  QQK301  1.0   'O3 + SO2 = H2SO4'
+  QQK297  1.0   'NO2 =  0.50 HNO2 +  0.50 HNO3'
+  QQK305  1.0   'O3 + SO2 = H2SO4'
 ::
 
 OCS_JRATE: QJ080

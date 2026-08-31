@@ -1,0 +1,524 @@
+Modeler input mechanism:        Standard_Pyro.txt
+Principal reaction reference:   GMI_reactions_JPL19.db
+Species nomenclature:           GMI_species.db
+Mechanism timestamp:            Wed Jul  8 20:30:04 2026
+
+Species indices:
+  1: A3O2
+  2: ACTA
+  3: ALD2
+  4: ALK4
+  5: ATO2
+  6: B3O2
+  7: Br
+  8: BrCl
+  9: BrO
+ 10: BrONO2
+ 11: C2Cl4
+ 12: C2H4Cl2
+ 13: C2H6
+ 14: C3H8
+ 15: CCl4
+ 16: CF2Br2
+ 17: CF2ClBr
+ 18: CF3Br
+ 19: CFC113
+ 20: CFC114
+ 21: CFC115
+ 22: CFC11
+ 23: CFC12
+ 24: CHCl3
+ 25: CH2Br2
+ 26: CH2Cl2
+ 27: CH2O
+ 28: CH3Br
+ 29: CH3CCl3
+ 30: CH3Cl
+ 31: CH3CN
+ 32: CH4
+ 33: CHBr3
+ 34: Cl2
+ 35: Cl2O2
+ 36: Cl
+ 37: ClO
+ 38: ClONO2
+ 39: CO
+ 40: DMS
+ 41: EOH
+ 42: ETO2
+ 43: ETP
+ 44: GLYC
+ 45: GLYX
+ 46: H
+ 47: H2
+ 48: H2402
+ 49: H2O2
+ 50: H2O
+ 51: HAC
+ 52: HBr
+ 53: HCFC141b
+ 54: HCFC142b
+ 55: HCFC22
+ 56: HCl
+ 57: HCN
+ 58: HCOOH
+ 59: HNO2
+ 60: HNO3
+ 61: HNO4
+ 62: HO2
+ 63: HOBr
+ 64: HOCl
+ 65: IALD
+ 66: IAO2
+ 67: INO2
+ 68: INPN
+ 69: ISOP
+ 70: KO2
+ 71: MACR
+ 72: MAO3
+ 73: MAOP
+ 74: MAP
+ 75: MCO3
+ 76: MEK
+ 77: MGLY
+ 78: MO2
+ 79: MOH
+ 80: MP
+ 81: MRP
+ 82: MVK
+ 83: N
+ 84: N2O
+ 85: N2O5
+ 86: NO
+ 87: NO2
+ 88: NO3
+ 89: O
+ 90: O1D
+ 91: O3
+ 92: OClO
+ 93: OCSg
+ 94: OH
+ 95: PAN
+ 96: PMN
+ 97: PO2
+ 98: PP
+ 99: PPN
+100: PRN1
+101: PRPE
+102: PRPN
+103: R4N1
+104: R4N2
+105: R4O2
+106: R4P
+107: RA3P
+108: RB3P
+109: RCHO
+110: RCO3
+111: RCOOH
+112: RIO1
+113: RIO2
+114: RIPA
+115: RIPB
+116: ROH
+117: RP
+118: VRO2
+119: VRP
+120: SO2
+121: H2SO4
+122: ACET
+123: N2
+124: O2
+125: NUMDENS
+126: HNO3COND
+
+Thermal reactions:
+  1: O + O = O2
+  2: O + O2 = O3
+  3: O + O3 = 2 O2
+  4: H2O2 + O = HO2 + OH
+  5: N2 + O1D = N2 + O
+  6: O1D + O2 = O + O2
+  7: O1D + O3 = 2 O2
+  8: O1D + O3 = 2 O + O2
+  9: H2O + O1D = 2 OH
+ 10: H2 + O1D = H + OH
+ 11: N2O + O1D = N2 + O2
+ 12: N2O + O1D = 2 NO
+ 13: CH4 + O1D = MO2 + OH
+ 14: CH4 + O1D = CH2O + H + HO2
+ 15: CH4 + O1D = CH2O + H2
+ 16: CFC12 + O1D = 2 Cl
+ 17: CFC113 + O1D = 3 Cl
+ 18: CFC114 + O1D = 2 Cl
+ 19: CFC115 + O1D = Cl
+ 20: HCFC22 + O1D = Cl
+ 21: HCFC141b + O1D = 2 Cl
+ 22: HCFC142b + O1D = Cl
+ 23: H + O2 = HO2
+ 24: H + O3 = O2 + OH
+ 25: H + HO2 = 2 OH
+ 26: H + HO2 = H2 + O2
+ 27: H + HO2 = H2O + O
+ 28: H + NO2 = NO + OH
+ 29: O + OH = H + O2
+ 30: HO2 + O = O2 + OH
+ 31: H + HO2 = 2 OH
+ 32: O3 + OH = HO2 + O2
+ 33: HO2 + O3 = 2 O2 + OH
+ 34: OH + OH = H2O + O
+ 35: OH + OH = H2O2
+ 36: HO2 + OH = H2O + O2
+ 37: H2O2 + OH = H2O + HO2
+ 38: HO2 + HO2 = H2O2 + O2
+ 39: H2O + HO2 + HO2 = H2O + H2O2 + O2
+ 40: H2 + OH = H + H2O
+ 41: NO + O3 = NO2 + O2
+ 42: NO2 + O3 = NO3 + O2
+ 43: HO2 + NO = NO2 + OH
+ 44: CO + OH = H
+ 45: CH4 + OH = H2O + MO2
+ 46: MO2 + NO = CH2O + HO2 + NO2
+ 47: ClO + MO2 = CH2O + Cl + HO2 + O2
+ 48: HO2 + MO2 = MP + O2
+ 49: MO2 + MO2 = CH2O + MOH + O2
+ 50: MO2 + MO2 = 2 CH2O + 2 HO2
+ 51: MP + OH = H2O + MO2
+ 52: MP + OH = CH2O + H2O + OH
+ 53: CH2O + OH = CO + H2O + HO2
+ 54: NO + O = NO2
+ 55: NO2 + O = NO + O2
+ 56: NO2 + O = NO3
+ 57: NO3 + O = NO2 + O2
+ 58: N + O2 = NO + O
+ 59: N + OH = H + NO
+ 60: N + NO = N2 + O
+ 61: N + NO2 = N2O + O
+ 62: NO2 + OH = HNO3
+ 63: HNO3 + OH = H2O + NO3
+ 64: NO + OH = HNO2
+ 65: HNO2 + OH = H2O + NO2
+ 66: HO2 + NO2 = HNO4
+ 67: HNO4 = HO2 + NO2
+ 68: HNO4 + OH = H2O + NO2 + O2
+ 69: HO2 + NO3 = NO2 + O2 + OH
+ 70: NO + NO3 = 2 NO2
+ 71: NO3 + OH = HO2 + NO2
+ 72: NO2 + NO3 = N2O5
+ 73: N2O5 = NO2 + NO3
+ 74: HCOOH + OH = H2O + HO2
+ 75: MOH + OH = CH2O + HO2
+ 76: NO2 + NO3 = NO + NO2 + O2
+ 77: CH2O + NO3 = CO + HNO3 + HO2
+ 78: Cl + O3 = ClO + O2
+ 79: Cl + H2 = H + HCl
+ 80: Cl + H2O2 = HCl + HO2
+ 81: Cl + HO2 = HCl + O2
+ 82: Cl + HO2 = ClO + OH
+ 83: ClO + O = Cl + O2
+ 84: ClO + OH = Cl + HO2
+ 85: ClO + OH = HCl + O2
+ 86: ClO + HO2 = HOCl + O2
+ 87: ClO + NO = Cl + NO2
+ 88: ClO + NO2 = ClONO2
+ 89: ClO + ClO = 2 Cl + O2
+ 90: ClO + ClO = Cl2 + O2
+ 91: ClO + ClO = Cl + OClO
+ 92: ClO + ClO = Cl2O2
+ 93: Cl2O2 = 2 ClO
+ 94: HCl + OH = Cl + H2O
+ 95: HOCl + OH = ClO + H2O
+ 96: ClONO2 + O = ClO + NO3
+ 97: ClONO2 + OH = HOCl + NO3
+ 98: Cl + ClONO2 = Cl2 + NO3
+ 99: Br + O3 = BrO + O2
+100: Br + HO2 = HBr + O2
+101: Br + CH2O = CO + HBr + HO2
+102: BrO + O = Br + O2
+103: BrO + HO2 = HOBr + O2
+104: BrO + NO = Br + NO2
+105: BrO + NO2 = BrONO2
+106: BrO + ClO = Br + OClO
+107: BrO + ClO = Br + Cl + O2
+108: BrO + ClO = BrCl + O2
+109: BrO + BrO = 2 Br + O2
+110: HBr + OH = Br + H2O
+111: CHBr3 + OH = 3 Br
+112: CH2Br2 + OH = 2 Br
+113: CH2O + O = CO + HO2 + OH
+114: CH4 + Cl = HCl + MO2
+115: CH2O + Cl = CO + HCl + HO2
+116: CH3Cl + OH = Cl + H2O + HO2
+117: CH3CCl3 + OH = 3 Cl + H2O
+118: HCFC22 + OH = Cl + H2O
+119: HCFC141b + OH = 2 Cl + H2O
+120: HCFC142b + OH = Cl + H2O
+121: CH3Cl + Cl = CO + 2 HCl + HO2
+122: CH3Br + OH = Br + H2O + HO2
+123: CHCl3 + OH = 3 Cl
+124: CH2Cl2 + OH = 2 Cl
+125: C2H4Cl2 + OH = 2 Cl
+126: CHCl3 + Cl = 3 Cl + HCl
+127: CH2Cl2 + Cl = 2 Cl + HCl
+128: C2Cl4 + Cl = 2 Cl
+129: A3O2 + HO2 = RA3P
+130: A3O2 + MO2 =  0.75 CH2O + HO2 +  0.25 MOH +  0.75 RCHO +  0.25 ROH
+131: A3O2 + NO = HO2 + NO2 + RCHO
+132: ACET + OH = ATO2 + H2O
+133: ACTA + OH = H2O + MO2
+134: ALD2 + NO3 = HNO3 + MCO3
+135: ALD2 + OH =  0.05 CH2O +  0.05 CO + H2O +  0.05 HO2 +  0.95 MCO3
+136: ALK4 + NO3 = HNO3 + R4O2
+137: ALK4 + OH = R4O2
+138: ATO2 + HO2 =  0.15 CH2O +  0.85 HCOOH +  0.15 MCO3 +  0.15 OH
+139: ATO2 + MCO3 =  0.10 ACTA +  0.90 CH2O +  0.90 MCO3 +  0.10 MGLY +  0.90 MO2
+140: ATO2 + MO2 =  0.50 CH2O +  0.20 HAC +  0.30 HO2 +  0.30 MCO3 +  0.50 MGLY +  0.50 MOH
+141: ATO2 + NO = CH2O + MCO3 + NO2
+142: B3O2 + HO2 = RB3P
+143: B3O2 + MCO3 = ACET +  0.10 ACTA +  0.90 HO2 +  0.90 MO2
+144: B3O2 + MO2 =  0.75 ACET +  0.75 CH2O + HO2 +  0.25 MOH +  0.25 ROH
+145: B3O2 + NO = ACET + HO2 + NO2
+146: C2H6 + NO3 = ETO2 + HNO3
+147: C2H6 + OH = ETO2 + H2O
+148: C2H6 + Cl = ETO2 + HCl
+149: C3H8 + OH = A3O2
+150: C3H8 + OH = B3O2
+151: CH3CN + OH =  0.30 H +  0.30 HCN
+152: CH3CN + O1D =  0.30 H
+153: CH3CN + Cl = HCl
+154: EOH + OH = ALD2 + HO2
+155: ETO2 + ETO2 =  1.60 ALD2 +  0.40 EOH +  1.20 HO2
+156: ETO2 + NO = ALD2 + HO2 + NO2
+157: ETP + OH =  0.64 ALD2 +  0.36 ETO2 +  0.64 OH
+158: GLYC + OH =  0.73 CH2O +  0.50 CO +  0.13 GLYX +  0.13 HCOOH +  0.77 HO2 +  0.23 OH
+159: GLYC + OH = CO + HCOOH + OH
+160: GLYX + NO3 = 2 CO + HNO3 + HO2
+161: GLYX + OH = 2 CO + HO2
+162: HAC + OH = HO2 + MGLY
+163: HAC + OH =  0.50 ACTA +  0.50 CO +  0.50 HCOOH +  0.50 MO2 + OH
+164: HCN + O1D = CO + NO
+165: HCN + OH = H2O
+166: ETO2 + HO2 = ETP
+167: HO2 + MCO3 =  0.13 ACTA +  0.37 MAP +  0.50 MO2 +  0.13 O3 +  0.50 OH
+168: IALD + OH =  0.15 HO2 +  0.44 IAO2 +  0.41 MAO3
+169: HO2 + IAO2 =  0.50 MACR +  0.50 MVK + 2 OH
+170: IAO2 + NO =  0.50 MACR +  0.50 MVK + NO2 + OH
+171: HO2 + INO2 = INPN
+172: INO2 + MCO3 =  0.15 CH2O +  0.85 HNO3 +  0.80 HO2 +  0.10 MACR + MO2 +  0.05 MVK +  0.15 NO2
+173: INO2 + MCO3 = ACTA + NO2 + RCHO
+174: INO2 + MO2 =  0.83 CH2O +  0.43 HNO3 +  0.90 HO2 +  0.05 MACR +  0.25 MOH +  0.03 MVK +  0.57 NO2 +  0.25 RCHO +  0.25 ROH
+175: INO2 + NO =  0.15 CH2O +  0.85 HNO3 +  0.80 HO2 +  0.10 MACR +  0.05 MVK +  1.15 NO2
+176: INPN + OH = INO2
+177: ISOP + NO3 = INO2
+178: ISOP + O3 =  0.83 CH2O +  0.41 CO +  0.01 H2O2 +  0.58 HCOOH +  0.16 HO2 +  0.42 MACR +  0.41 MO2 +  0.18 MVK +  0.28 OH
+179: ISOP + OH = RIO1
+180: ISOP + OH = RIO2
+181: HO2 + KO2 =  0.15 ALD2 +  0.85 HCOOH +  0.15 MCO3 +  0.85 MO2 +  0.15 OH
+182: KO2 + MCO3 =  0.10 ACTA +  0.90 ALD2 +  0.90 MCO3 +  0.10 MEK +  0.90 MO2
+183: KO2 + MO2 =  0.50 ALD2 +  0.75 CH2O +  0.50 HO2 +  0.50 MCO3 +  0.25 MEK +  0.25 MO2 +  0.25 MOH +  0.25 ROH
+184: KO2 + NO =  0.92 ALD2 +  0.92 MCO3 +  0.93 NO2 +  0.07 R4N2
+185: MACR + NO3 =  0.68 CO +  0.32 HNO3 +  0.32 MAO3 +  0.68 MGLY +  0.68 NO2
+186: MACR + OH = MAO3
+187: MACR + O3 =  0.12 CH2O +  0.12 CO +  0.88 HCOOH +  0.12 MCO3 +  0.88 MGLY +  0.12 OH
+188: HO2 + MAO3 =  0.50 CH2O +  0.32 CO +  0.50 MAOP +  0.17 MCO3 +  0.32 MO2 +  0.13 O3 +  0.50 OH
+189: MAO3 + NO = CH2O +  0.65 CO +  0.35 MCO3 +  0.65 MO2 + NO2
+190: MAO3 + NO2 = PMN
+191: MAOP + OH =  0.25 CH2O +  0.49 CO +  0.49 HAC +  0.17 MAO3 +  0.10 MAOP +  0.09 MCO3 +  0.16 MO2 +  0.58 OH
+192: A3O2 + MCO3 =  0.10 ACTA +  0.90 HO2 +  0.90 MO2 + RCHO
+193: ETO2 + MCO3 =  0.10 ACTA + ALD2 +  0.90 HO2 +  0.90 MO2
+194: MCO3 + MCO3 = 2 MO2
+195: MCO3 + MO2 =  0.10 ACTA + CH2O +  0.90 HO2 +  0.90 MO2
+196: MCO3 + NO2 = PAN
+197: MCO3 + NO = MO2 + NO2
+198: MCO3 + PO2 =  0.10 ACTA +  0.90 ALD2 +  0.90 CH2O +  0.06 HAC +  0.90 HO2 +  0.90 MO2 +  0.04 RCHO
+199: MEK + NO3 = HNO3 + KO2
+200: MEK + OH = H2O + KO2
+201: MGLY + NO3 = CO + HNO3 + MCO3
+202: MGLY + OH = CO + MCO3
+203: MVK + O3 =  0.04 ALD2 +  0.80 CH2O +  0.05 CO +  0.06 HO2 +  0.82 MGLY +  0.20 O3 +  0.08 OH
+204: MVK + OH = VRO2
+205: MAP + OH =  0.22 CH2O +  0.78 MCO3 +  0.22 OH
+206: OH + RCHO = H2O + RCO3
+207: OH + RCOOH = ETO2
+208: PAN = MCO3 + NO2
+209: PMN = MAO3 + NO2
+210: OH + PMN =  0.25 CO +  0.25 HAC +  0.75 MAOP + NO3
+211: HO2 + PO2 = PP
+212: MO2 + PO2 =  0.50 ALD2 +  1.25 CH2O +  0.16 HAC + HO2 +  0.25 MOH +  0.09 RCHO +  0.25 ROH
+213: NO + PO2 = ALD2 + CH2O + HO2 + NO2
+214: PPN = NO2 + RCO3
+215: OH + PP =  0.79 HAC +  0.79 OH +  0.21 PO2
+216: HO2 + PRN1 = PRPN
+217: MCO3 + PRN1 =  0.10 ACTA +  0.90 ALD2 +  0.90 CH2O +  0.90 MO2 + NO2 +  0.10 RCHO
+218: MO2 + PRN1 =  0.50 ALD2 +  1.25 CH2O +  0.50 HO2 +  0.25 MOH + NO2 +  0.25 RCHO +  0.25 ROH
+219: NO + PRN1 = ALD2 + CH2O + 2 NO2
+220: NO3 + PRPE = PRN1
+221: O3 + PRPE =  0.12 ACTA +  0.50 ALD2 +  0.50 CH2O +  0.10 CH4 +  0.56 CO +  0.22 HCOOH +  0.28 HO2 +  0.28 MO2 +  0.36 OH
+222: OH + PRPE = PO2
+223: OH + PRPN =  0.79 MGLY +  0.79 NO2 +  0.21 PRN1
+224: HO2 + R4N1 = R4N2
+225: MCO3 + R4N1 =  0.10 ACTA +  0.68 ALD2 +  0.35 CH2O +  0.90 MO2 + NO2 +  0.27 R4O2 +  0.61 RCHO
+226: MO2 + R4N1 =  0.38 ALD2 +  0.95 CH2O +  0.50 HO2 +  0.25 MOH + NO2 +  0.15 R4O2 +  0.58 RCHO +  0.38 ROH
+227: NO + R4N1 =  0.97 ALD2 +  0.64 CH2O + 2 NO2 +  0.64 RCHO
+228: OH + R4N2 = H2O + R4N1
+229: HO2 + R4O2 = R4P
+230: MCO3 + R4O2 =  0.05 A3O2 +  0.29 ACET +  0.10 ACTA +  0.29 ALD2 +  0.16 B3O2 +  0.29 ETO2 +  0.24 HO2 +  0.27 MEK +  0.90 MO2 +  0.25 RCHO
+231: MO2 + R4O2 =  0.03 A3O2 +  0.16 ACET +  0.16 ALD2 +  0.09 B3O2 +  0.75 CH2O +  0.16 ETO2 +  0.64 HO2 +  0.35 MEK +  0.09 MO2 +  0.25 MOH +  0.13 RCHO +  0.38 ROH
+232: NO + R4O2 =  0.05 A3O2 +  0.34 ACET +  0.34 ALD2 +  0.19 B3O2 +  0.34 ETO2 +  0.27 HO2 +  0.19 MEK +  0.19 MO2 + NO2 +  0.15 RCHO
+233: NO + R4O2 = R4N2
+234: OH + R4P =  0.79 OH +  0.21 R4O2 +  1.18 RCHO
+235: OH + RA3P =  0.36 A3O2 +  0.64 OH +  0.64 RCHO
+236: OH + RB3P =  0.79 ACET +  0.21 B3O2 +  0.79 OH
+237: NO3 + RCHO = HNO3 + RCO3
+238: HO2 + RCO3 =  0.03 A3O2 +  0.12 B3O2 +  0.22 ETO2 +  0.15 O3 +  0.44 OH +  0.15 RCOOH +  0.41 RP
+239: MCO3 + RCO3 =  0.07 A3O2 +  0.27 B3O2 +  0.49 ETO2 + MO2
+240: MO2 + RCO3 =  0.07 A3O2 +  0.27 B3O2 + CH2O +  0.49 ETO2 + HO2
+241: NO2 + RCO3 = PPN
+242: NO + RCO3 =  0.07 A3O2 +  0.27 B3O2 +  0.49 ETO2 + NO2
+243: HO2 + RIO1 =  0.06 CH2O +  0.06 HO2 +  0.06 MVK +  0.06 OH +  0.94 RIPA
+244: HO2 + RIO2 =  0.06 CH2O +  0.06 HO2 +  0.06 MACR +  0.06 OH +  0.94 RIPB
+245: MO2 + RIO1 = 2 CH2O + 2 HO2 + MVK
+246: MO2 + RIO2 = 2 CH2O + 2 HO2 + MACR
+247: RIO1 + RIO1 = 2 CH2O + 2 HO2 + 2 MVK
+248: RIO2 + RIO2 = 2 CH2O + 2 HO2 + 2 MACR
+249: RIO1 + RIO2 = 2 CH2O + 2 HO2 + MACR + MVK
+250: NO + RIO1 = CH2O + HO2 + MVK + NO2
+251: NO + RIO2 = CH2O + HO2 + MACR + NO2
+252: NO + RIO1 = HNO3
+253: NO + RIO2 = HNO3
+254: RIO1 = CH2O + MVK + OH
+255: RIO2 = CH2O + MACR + OH
+256: RIO1 =  0.30 CH2O +  0.60 CO +  0.40 HO2 +  0.40 IALD +  0.30 MCO3 +  0.30 MGLY +  1.50 OH
+257: RIO2 =  0.30 CH2O +  0.90 CO +  0.30 HCOOH +  0.70 HO2 +  0.40 IALD +  0.30 MGLY +  1.50 OH
+258: OH + RIPA =  0.25 CO +  0.25 HO2 +  0.12 MRP +  0.12 MVK +  0.75 RIO1
+259: OH + RIPB =  0.33 CO +  0.33 HO2 +  0.16 IAO2 +  0.17 MACR +  0.17 MRP +  0.51 RIO2
+260: OH + ROH = HO2 + RCHO
+261: OH + RP =  0.50 ALD2 +  0.50 OH +  0.50 RCO3
+262: HO2 + VRO2 =  0.05 CH2O +  0.36 GLYC +  0.31 HO2 +  0.25 MAOP +  0.36 MCO3 +  0.05 MGLY +  0.67 OH +  0.34 VRP
+263: NO + VRO2 = HNO3
+264: NO + VRO2 =  0.24 CH2O +  0.76 GLYC +  0.24 HO2 +  0.76 MCO3 +  0.24 MGLY + NO2
+265: OH + VRP =  1.19 CO +  0.53 HO2 +  0.53 MCO3 +  0.19 MGLY +  0.19 OH
+266: N2O5 = 2 HNO3
+267: ClONO2 = HNO3 + HOCl
+268: BrONO2 = HNO3 + HOBr
+269: ClONO2 + HCl = Cl2 + HNO3
+270: HCl + HOCl = Cl2 + H2O
+271: HCl + HOBr = BrCl + H2O
+272: N2O5 = 2 HNO3
+273: ClONO2 = HNO3 + HOCl
+274: BrONO2 = HNO3 + HOBr
+275: ClONO2 + HCl = Cl2 + HNO3
+276: HCl + HOCl = Cl2 + H2O
+277: HCl + HOBr = BrCl + H2O
+278: ClONO2 = HNO3 + HOCl
+279: BrONO2 = HNO3 + HOBr
+280: ClONO2 + HCl = Cl2 + HNO3
+281: HCl + HOCl = Cl2 + H2O
+282: BrONO2 + HCl = BrCl + HNO3
+283: HCl + HOBr = BrCl + H2O
+284: ClONO2 = HNO3 + HOCl
+285: BrONO2 = HNO3 + HOBr
+286: ClONO2 + HCl = Cl2 + HNO3
+287: HCl + HOCl = Cl2 + H2O
+288: BrONO2 + HCl = BrCl + HNO3
+289: HCl + HOBr = BrCl + H2O
+290: ClONO2 = HNO3 + HOCl
+291: ClONO2 + HCl = Cl2 + HNO3
+292: HCl + HOCl = Cl2 + H2O
+293: HCl + HOBr = BrCl + H2O
+294: N2O5 = 2 HNO3
+295: NO3 + NO3 = 2 NO2 + O2
+296: HO2 =  0.50 H2O
+297: NO2 =  0.50 HNO2 +  0.50 HNO3
+298: NO3 = HNO3
+299: N2O5 = 2 HNO3
+300: DMS + OH = SO2
+301: DMS + NO3 = HNO3 + SO2
+302: O + SO2 = H2SO4
+303: OH + SO2 = H2SO4
+304: H2O2 + SO2 = H2SO4
+305: O3 + SO2 = H2SO4
+306: O + OCSg = CO + SO2
+307: OCSg + OH = SO2
+
+Photolyses:
+308: O2 + hv = 2 O
+309: O2 + hv = O + O1D
+310: O3 + hv = O + O2
+311: O3 + hv = O1D + O2
+312: NO + hv = N + O
+313: N2O + hv = N2 + O1D
+314: NO2 + hv = NO + O
+315: H2O + hv = H + OH
+316: H2O + hv = H2O
+317: H2O + hv = H2 + O
+318: CH4 + hv = CO + 2 H2O
+319: H2O2 + hv = 2 OH
+320: MP + hv = CH2O + HO2 + OH
+321: CH2O + hv = CO + H + HO2
+322: CH2O + hv = CO + H2
+323: HNO3 + hv = NO2 + OH
+324: HNO2 + hv = NO + OH
+325: HNO4 + hv = NO3 + OH
+326: HNO4 + hv = HO2 + NO2
+327: NO3 + hv = NO2 + O3
+328: NO3 + hv = NO + O2
+329: N2O5 + hv = NO2 + NO3
+330: Cl2 + hv = 2 Cl
+331: OClO + hv = ClO + O
+332: Cl2O2 + hv = 2 Cl + O2
+333: HOCl + hv = Cl + OH
+334: ClONO2 + hv = Cl + NO3
+335: ClONO2 + hv = ClO + NO2
+336: BrCl + hv = Br + Cl
+337: BrO + hv = Br + O
+338: HOBr + hv = Br + OH
+339: BrONO2 + hv = Br + NO3
+340: CHBr3 + hv = 3 Br
+341: CH2Br2 + hv = 2 Br
+342: CH3Cl + hv = Cl + MO2
+343: CCl4 + hv = 4 Cl
+344: CH3CCl3 + hv = 3 Cl
+345: CFC11 + hv = 3 Cl
+346: CFC12 + hv = 2 Cl
+347: CFC113 + hv = 3 Cl
+348: CFC114 + hv = 2 Cl
+349: CFC115 + hv = Cl
+350: HCFC141b + hv = 2 Cl
+351: HCFC142b + hv = Cl
+352: CH3Br + hv = Br + MO2
+353: CF3Br + hv = Br
+354: CF2Br2 + hv = 2 Br
+355: H2402 + hv = 2 Br
+356: CF2ClBr + hv = Br + Cl
+357: ALD2 + hv = CO + HO2 + MO2
+358: PAN + hv =  0.70 MCO3 +  0.30 MO2 +  0.70 NO2 +  0.30 NO3
+359: RCHO + hv =  0.07 A3O2 +  0.27 B3O2 + CO +  0.49 ETO2 + HO2
+360: ACET + hv = MCO3 + MO2
+361: MEK + hv =  0.06 A3O2 +  0.23 B3O2 +  0.41 ETO2 +  0.85 MCO3 +  0.15 MO2 +  0.15 RCO3
+362: GLYC + hv =  0.90 CH2O + CO +  1.73 HO2 +  0.10 MOH +  0.07 OH
+363: GLYX + hv = 2 CO + H2
+364: GLYX + hv = 2 CO + 2 HO2
+365: GLYX + hv = CH2O + CO
+366: MGLY + hv = CO + HO2 + MCO3
+367: MVK + hv = CO + PRPE
+368: MVK + hv = MO2 + RCO3
+369: MACR + hv = CH2O + CO + HO2 + MCO3
+370: HAC + hv = CH2O + HO2 + MCO3
+371: INPN + hv = HO2 + NO2 + OH + RCHO
+372: PRPN + hv = HO2 + NO2 + OH + RCHO
+373: ETP + hv = ALD2 + HO2 + OH
+374: RA3P + hv = HO2 + OH + RCHO
+375: RB3P + hv = ACET + HO2 + OH
+376: R4P + hv = HO2 + OH +  1.50 RCHO
+377: PP + hv = ALD2 + CH2O + HO2 + OH
+378: RP + hv = ALD2 + HO2 + MO2 + OH
+379: RIPA + hv = CH2O + HO2 + MVK + OH
+380: RIPB + hv = CH2O + HO2 + MACR + OH
+381: VRP + hv =  0.53 CH2O +  0.76 CO +  0.23 GLYX +  1.24 HO2 +  0.76 MCO3 +  0.23 MGLY
+382: MRP + hv =  0.35 CH2O +  0.38 CO +  0.26 GLYC +  0.38 HAC +  0.74 HO2 +  0.26 MCO3 +  0.35 MGLY + OH
+383: MAOP + hv =  0.23 CH2O +  0.77 CO +  0.77 HAC + HO2 +  0.23 MGLY + OH
+384: R4N2 + hv =  0.05 A3O2 +  0.34 ACET +  0.34 ALD2 +  0.19 B3O2 +  0.34 ETO2 +  0.27 HO2 +  0.19 MEK +  0.19 MO2 + NO2 +  0.15 RCHO
+385: MAP + hv = MO2 + OH
+386: CH2Cl2 + hv = 2 Cl
+387: OCSg + hv = CO + SO2
+388: H2SO4 + hv = 2 OH + SO2
