@@ -258,7 +258,7 @@ loss_opt: 0
 do_AerDust_Calc: T
 AerDust_Effect_opt: 0
 do_StratPyroHetChem: F   # HISTORY must include CA.brSAREA and CA.brREFF from CA.br
-
+do_PyroToLBS:        F   # Only can be true if do_StratPyroHetChem is True
 
         ###########################################################
         # GHG and ODS surface source gases
