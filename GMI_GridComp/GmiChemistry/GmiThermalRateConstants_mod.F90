@@ -60,7 +60,7 @@
                      concentration, rxnr_adjust, Eradius, Tarea, gcPhot,        &
                      relativeHumidity, conPBLFlag, do_AerDust_Calc,             &
                      do_LBSplusBCOC_SAD, do_StratPyroHetChem,                   &
-                     do_PyroToLBS, phot_opt,                                    &
+                     phot_opt,                                                  &
                      pr_diag, loc_proc, num_rxnr_adjust, rxnr_adjust_timpyr,    &
                      ivert, num_sad, num_qks, num_molefrac, num_species,        &
                      ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)
@@ -73,7 +73,7 @@
 ! !INPUT PARAMETERS:
       logical, intent(in) :: pr_diag
       logical, intent(in) :: do_AerDust_Calc, do_LBSplusBCOC_SAD, &
-                             do_StratPyroHetChem, do_PyroToLBS, rootProc
+                             do_StratPyroHetChem, rootProc
 
       integer, intent(in) :: loc_proc
       integer, intent(in) :: num_species
@@ -156,8 +156,7 @@
       qkcol(:,:) = 0.0d0
 
 !... Special case to use GOCART BC + OC  for O3 related stratospheric het reactions
-!      if (do_StratPyroHetChem.and.gcPhot%pyro_saexist) then
-      if ( (do_StratPyroHetChem.and.gcPhot%pyro_saexist) .and. .not. do_PyroToLBS) then
+      if (do_StratPyroHetChem.and.gcPhot%pyro_saexist) then
 !... need to make PyroCb available to setkin_kcalc
         sadgmi(IPYROSAD)%pArray3D(:,:,:) = gcPhot%pyro_sa(:,:,:)
 !. orig method of pyrocb
@@ -218,12 +217,6 @@
                     sadcol(ILBSSAD,:) + sadcol2(nSADdust+IBCSAD,:) + sadcol2(nSADdust+IOCSAD,:)
 !                  radS(ILBSSAD,:) = 0.221d-4
                 endif
-                ! Other special case if using PyroCb brown carbon
-                if (do_PyroToLBS .and. gcPhot%pyro_saexist) then
-                  sadcol(ILBSSAD,:) = sadcol(ILBSSAD,:) + gcPhot%pyro_sa(il,ij,:)
-!                  radS(ILBSSAD,:) = gcPhot%pyro_sareff(il,ij,:)
-                endif
-                
 
 !... If GOCART has SO4v then replace STS for strat het reaction
                 if (gcPhot%so4v_saexist) then

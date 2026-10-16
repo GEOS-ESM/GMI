@@ -90,7 +90,7 @@
    LOGICAL :: pr_qqjk
    LOGICAL :: do_tran_h2
    LOGICAL :: do_AerDust_Calc
-   LOGICAL :: do_LBSplusBCOC_SAD, do_StratPyroHetChem, do_PyroToLBS
+   LOGICAL :: do_LBSplusBCOC_SAD, do_StratPyroHetChem
    INTEGER :: phot_opt
 
 ! Dimensions
@@ -295,10 +295,6 @@ CONTAINS
 
       call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_StratPyroHetChem, &
      &           label="do_StratPyroHetChem:", default=.false., rc=STATUS)
-      VERIFY_(STATUS)
-
-      call ESMF_ConfigGetAttribute(gmiConfigFile, value=self%do_PyroToLBS, &
-     &           label="do_PyroToLBS:", default=.false., rc=STATUS)
       VERIFY_(STATUS)
 !
 !... mutually exclusive, do_StratPyroHetChem takes precedence
@@ -828,7 +824,7 @@ CONTAINS
                 self%rxnr_adjust, eRadius, tArea, gcPhot,                    &
                 relativeHumidity, conPBLFlag, self%do_AerDust_Calc,          &
                 self%do_LBSplusBCOC_SAD, self%do_StratPyroHetChem,           &
-                self%do_PyroToLBS, self%phot_opt,                            &
+                self%phot_opt,                                               &
                 self%pr_diag, loc_proc, self%num_rxnr_adjust,                &
                 self%rxnr_adjust_timpyr, ivert, NSAD, NUM_K, NMF, NSP,       &
                 ilo, ihi, julo, jhi, i1, i2, ju1, j2, k1, k2)

@@ -105,7 +105,8 @@
    LOGICAL :: do_qqjk_inchem
    LOGICAL :: do_qqjk_reset
    LOGICAL :: pr_qqjk
-
+   LOGICAL :: do_pyrotolbs
+   
 ! Dimensions
 ! ----------
    INTEGER :: i1, i2, im, j1, j2, jm, km
@@ -392,6 +393,14 @@ CONTAINS
      &                default = 4, rc=STATUS )
       VERIFY_(STATUS)
 
+!     Doing PyroCb aerosol in LBS also?
+      call ESMF_ConfigGetAttribute(gmiConfigFile, self%do_pyrotolbs, &
+     &                label   = "do_PyroToLBS:", &
+     &                default = .false., rc=STATUS )
+      VERIFY_(STATUS)
+      
+
+      
 !     ----------------------------------------------
 !     lbssad_init_val
 !       set all lbssad values to lbssad_init_val
@@ -761,7 +770,7 @@ CONTAINS
    type(ESMF_State)   :: aero_state
 !   type(ESMF_State)   :: bc_state
 !   type(ESMF_State)   :: oc_state
-!   type(ESMF_State)   :: br_state
+   type(ESMF_State)   :: br_state
    type(ESMF_State)   :: su_state, suv_state
 !   type(ESMF_State)   :: du_state
 !   type(ESMF_State)   :: ss_state
@@ -770,8 +779,7 @@ CONTAINS
 !   type(ESMF_Field)   :: bc_philic_3d_field
 !   type(ESMF_Field)   :: oc_phobic_3d_field
 !   type(ESMF_Field)   :: oc_philic_3d_field
-!   type(ESMF_Field)   :: br_phobic_3d_field
-!   type(ESMF_Field)   :: br_philic_3d_field
+   type(ESMF_Field)   ::       br_3d_field
    type(ESMF_Field)   ::       so4_3d_field
 !   type(ESMF_Field)   ::        du_4d_field
 !   type(ESMF_Field)   ::        ss_4d_field
@@ -780,8 +788,7 @@ CONTAINS
 !   real, pointer, dimension(:,:,:)   :: bc_philic_3d_array
 !   real, pointer, dimension(:,:,:)   :: oc_phobic_3d_array
 !   real, pointer, dimension(:,:,:)   :: oc_philic_3d_array
-!   real, pointer, dimension(:,:,:)   :: br_phobic_3d_array
-!   real, pointer, dimension(:,:,:)   :: br_philic_3d_array
+   real, pointer, dimension(:,:,:)   ::       br_3d_array
    real, pointer, dimension(:,:,:)   ::       so4_3d_array
 !   real, pointer, dimension(:,:,:,:) ::        du_4d_array
 !   real, pointer, dimension(:,:,:,:) ::        ss_4d_array
@@ -1123,7 +1130,7 @@ CONTAINS
       call ESMF_StateGet(impChem, 'AERO', aero_state, __RC__)
 !      call ESMF_StateGet(aero_state,   'CA.bc_AERO', bc_state,  __RC__)
 !      call ESMF_StateGet(aero_state,   'CA.oc_AERO', oc_state,  __RC__)
-!      call ESMF_StateGet(aero_state,   'CA.br_AERO', br_state,  __RC__)
+      call ESMF_StateGet(aero_state,   'CA.br_AERO', br_state,  __RC__)
       call ESMF_StateGet(aero_state,      'SU_AERO', su_state,  __RC__)
       call ESMF_StateGet(aero_state, 'SU.volc_AERO', suv_state,  rc=rcvolc)
 !      call ESMF_StateGet(aero_state,      'DU_AERO', du_state,  __RC__)
@@ -1141,7 +1148,18 @@ CONTAINS
                              + so4_3d_array(:,:,km:1:-1) * 0.01 ! convert from m2/m3 to cm2/cm3
        NULLIFY(so4_3d_array)
       endif
-      CALL MAPL_MaxMin('GMI: SO4 SArea  (m^2/m^3?):', self%lbssad)
+      CALL MAPL_MaxMin('GMI: LBSSAD after GOCART SU  (cm^2/cm^3?):', self%lbssad)
+
+      if(self%do_pyrotolbs) then
+       call ESMF_StateGet(br_state,    'SAREA',     br_3d_field, __RC__)
+       call ESMF_FieldGet(field=br_3d_field, farrayPtr=br_3d_array, __RC__)
+       self%lbssad(:,:,1:km) = self%lbssad(:,:,1:km) &
+                             + br_3d_array(:,:,km:1:-1) * 0.01 ! convert from m2/m3 to cm2/cm3
+       NULLIFY(br_3d_array)
+       CALL MAPL_MaxMin('GMI: LBSSAD after GOCART SU and BR  (cm^2/cm^3?):', self%lbssad)
+      endif
+
+      
     END IF
   end if
 
