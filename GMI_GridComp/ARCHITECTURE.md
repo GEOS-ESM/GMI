@@ -9,7 +9,7 @@ elsewhere; paths inside this repository do not change.
 
 Parent documents: [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)
 (the MAPL component, `GMIchem_GridCompMod.F90`) and the Chemistry document
-[`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md). This directory
+`../../docs/ARCHITECTURE.md`. This directory
 holds no MAPL component of its own; it is the Fortran code that
 `GMIchem_GridCompMod` calls. Scientific kernels are described by directory
 only.

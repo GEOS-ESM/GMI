@@ -6,7 +6,7 @@ modules and several selectable chemical mechanisms.
 
 **Placement:** GEOSgcm fixture, `src/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSchem_GridComp/@GMI`
 (`components.yaml` @ `0f2e0fb`, key `GMI`). Parent: Chemistry, see
-[`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) (adds `GMICHEM`, wires
+`../docs/ARCHITECTURE.md` (adds `GMICHEM`, wires
 `AERO`). Verified against `GMI` @ `ec9e2fd`; describes `develop`.
 
 ## Documents
