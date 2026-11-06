@@ -20,7 +20,7 @@ and the scientific code at directory level. The class-module layer and the
 - Fixture path: `src/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSchem_GridComp/@GMI`
   (nested repository, `components.yaml` key `GMI`).
 - Parent: the Chemistry component,
-  [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) (sections 2.3
+  `../../docs/ARCHITECTURE.md` (sections 2.3
   and 3 describe how it adds `GMICHEM`, runs it and builds the `AERO`
   state). It adds the child with `MAPL_AddChild(GC, NAME='GMICHEM',
   SS=GMI_SetServices)` when `ENABLE_GMICHEM:` is true; `GMI_SetServices` is
