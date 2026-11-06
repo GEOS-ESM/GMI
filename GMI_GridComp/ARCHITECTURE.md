@@ -1,9 +1,9 @@
 # GMI_GridComp: class modules and the GmiChemistry tree
 
 **Audience:** coding agents and developers working on the GMI chemistry code.
-**Describes:** the MAPL2 line, branch `develop`.
-**Verified against:** `GMI` @ `ec9e2fd` (2026-11-06).
-**Placement:** as in the GEOSgcm fixture (`components.yaml` @ `0f2e0fb`).
+**Describes:** the MAPL3 line, branch `release/MAPL-v3`.
+**Verified against:** `GMI` @ `fce93fe` (2026-11-06).
+**Placement:** as in the GEOSgcm fixture (`components.yaml` @ `f50622d`).
 Other fixtures (for example GEOSadas, GEOSldas) may place this repository
 elsewhere; paths inside this repository do not change.
 
@@ -112,7 +112,7 @@ exports (`gmiSAD`, `gmiQJ`, `gmiQK`, ...) and the bundle arrays
 | `include/` | `gmi_forc_bc.h`, `smv2chem_par.h` | build include path |
 | `<mechanism>/` | per-mechanism generated-style files (below) | build selects one |
 
-Mechanism directories: `Standard`, `Standard_Pyro`, `StratTrop_HFC_S`,
+Mechanism directories (no `Standard_Pyro` on this line): `Standard`, `StratTrop_HFC_S`,
 `StratTrop_HFC_S_Pyro`, `StratTrop_JPL19`, `StratTrop_Minimal`,
 `StratTrop_Orig` (default). Every one has the same 17 file names:
 `GMI_GridComp.rc`, `GMI_Mech_Registry.rc`, `GMI_Registry.rc`,
@@ -146,7 +146,7 @@ Photolysis reads the `AERO` state's `implements_aerosol_optics_method`
 attribute and executes `run_aerosol_optics` on it when the aerosol
 provider is `GOCART2G` (`GmiPhotolysis_GridCompClassMod.F90`,
 `Acquire_OptProps`). The label GMI attaches is described in the
-[main document](../docs/ARCHITECTURE.md), section 7.
+[main document](../docs/ARCHITECTURE.md) (section on the `AERO` state).
 
 ## 8. Dependencies
 

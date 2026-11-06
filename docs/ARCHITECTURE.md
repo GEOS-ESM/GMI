@@ -1,11 +1,15 @@
 # GMI architecture
 
 **Audience:** coding agents and developers working on the GMI repository.
-**Describes:** the MAPL2 line, branch `develop`.
-**Verified against:** `GMI` @ `ec9e2fd` (2026-11-06).
-**Placement:** as in the GEOSgcm fixture (`components.yaml` @ `0f2e0fb`).
+**Describes:** the MAPL3 line, branch `release/MAPL-v3`.
+**Verified against:** `GMI` @ `fce93fe` (2026-11-06).
+**Placement:** as in the GEOSgcm fixture (`components.yaml` @ `f50622d`).
 Other fixtures (for example GEOSadas, GEOSldas) may place this repository
 elsewhere; paths inside this repository do not change.
+
+**Build status on this line:** not built, not ported. On `release/MAPL-v3`, `@GEOSchem_GridComp/CMakeLists.txt` calls `esma_add_subdirectories(GOCART)` only, with the comment "Restore subdirs as components are ported to MAPL3."; `GMI` appears only in a commented-out list of subdirectories. The Chemistry top-level library (`GEOS_ChemGridComp.F90`, which adds this component) is present but not compiled on this line: the `esma_add_library` block that builds it is commented out in `../CMakeLists.txt`. Statements about it describe the file as it is. This repository's `CMakeLists.txt` lists the dependencies `Chem_Shared` (from the Chemistry `Shared` directory, also in the commented-out list), `GEOS_Shared`, `esmf`, `Process_Library`. The code here is the MAPL2 code of an older state of the repository, kept for a later port; it is one commit ("Updates for MAPL3", which renames `use MAPL_ConstantsMod` to `use MAPL_Constants` in six files under `photolysis/CloudJ` and `GmiEmission`, and strips trailing whitespace) ahead of, and 20 commits behind, MAPL2 `main`.
+
+**Differences from the MAPL2 line.** This line lacks later MAPL2 changes: the `Standard_Pyro` mechanism directory; the later `Standard` mechanism update (species `CH3CN`, `HCN`, ODS emission fields); the `FLOOR_VALUE`, `Br_limit`, `HBr_limit`, `BrONO2_limit` run-time keys and the Br spike traps; the debug exports `CPU_MAP`, `SO2_MMR`, `SO2CMASS`; and tendencies for non-transported species. Sections below describe the code on this line.
 
 GMI is the Global Modeling Initiative combined stratosphere/troposphere
 chemistry package, wrapped as one MAPL gridded component, `GMICHEM`. The
@@ -20,8 +24,7 @@ and the scientific code at directory level. The class-module layer and the
 - Fixture path: `src/Components/@GEOSgcm_GridComp/GEOSagcm_GridComp/GEOSphysics_GridComp/@GEOSchem_GridComp/@GMI`
   (nested repository, `components.yaml` key `GMI`).
 - Parent: the Chemistry component,
-  `../../docs/ARCHITECTURE.md` (sections 2.3
-  and 3 describe how it adds `GMICHEM`, runs it and builds the `AERO`
+  `../../docs/ARCHITECTURE.md` (it adds `GMICHEM`, runs it and builds the `AERO`
   state). It adds the child with `MAPL_AddChild(GC, NAME='GMICHEM',
   SS=GMI_SetServices)` when `ENABLE_GMICHEM:` is true; `GMI_SetServices` is
   the `use ... only: GMI_SetServices => SetServices` rename of
@@ -29,8 +32,8 @@ and the scientific code at directory level. The class-module layer and the
 - Children: none in the MAPL sense. `GMICHEM` has no `MAPL_AddChild`; its
   seven sub-processes are plain Fortran derived types called directly
   (`GMI_GridComp/GMI_GridCompMod.F90`, type `GMI_GridComp`).
-- Build target: one library built by `CMakeLists.txt`. The parent links it
-  as `GMI` (parent document, section on build).
+- Build target: one library defined by `CMakeLists.txt`; not built on this line. The parent links it
+  as `GMI` (the parent's build).
 
 ## 2. Directory and file map
 
@@ -42,7 +45,7 @@ and the scientific code at directory level. The class-module layer and the
 | `GMI_GridComp/Gmi{Chem,Depos,Emiss,ForcingBC,Photolysis,SAD,ThermalRC}_GridCompClassMod.F90` | The class modules (module names `Gmi*_GCCMod`): one process each. |
 | `GMI_GridComp/GmiSwapSpeciesBundlesMod.F90` | Copies species between the MAPL species bundles and GMI's arrays. |
 | `GMI_GridComp/GMI_ExtData.rc`, `GMI_ExtData.yaml` | ExtData (MAPL external data) specification for GMI's file inputs; installed to `etc`. |
-| `GMI_GridComp/GmiChemistry/` | Chemistry solver, photolysis, SAD code and the per-mechanism directories (`Standard`, `Standard_Pyro`, `StratTrop_HFC_S`, `StratTrop_HFC_S_Pyro`, `StratTrop_JPL19`, `StratTrop_Minimal`, `StratTrop_Orig`). |
+| `GMI_GridComp/GmiChemistry/` | Chemistry solver, photolysis, SAD code and the per-mechanism directories (`Standard`, `StratTrop_HFC_S`, `StratTrop_HFC_S_Pyro`, `StratTrop_JPL19`, `StratTrop_Minimal`, `StratTrop_Orig`). |
 | `GMI_GridComp/GmiEmission/`, `GmiDeposition/`, `GmiSpeciesConcentration/`, `GmiShared/` | Emission, deposition, species-concentration and shared support code. |
 | `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `LICENSE*`, `ChangeLog` | Repository metadata. `README.md` is a one-line title. |
 
@@ -75,7 +78,7 @@ provides the `AERO` state (prescribed aerosols, with optics) to Radiation
     when the provider is `CARMA`; `HEMCO` `GMI_ISOPRENE` when
     `doMEGANviaHEMCO` is true.
   - Parent sets `SULFURIC_ACID_SOURCE:` to `full_field` when CARMA and GMI
-    are both on; GMI reads it in Run (section 6).
+    are both on; GMI reads it in Run.
 - Friendly transport: transported species are `FriendlyTo`
   `DYNAMICS:TURBULENCE:MOIST` plus the component name, so they land in the
   parent's `CHEM_TRACERS` bundle. `OX` is also friendly to `ANALYSIS` when
@@ -97,17 +100,16 @@ provides the `AERO` state (prescribed aerosols, with optics) to Radiation
   allocation and points them at the MAPL internal-state arrays; calls
   `GMI_GridCompInitialize`; sets up overpass masks (10 am and 2 pm local
   time, `OVP_init`); builds the `AERO` state if GMI is the provider;
-  initialises chemical families; reads `FLOOR_VALUE`, `Br_limit`,
-  `HBr_limit`, `BrONO2_limit` and the matching `_action` keys from
-  `GMI_GridComp.rc`.
+  initialises chemical families. On this line it reads no species floor or
+  Br trap keys from `GMI_GridComp.rc`.
 - **Run1** (phase 1): if `GMI_RUN_PHASES:` is 2 (default) calls `Run_` with
   phase 1; otherwise does nothing.
 - **Run2** (phase 2): calls `Run_` with phase 2, or phase 99 when
   `GMI_RUN_PHASES:` is 1.
 - **Run_**: reads the run alarm (`RunGMINow`, chemistry time step set by
-  `GMICHEM_DT:`, default the heartbeat; error if shorter); stores initial
-  species to form tendencies; loads `OCS_CLIMO`; zeroes `H2SO4` to the
-  floor unless `SULFURIC_ACID_SOURCE:` begins `full_field`; then
+  `GMICHEM_DT:`, default the heartbeat; error if shorter); applies a fixed floor of 1.0e-30 to the transported species (`#define FLOOR_VALUE`); stores
+  initial species to form tendencies (transported species only); loads `OCS_CLIMO`; sets `H2SO4` to 1e-30
+  unless `SULFURIC_ACID_SOURCE:` begins `full_field`; then
   - phase 1: `GMI_GridCompRun1` (emissions then forced boundary
     conditions, every heartbeat);
   - phase 2: `GMI_GridCompRun2` (deposition every heartbeat; SAD,
@@ -122,7 +124,7 @@ provides the `AERO` state (prescribed aerosols, with optics) to Radiation
   masks, `MAPL_GenericFinalize`.
 
 The phase numbers visible to the parent are the registration order; the
-parent's phase handling is in the parent document (section 3).
+parent's phase handling is in the parent's architecture document.
 
 ## 6. State
 
@@ -137,10 +139,10 @@ parent's phase handling is in the parent document (section 3).
   plus the families `Bry` and `Cly` (restart skipped). Non-transported species
   have `ADD2EXPORT` (`GMIchem_GridCompMod.F90`, SetServices). Species
   restart is the MAPL internal restart of `GMICHEM`; the parent template
-  keeps the `GMICHEM` restart-file keys commented out (parent document,
-  section 6). `importRestartFile: gmichem_import_rst` is set in each
+  keeps the `GMICHEM` restart-file keys commented out (see the parent's
+  architecture document). `importRestartFile: gmichem_import_rst` is set in each
   mechanism's `GMI_GridComp.rc`.
-- **Exports**: hand-written (`CPU_MAP`, `SO2_MMR`, `SO2CMASS`, `AERO`,
+- **Exports**: hand-written (`AERO`,
   `AERO_ACI`, `AERO_DP`, `HNO3CONDsad`, `HNO3GASsad`, `jNO2val`, bundles
   `surfEmissForChem`, `gmiSAD`, `gmiQJ`, `gmiQQJ`, `gmiQK`, `gmiQQK`,
   `gmiERADIUS`, `gmiTAREA`, overpass `OVP10_*`/`OVP14_*`, `stOX_loss`) plus
@@ -174,7 +176,7 @@ parent's phase handling is in the parent document (section 3).
   `GOCART2G` (`GmiPhotolysis_GridCompClassMod.F90`, `Acquire_OptProps`:
   reads `implements_aerosol_optics_method`, sets `band_for_aerosol_optics`
   per wavelength, `ESMF_MethodExecute(label='run_aerosol_optics')`).
-  Cross-repository label story: parent document, section 3 (`AERO`).
+  Cross-repository label story: the parent's architecture document (`AERO`).
 - With `GMICHEM` as the provider and `GOCART2G` aerosols, photolysis
   stops with an error (`GmiPhotolysis_GridCompClassMod.F90`, consistency
   check in Initialize).
@@ -192,7 +194,7 @@ parent's phase handling is in the parent document (section 3).
 | `SULFURIC_ACID_SOURCE:` | `AGCM.rc` | `full_field` keeps GMI `H2SO4`; else reset each step. |
 | `doEmiss`, `doBoCo`, `doDepos`, `doSAD`, `doPhot`, `doTherm`, `doSolver` | `GMI_GridComp.rc` | Switch individual sub-processes (default true) (`GMI_GridCompInitialize`). |
 | `phot_opt`, `fastj_opt` (4 or 5) | `GMI_GridComp.rc` | Photolysis scheme: 4 calls `initializeFastJX65`, 5 calls `InitializeFastJX74` from `CloudJ` (`GmiPhotolysis_GridCompInitialize`). |
-| `doMEGANviaHEMCO:`, `do_ShipEmission:` | `GMI_GridComp.rc` | Adds imports (section 6). |
+| `doMEGANviaHEMCO:`, `do_ShipEmission:` | `GMI_GridComp.rc` | Adds imports (see State). |
 | `REPLAY_MODE:` | `AGCM.rc` | Replay predictor step passed to emission class. |
 
 ## 9. Build structure
@@ -220,8 +222,8 @@ parent's phase handling is in the parent document (section 3).
 
 Uses `ESMF`, `MAPL`, `Chem_Mod`, `Chem_UtilMod`, `Chem_GroupMod`,
 `Species_BundleMod`, `Runtime_RegistryMod`, `OVP` (overpass masks),
-`Chem_Mie` from `Chem_Shared`/`Chem_Base` in the parent repository
-(`GMIchem_GridCompMod.F90`, `USE` list).
+`Chem_Mie` from the Chemistry shared code in the parent repository
+(`GMIchem_GridCompMod.F90`, `USE` list). `CMakeLists.txt` lists `Chem_Shared`, `GEOS_Shared`, `esmf`, `Process_Library`; it does not list `Chem_Base`.
 
 ## 11. Known traps
 
@@ -236,7 +238,7 @@ Uses `ESMF`, `MAPL`, `Chem_Mod`, `Chem_UtilMod`, `Chem_GroupMod`,
 3. **Phase numbers.** Phase 99 means "single phase" and is internal to GMI;
    in single-phase mode `Run1` does nothing and `Run2` does everything.
 4. **Tendencies.** Phase 1 and 99 store the tendency, phase 2 adds to it
-   (comment in `Run_`).
+   (comment in `Run_`). On this line tendency exports are restricted to transported species (`Run_` comment; `gmi_acg.pl` keeps a tendency export only when the friends field is `D,T,C`).
 5. **Generated headers** (`*___.h`) are not in the repository; searching
    the source tree will not find them.
 
